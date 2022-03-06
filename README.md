@@ -1,4 +1,4 @@
-# Pojo mapper for 'x-www-form-urlencoded' MIME type data
+# Pojo mapper for 'x-www-form-urlencoded' MIME type
 
 The mapper allows you to convert a FormUrlEncoded string to a pojo object and vice versa.
 

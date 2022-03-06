@@ -173,6 +173,9 @@ public interface IChain {
             }
             final IChainList sourceList = (IChainList) source;
             final IChainList targetList = (IChainList) target;
+            if (sourceList.isEmpty() || targetList.isEmpty()) {
+                return sourceList.isEmpty() ? targetList : sourceList;
+            }
             if (sourceList.size() < targetList.size()) {
                 return mergeRawList(targetList, sourceList); // reverse
             }
@@ -210,10 +213,13 @@ public interface IChain {
          * @throws IllegalArgumentException key-value pair is not in URL form format
          */
         protected List<IChainPart> readUrlEncodedString(final String urlEncodedString) {
+            if (urlEncodedString == null || urlEncodedString.trim().isEmpty()) {
+                return new ArrayList<>();
+            }
             final String[] pairs = urlEncodedString.split("&");
             List<IChainPart> result = new ArrayList<>();
             for (String pair : pairs) {
-                final String[] split = pair.split("=");
+                final String[] split = pair.contains("=") ? pair.split("=") : new String[]{};
                 if (split.length > 2 || split.length == 0) {
                     throw new IllegalArgumentException("URL encoded key-value pair is not in URL format:\n" +
                                                        "Pair: " + urlEncodedString);
