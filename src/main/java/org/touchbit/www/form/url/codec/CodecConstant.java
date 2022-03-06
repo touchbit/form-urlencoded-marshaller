@@ -21,4 +21,11 @@ public class CodecConstant {
     public static final String SOURCE_PARAMETER = "source";
     public static final String CHAIN_PART_PARAMETER = "chainPart";
 
+    /**
+     * Utility class. Forbidden instantiation.
+     */
+    private CodecConstant() {
+        throw new UnsupportedOperationException();
+    }
+
 }

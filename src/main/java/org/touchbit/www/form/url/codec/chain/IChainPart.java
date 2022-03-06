@@ -1,6 +1,8 @@
 package org.touchbit.www.form.url.codec.chain;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -116,19 +118,18 @@ public interface IChainPart {
          * @throws IllegalArgumentException if first key element is array item
          */
         @Override
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({"unchecked", "java:S3776"})
         public Map<String, Object> getRawDataValue() {
             final List<IChainKey> keyChain = getKeyChain();
             final ListIterator<IChainKey> iterator = keyChain.listIterator(keyChain.size());
+            final AtomicBoolean isLast = new AtomicBoolean(true);
             Object nested = null;
-            boolean isLast = true;
             while (iterator.hasPrevious()) {
                 final IChainKey previous = iterator.previous();
                 if (previous.isMap()) {
                     final Map<String, Object> tempMap = new HashMap<>();
-                    if (isLast) {
+                    if (isLast.compareAndSet(true, false)) {
                         tempMap.put(previous.getKeyName(), value);
-                        isLast = false;
                     } else {
                         tempMap.put(previous.getKeyName(), nested);
                     }
@@ -142,17 +143,15 @@ public interface IChainPart {
                         for (int i = 0; i < previous.getIndex(); i++) {
                             chainList.add(i, null);
                         }
-                        if (isLast) {
+                        if (isLast.compareAndSet(true, false)) {
                             chainList.add(previous.getIndex(), value);
-                            isLast = false;
                         } else {
                             chainList.add(previous.getIndex(), nested);
                         }
                     } else {
                         chainList = new IChainList.Default(false);
-                        if (isLast) {
+                        if (isLast.compareAndSet(true, false)) {
                             chainList.add(value);
-                            isLast = false;
                         } else {
                             chainList.add(nested);
                         }

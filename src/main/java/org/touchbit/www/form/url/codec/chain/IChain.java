@@ -87,11 +87,11 @@ public interface IChain {
          * @return filled raw data
          */
         protected Map<String, Object> chainPartsToRawData(final List<IChainPart> list) {
-            final Map<String, Object> rawData = new HashMap<>();
+            final Map<String, Object> result = new HashMap<>();
             list.stream()
                     .map(IChainPart::getRawDataValue)
-                    .forEach(field -> mergeRawMap(field, rawData));
-            return rawData;
+                    .forEach(field -> mergeRawMap(field, result));
+            return result;
         }
 
         /**
@@ -171,7 +171,7 @@ public interface IChain {
             if (sourceList.isNotFilled()) {
                 if (sourceList.size() <= targetList.size()) {
                     sourceList.stream() // insert map to list by index
-                            .filter(v -> v instanceof Map)
+                            .filter(Map.class::isInstance)
                             .map(sourceList::indexOf)
                             .forEach(i -> sourceList.set(i, mergeRawMap(sourceList.get(i), targetList.get(i))));
                 }
@@ -250,15 +250,13 @@ public interface IChain {
         protected boolean isEvenBracketsRatio(String key) {
             FormUrlUtils.parameterRequireNonNull(key, KEY_PARAMETER);
             final Deque<Character> deque = new LinkedList<>();
-            final Map<Character, Character> supportedBrackets = new HashMap<>();
-            supportedBrackets.put(']', '[');
+            final Map<Character, Character> supported = Collections.singletonMap(']', '[');
             for (char c : key.toCharArray()) {
-                if (supportedBrackets.containsValue(c)) {
+                if (supported.containsKey(c) && (deque.isEmpty() || !deque.pop().equals(supported.get(c)))) {
+                    return false;
+                }
+                if (supported.containsValue(c)) {
                     deque.push(c);
-                } else if (supportedBrackets.containsKey(c)) {
-                    if (deque.isEmpty() || deque.pop() != supportedBrackets.get(c)) {
-                        return false;
-                    }
                 }
             }
             return deque.isEmpty();
@@ -334,8 +332,8 @@ public interface IChain {
                 final String eKey = String.valueOf(entry.getKey());
                 final Object eValue = entry.getValue() == null ? "" : entry.getValue();
                 final IChainPart mapEntryChainPart = chainPart.copy().appendPart(eKey);
-                final List<IChainPart> chainParts = valueObjectToChainParts(mapEntryChainPart, eValue);
-                result.addAll(chainParts);
+                final List<IChainPart> parts = valueObjectToChainParts(mapEntryChainPart, eValue);
+                result.addAll(parts);
             }
             return result;
         }

@@ -129,6 +129,7 @@ public class IChainUnitTests extends BaseTest {
             final List<Object> list = new ArrayList<>();
             list.add("foo");
             list.add("bar");
+            list.add(null);
             final List<IChainPart> parts = chain.collectionToChainPart(bar, list);
             assertThat(parts, hasSize(2));
             assertIs(parts.get(0).toString(), "test=foo");
@@ -227,5 +228,64 @@ public class IChainUnitTests extends BaseTest {
 
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+    @Nested
+    @DisplayName("#isEvenBracketsRatio() method tests")
+    public class IsEvenBracketsRatioMethodTests {
+
+        @Test
+        @DisplayName("Required parameters")
+        public void test1646581863035() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertNPE(() -> chain.isEvenBracketsRatio(null), "key");
+        }
+
+        @Test
+        @DisplayName("return true if the list key is sequential (indexed)")
+        public void test1646581898521() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertTrue(chain.isEvenBracketsRatio("key[0][1][2]"));
+        }
+
+        @Test
+        @DisplayName("return true if the list key is sequential (unindexed)")
+        public void test1646581975124() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertTrue(chain.isEvenBracketsRatio("key[][][]"));
+        }
+
+        @Test
+        @DisplayName("return true if the list key is sequential (nested)")
+        public void test1646581988424() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertTrue(chain.isEvenBracketsRatio("key[[[]]]"));
+        }
+
+        @Test
+        @DisplayName("return true if the list not present")
+        public void test1646582010654() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertTrue(chain.isEvenBracketsRatio("key"));
+        }
+
+        @Test
+        @DisplayName("return false if key contains odd ratio of brackets")
+        public void test1646582039541() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertFalse(chain.isEvenBracketsRatio("key[[]"));
+        }
+
+    }
 
 }

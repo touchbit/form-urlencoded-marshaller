@@ -60,5 +60,15 @@ public interface IChainList extends List<Object> {
             return !isIndexed || this.stream().anyMatch(Objects::isNull);
         }
 
+        @Override
+        public boolean equals(Object o) {
+            return super.equals(o);
+        }
+
+        @Override
+        public int hashCode() {
+            return super.hashCode();
+        }
+
     }
 }
