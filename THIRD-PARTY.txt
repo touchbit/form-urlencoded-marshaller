@@ -1,4 +1,3 @@
 
-Lists of 2 third-party dependencies.
-     (Apache License, Version 2.0) Apache Commons IO (commons-io:commons-io:2.11.0 - https://commons.apache.org/proper/commons-io/)
+Lists of 1 third-party dependencies.
      (Apache License, Version 2.0) Apache Commons Lang (org.apache.commons:commons-lang3:3.12.0 - https://commons.apache.org/proper/commons-lang/)

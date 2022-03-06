@@ -1,7 +1,6 @@
 .git
 .mtj.tmp/
 target/
-/all/THIRD-PARTY.txt
 *.class
 *.log
 *.ctxt

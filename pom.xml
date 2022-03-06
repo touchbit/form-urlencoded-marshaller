@@ -90,9 +90,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest</artifactId>
-            <version>2.2</version>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.22.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -128,7 +128,7 @@
                         <configuration>
                             <target>
                                 <copy todir="${project.build.directory}/classes/META-INF">
-                                    <fileset dir="${project.basedir}/../">
+                                    <fileset dir="./">
                                         <include name="LICENSE"/>
                                         <include name="NOTICE"/>
                                     </fileset>
@@ -180,24 +180,13 @@
                     <execution>
                         <phase>verify</phase>
                         <goals>
-                            <goal>aggregate-add-third-party</goal>
+                            <goal>add-third-party</goal>
                         </goals>
                         <configuration>
                             <thirdPartyFilename>THIRD-PARTY.txt</thirdPartyFilename>
                             <outputDirectory>${project.basedir}</outputDirectory>
                             <sortArtifactByName>true</sortArtifactByName>
                             <excludedScopes>test,provided</excludedScopes>
-                            <excludedArtifacts>
-                                (hamcrest|mockito.*|log4j.*|javafaker|junit.*|automaton|generex|objenesis|apiguardian-api|opentest4j|snakeyaml|byte-buddy.*)
-                            </excludedArtifacts>
-                            <licenseMerges>
-                                <licenseMerge>Apache License, Version 2.0|Apache-2.0</licenseMerge>
-                                <licenseMerge>Apache License, Version 2.0|Apache 2.0</licenseMerge>
-                                <licenseMerge>Apache License, Version 2.0|Apache License 2.0</licenseMerge>
-                                <licenseMerge>Apache License, Version 2.0|The Apache License, Version 2.0</licenseMerge>
-                                <licenseMerge>Apache License, Version 2.0|The Apache Software License, Version 2.0
-                                </licenseMerge>
-                            </licenseMerges>
                         </configuration>
                     </execution>
                 </executions>

@@ -7,7 +7,7 @@ import org.touchbit.www.form.url.BaseTest;
 
 import java.util.*;
 
-import static org.hamcrest.Matchers.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("IChain.class unit tests")
 public class IChainUnitTests extends BaseTest {
@@ -22,7 +22,7 @@ public class IChainUnitTests extends BaseTest {
             final IChain.Default aDefault = new IChain.Default("foo=%20");
             assertNotNull(aDefault.getRawData());
             assertIs(aDefault.getRawData().get("foo"), "%20");
-            assertThat(aDefault.getChainParts(), not(empty()));
+            assertThat(aDefault.getChainParts()).isNotEmpty();
             assertIs(aDefault.getChainParts().get(0).toString(), "foo=%20");
             assertIs(aDefault.toString(), "foo=%20");
         }
@@ -31,8 +31,8 @@ public class IChainUnitTests extends BaseTest {
         @DisplayName("Build from url encoded string (null)")
         public void test1646498193999() {
             final IChain.Default aDefault = new IChain.Default(null);
-            assertThat(aDefault.getRawData(), anEmptyMap());
-            assertThat(aDefault.getChainParts(), empty());
+            assertThat(aDefault.getRawData()).isEmpty();
+            assertThat(aDefault.getChainParts()).isEmpty();
         }
 
         @Test
@@ -40,8 +40,8 @@ public class IChainUnitTests extends BaseTest {
         public void test1646498257354() {
             final IChain.Default aDefault = new IChain.Default("");
             assertNotNull(aDefault.getRawData());
-            assertThat(aDefault.getRawData(), anEmptyMap());
-            assertThat(aDefault.getChainParts(), empty());
+            assertThat(aDefault.getRawData()).isEmpty();
+            assertThat(aDefault.getChainParts()).isEmpty();
         }
 
         @Test
@@ -49,8 +49,8 @@ public class IChainUnitTests extends BaseTest {
         public void test1646498371061() {
             final IChain.Default aDefault = new IChain.Default("      \n    ");
             assertNotNull(aDefault.getRawData());
-            assertThat(aDefault.getRawData(), anEmptyMap());
-            assertThat(aDefault.getChainParts(), empty());
+            assertThat(aDefault.getRawData()).isEmpty();
+            assertThat(aDefault.getChainParts()).isEmpty();
         }
 
         @Test
@@ -62,7 +62,7 @@ public class IChainUnitTests extends BaseTest {
             final IChain.Default aDefault = new IChain.Default(rawData, true, true);
             assertNotNull(aDefault.getRawData());
             assertIs(aDefault.getRawData().get("foo"), "%20");
-            assertThat(aDefault.getChainParts(), not(empty()));
+            assertThat(aDefault.getChainParts()).isNotEmpty();
             assertIs(aDefault.getChainParts().get(0).toString(), "bar=car");
             assertIs(aDefault.toString(), "bar=car&foo=%20");
             assertIs(aDefault.toString(true), "bar=car&\nfoo=%20");
@@ -74,8 +74,8 @@ public class IChainUnitTests extends BaseTest {
             final Map<String, Object> rawData = new HashMap<>();
             final IChain.Default aDefault = new IChain.Default(rawData, true, true);
             assertNotNull(aDefault.getRawData());
-            assertThat(aDefault.getRawData(), anEmptyMap());
-            assertThat(aDefault.getChainParts(), empty());
+            assertThat(aDefault.getRawData()).isEmpty();
+            assertThat(aDefault.getChainParts()).isEmpty();
         }
 
     }
@@ -102,7 +102,7 @@ public class IChainUnitTests extends BaseTest {
             list.add("foo");
             list.add("bar");
             final List<IChainPart> parts = chain.collectionToChainPart(bar, list);
-            assertThat(parts, hasSize(2));
+            assertThat(parts).hasSize(2);
             assertIs(parts.get(0).toString(), "test[0]=foo");
             assertIs(parts.get(1).toString(), "test[1]=bar");
         }
@@ -116,7 +116,7 @@ public class IChainUnitTests extends BaseTest {
             list.add("foo");
             list.add("bar");
             final List<IChainPart> parts = chain.collectionToChainPart(bar, list);
-            assertThat(parts, hasSize(2));
+            assertThat(parts).hasSize(2);
             assertIs(parts.get(0).toString(), "test[]=foo");
             assertIs(parts.get(1).toString(), "test[]=bar");
         }
@@ -131,7 +131,7 @@ public class IChainUnitTests extends BaseTest {
             list.add("bar");
             list.add(null);
             final List<IChainPart> parts = chain.collectionToChainPart(bar, list);
-            assertThat(parts, hasSize(2));
+            assertThat(parts).hasSize(2);
             assertIs(parts.get(0).toString(), "test=foo");
             assertIs(parts.get(1).toString(), "test=bar");
         }
@@ -145,7 +145,7 @@ public class IChainUnitTests extends BaseTest {
             set.add("foo");
             set.add("bar");
             final List<IChainPart> parts = chain.collectionToChainPart(bar, set);
-            assertThat(parts, hasSize(2));
+            assertThat(parts).hasSize(2);
             assertIs(parts.get(0).toString(), "test[0]=bar");
             assertIs(parts.get(1).toString(), "test[1]=foo");
         }
@@ -194,7 +194,7 @@ public class IChainUnitTests extends BaseTest {
             final IChain.Default chain = new IChain.Default(null);
             final IChainPart.Default bar = new IChainPart.Default("test", true, true);
             final List<IChainPart> parts = chain.mapToChainPart(bar, new HashMap<>());
-            assertThat(parts, empty());
+            assertThat(parts).isEmpty();
         }
 
         @Test
@@ -206,7 +206,7 @@ public class IChainUnitTests extends BaseTest {
             map.put("bar", Collections.singleton("1"));
             map.put("foo", Collections.singleton("2"));
             final List<IChainPart> parts = chain.mapToChainPart(bar, map);
-            assertThat(parts, hasSize(2));
+            assertThat(parts).hasSize(2);
             assertIs(parts.get(0).toString(), "test[bar][0]=1");
             assertIs(parts.get(1).toString(), "test[foo][0]=2");
         }
@@ -220,25 +220,13 @@ public class IChainUnitTests extends BaseTest {
             map.put("bar", "1");
             map.put("foo", "2");
             final List<IChainPart> parts = chain.mapToChainPart(bar, map);
-            assertThat(parts, hasSize(2));
+            assertThat(parts).hasSize(2);
             assertIs(parts.get(0).toString(), "test[bar]=1");
             assertIs(parts.get(1).toString(), "test[foo]=2");
         }
 
 
     }
-
-
-
-
-
-
-
-
-
-
-
-
 
     @Nested
     @DisplayName("#isEvenBracketsRatio() method tests")
@@ -284,6 +272,92 @@ public class IChainUnitTests extends BaseTest {
         public void test1646582039541() {
             final IChain.Default chain = new IChain.Default(null);
             assertFalse(chain.isEvenBracketsRatio("key[[]"));
+        }
+    }
+
+    @Nested
+    @DisplayName("#valueObjectToChainParts() method tests")
+    public class ValueObjectToChainPartsMethodTests {
+
+        @Test
+        @DisplayName("Required parameters")
+        public void test1646583838933() {
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainPart.Default bar = new IChainPart.Default("test", true, true);
+            assertNPE(() -> chain.valueObjectToChainParts(null, new HashMap<>()), "chainPart");
+            assertNPE(() -> chain.valueObjectToChainParts(bar, null), "value");
+        }
+
+        @Test
+        @DisplayName("Convert simple type to ChainPart list")
+        public void test1646583894688() {
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainPart.Default bar = new IChainPart.Default("test", true, true);
+            final List<IChainPart> parts = chain.valueObjectToChainParts(bar, 1);
+            assertThat(parts).hasSize(1);
+            assertIs(parts.get(0).toString(), "test=1");
+        }
+
+        @Test
+        @DisplayName("Convert List to ChainPart list")
+        public void test1646583985419() {
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainPart.Default bar = new IChainPart.Default("test", true, true);
+            final List<IChainPart> parts = chain.valueObjectToChainParts(bar, listOf(1, 2));
+            assertThat(parts).hasSize(2);
+            assertIs(parts.get(0).toString(), "test[0]=1");
+            assertIs(parts.get(1).toString(), "test[1]=2");
+        }
+
+        @Test
+        @DisplayName("Convert Set to ChainPart list")
+        public void test1646584093909() {
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainPart.Default bar = new IChainPart.Default("test", true, true);
+            final List<IChainPart> parts = chain.valueObjectToChainParts(bar, setOf(1, 2));
+            assertThat(parts).hasSize(2);
+            assertIs(parts.get(0).toString(), "test[0]=1");
+            assertIs(parts.get(1).toString(), "test[1]=2");
+        }
+
+        @Test
+        @DisplayName("Convert Map to ChainPart list")
+        public void test1646584131434() {
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainPart.Default bar = new IChainPart.Default("test", true, true);
+            final List<IChainPart> parts = chain.valueObjectToChainParts(bar, mapOf("foo", "bar"));
+            assertThat(parts).hasSize(1);
+            assertIs(parts.get(0).toString(), "test[foo]=bar");
+        }
+
+        @Test
+        @DisplayName("IllegalArgumentException - unsupported value type")
+        public void test1646584333520() {
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainPart.Default bar = new IChainPart.Default("test", true, true);
+            assertThrow(() -> chain.valueObjectToChainParts(bar, mapOf("foo", new Object())))
+                    .assertClass(IllegalArgumentException.class)
+                    .assertMessageIs("Unsupported value type: java.lang.Object");
+        }
+    }
+
+    @Nested
+    @DisplayName("#readModel() method tests")
+    public class ReadModelMethodTests {
+
+        @Test
+        @DisplayName("Required parameters")
+        public void test1646584579737() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertNPE(() -> chain.readModel(null, true, true), "rawData");
+        }
+
+        @Test
+        @DisplayName("Return empty list if raw data map is empty")
+        public void test1646584611024() {
+            final IChain.Default chain = new IChain.Default(null);
+            final List<IChainPart> parts = chain.readModel(new HashMap<>(), true, true);
+            assertThat(parts).isEmpty();
         }
 
     }

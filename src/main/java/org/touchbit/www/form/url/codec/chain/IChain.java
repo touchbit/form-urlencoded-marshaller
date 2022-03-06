@@ -271,6 +271,7 @@ public interface IChain {
         protected List<IChainPart> readModel(final Map<String, Object> rawData,
                                              final boolean implicitList,
                                              final boolean explicitList) {
+            FormUrlUtils.parameterRequireNonNull(rawData, RAW_DATA_PARAMETER);
             final List<IChainPart> result = new ArrayList<>();
             for (Map.Entry<String, Object> entry : rawData.entrySet()) {
                 final String key = entry.getKey();
@@ -307,7 +308,7 @@ public interface IChain {
                 final List<IChainPart> mapChainParts = mapToChainPart(chainPart, (Map<?, ?>) value);
                 result.addAll(mapChainParts);
             } else {
-                throw new IllegalArgumentException("Unprocessed object received: " + value);
+                throw new IllegalArgumentException("Unsupported value type: " + value.getClass().getName());
             }
             return result;
         }

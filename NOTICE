@@ -1,2 +1,6 @@
-URL form mapper
-Copyright 2021-2022 URL form mapper project authors and contributors.
+form-urlencoded2pojo
+----------------------------------------------------------------------
+Pojo mapper for 'x-www-form-urlencoded' MIME type data
+Distributed under license 'Apache License Version 2.0'
+Copyright 2022 form-urlencoded2pojo project authors and contributors
+----------------------------------------------------------------------

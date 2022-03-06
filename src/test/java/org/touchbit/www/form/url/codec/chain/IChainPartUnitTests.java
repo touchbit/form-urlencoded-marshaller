@@ -8,7 +8,7 @@ import org.touchbit.www.form.url.BaseTest;
 import java.util.List;
 import java.util.Map;
 
-import static org.hamcrest.Matchers.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("IChainPart.class unit tests")
 public class IChainPartUnitTests extends BaseTest {
@@ -160,8 +160,8 @@ public class IChainPartUnitTests extends BaseTest {
         public void test1646350344883() {
             final IChainPart.Default part = new IChainPart.Default("foo", false, false);
             final List<IChainKey> keyChain = part.getKeyChain();
-            assertThat(keyChain, hasSize(1));
-            assertThat(keyChain.get(0).getKeyName(), is("foo"));
+            assertThat(keyChain).hasSize(1);
+            assertIs(keyChain.get(0).getKeyName(), "foo");
         }
 
         @Test
@@ -170,9 +170,9 @@ public class IChainPartUnitTests extends BaseTest {
             final IChainPart.Default part = new IChainPart.Default("foo", false, false);
             part.appendPart("bar");
             final List<IChainKey> keyChain = part.getKeyChain();
-            assertThat(keyChain, hasSize(2));
-            assertThat(keyChain.get(0).getKeyName(), is("foo"));
-            assertThat(keyChain.get(1).getKeyName(), is("bar"));
+            assertThat(keyChain).hasSize(2);
+            assertIs(keyChain.get(0).getKeyName(), "foo");
+            assertIs(keyChain.get(1).getKeyName(), "bar");
         }
 
         @Test
@@ -181,10 +181,10 @@ public class IChainPartUnitTests extends BaseTest {
             final IChainPart.Default part = new IChainPart.Default("foo", true, false);
             part.appendIndex(0);
             final List<IChainKey> keyChain = part.getKeyChain();
-            assertThat(keyChain, hasSize(2));
-            assertThat(keyChain.get(0).getKeyName(), is("foo"));
-            assertThat(keyChain.get(1).getKeyName(), nullValue());
-            assertThat(keyChain.get(1).getIndex(), nullValue());
+            assertThat(keyChain).hasSize(2);
+            assertIs(keyChain.get(0).getKeyName(), "foo");
+            assertIsNull(keyChain.get(1).getKeyName());
+            assertIsNull(keyChain.get(1).getIndex());
         }
 
         @Test
@@ -193,10 +193,10 @@ public class IChainPartUnitTests extends BaseTest {
             final IChainPart.Default part = new IChainPart.Default("foo", false, true);
             part.appendIndex(0);
             final List<IChainKey> keyChain = part.getKeyChain();
-            assertThat(keyChain, hasSize(2));
-            assertThat(keyChain.get(0).getKeyName(), is("foo"));
-            assertThat(keyChain.get(1).getKeyName(), nullValue());
-            assertThat(keyChain.get(1).getIndex(), is(0));
+            assertThat(keyChain).hasSize(2);
+            assertIs(keyChain.get(0).getKeyName(), "foo");
+            assertIsNull(keyChain.get(1).getKeyName());
+            assertIs(keyChain.get(1).getIndex(), 0);
         }
 
         @Test
@@ -204,9 +204,9 @@ public class IChainPartUnitTests extends BaseTest {
         public void test1646400035703() {
             final IChainPart.Default part = new IChainPart.Default("", false, true);
             final List<IChainKey> keyChain = part.getKeyChain();
-            assertThat(keyChain, hasSize(1));
-            assertThat(keyChain.get(0).getKeyName(), nullValue());
-            assertThat(keyChain.get(0).getIndex(), nullValue());
+            assertThat(keyChain).hasSize(1);
+            assertIsNull(keyChain.get(0).getKeyName());
+            assertIsNull(keyChain.get(0).getIndex());
         }
 
     }
@@ -225,23 +225,23 @@ public class IChainPartUnitTests extends BaseTest {
                     .appendPart("rob")
                     .appendIndex(1);
             final Map<String, Object> rawDataValue = part.getRawDataValue();
-            assertThat(rawDataValue, not(anEmptyMap()));
-            assertThat(rawDataValue.get("foo"), notNullValue());
-            assertThat(rawDataValue.get("foo"), instanceOf(Map.class));
+            assertThat(rawDataValue).isNotEmpty();
+            assertThat(rawDataValue.get("foo")).isNotNull();
+            assertThat(rawDataValue.get("foo")).isInstanceOf(Map.class);
             final Map<String, Object> fooMap = (Map<String, Object>) rawDataValue.get("foo");
-            assertThat(fooMap.get("bar"), notNullValue());
-            assertThat(fooMap.get("bar"), instanceOf(List.class));
+            assertThat(fooMap.get("bar")).isNotNull();
+            assertThat(fooMap.get("bar")).isInstanceOf(List.class);
             final List<Map<String, Object>> bar = (List<Map<String, Object>>) fooMap.get("bar");
-            assertThat(bar, hasSize(1));
-            assertThat(bar.get(0), instanceOf(Map.class));
-            assertThat(bar.get(0), not(anEmptyMap()));
+            assertThat(bar).hasSize(1);
+            assertThat(bar.get(0)).isInstanceOf(Map.class);
+            assertThat(bar.get(0)).isNotEmpty();
             final Map<String, Object> barMap = bar.get(0);
-            assertThat(barMap, not(anEmptyMap()));
-            assertThat(barMap.get("rob"), notNullValue());
-            assertThat(barMap.get("rob"), instanceOf(List.class));
+            assertThat(barMap).isNotEmpty();
+            assertThat(barMap.get("rob")).isNotNull();
+            assertThat(barMap.get("rob")).isInstanceOf(List.class);
             final List<Object> robList = (List<Object>) barMap.get("rob");
-            assertThat(robList, hasSize(2));
-            assertThat(robList, contains(null, (Object) null));
+            assertThat(robList).hasSize(2);
+            assertThat(robList).contains(null, (Object) null);
         }
 
         @Test
@@ -253,23 +253,23 @@ public class IChainPartUnitTests extends BaseTest {
                     .appendPart("rob")
                     .appendIndex(1);
             final Map<String, Object> rawDataValue = part.getRawDataValue();
-            assertThat(rawDataValue, not(anEmptyMap()));
-            assertThat(rawDataValue.get("foo"), notNullValue());
-            assertThat(rawDataValue.get("foo"), instanceOf(Map.class));
+            assertThat(rawDataValue).isNotEmpty();
+            assertThat(rawDataValue.get("foo")).isNotNull();
+            assertThat(rawDataValue.get("foo")).isInstanceOf(Map.class);
             final Map<String, Object> fooMap = (Map<String, Object>) rawDataValue.get("foo");
-            assertThat(fooMap.get("bar"), notNullValue());
-            assertThat(fooMap.get("bar"), instanceOf(List.class));
+            assertThat(fooMap.get("bar")).isNotNull();
+            assertThat(fooMap.get("bar")).isInstanceOf(List.class);
             final List<Map<String, Object>> bar = (List<Map<String, Object>>) fooMap.get("bar");
-            assertThat(bar, hasSize(1));
-            assertThat(bar.get(0), instanceOf(Map.class));
-            assertThat(bar.get(0), not(anEmptyMap()));
+            assertThat(bar).hasSize(1);
+            assertThat(bar.get(0)).isInstanceOf(Map.class);
+            assertThat(bar.get(0)).isNotEmpty();
             final Map<String, Object> barMap = bar.get(0);
-            assertThat(barMap, not(anEmptyMap()));
-            assertThat(barMap.get("rob"), notNullValue());
-            assertThat(barMap.get("rob"), instanceOf(List.class));
+            assertThat(barMap).isNotEmpty();
+            assertThat(barMap.get("rob")).isNotNull();
+            assertThat(barMap.get("rob")).isInstanceOf(List.class);
             final List<Object> robList = (List<Object>) barMap.get("rob");
-            assertThat(robList, hasSize(1));
-            assertThat(robList, contains((Object) null));
+            assertThat(robList).hasSize(1);
+            assertThat(robList).contains((Object) null);
         }
 
         @Test
@@ -281,15 +281,15 @@ public class IChainPartUnitTests extends BaseTest {
                     .appendPart("rob")
                     .appendIndex(1);
             final Map<String, Object> rawDataValue = part.getRawDataValue();
-            assertThat(rawDataValue, not(anEmptyMap()));
-            assertThat(rawDataValue.get("foo"), notNullValue());
-            assertThat(rawDataValue.get("foo"), instanceOf(Map.class));
+            assertThat(rawDataValue).isNotEmpty();
+            assertThat(rawDataValue.get("foo")).isNotNull();
+            assertThat(rawDataValue.get("foo")).isInstanceOf(Map.class);
             final Map<String, Object> fooMap = (Map<String, Object>) rawDataValue.get("foo");
-            assertThat(fooMap.get("bar"), notNullValue());
-            assertThat(fooMap.get("bar"), instanceOf(Map.class));
+            assertThat(fooMap.get("bar")).isNotNull();
+            assertThat(fooMap.get("bar")).isInstanceOf(Map.class);
             final Map<String, Object> barMap = (Map<String, Object>) fooMap.get("bar");
-            assertThat(barMap, not(anEmptyMap()));
-            assertThat(barMap.get("rob"), nullValue());
+            assertThat(barMap).isNotEmpty();
+            assertThat(barMap.get("rob")).isNull();
         }
 
         @Test
