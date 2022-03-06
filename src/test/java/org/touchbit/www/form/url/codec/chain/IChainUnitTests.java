@@ -229,53 +229,6 @@ public class IChainUnitTests extends BaseTest {
     }
 
     @Nested
-    @DisplayName("#isEvenBracketsRatio() method tests")
-    public class IsEvenBracketsRatioMethodTests {
-
-        @Test
-        @DisplayName("Required parameters")
-        public void test1646581863035() {
-            final IChain.Default chain = new IChain.Default(null);
-            assertNPE(() -> chain.isEvenBracketsRatio(null), "key");
-        }
-
-        @Test
-        @DisplayName("return true if the list key is sequential (indexed)")
-        public void test1646581898521() {
-            final IChain.Default chain = new IChain.Default(null);
-            assertTrue(chain.isEvenBracketsRatio("key[0][1][2]"));
-        }
-
-        @Test
-        @DisplayName("return true if the list key is sequential (unindexed)")
-        public void test1646581975124() {
-            final IChain.Default chain = new IChain.Default(null);
-            assertTrue(chain.isEvenBracketsRatio("key[][][]"));
-        }
-
-        @Test
-        @DisplayName("return true if the list key is sequential (nested)")
-        public void test1646581988424() {
-            final IChain.Default chain = new IChain.Default(null);
-            assertTrue(chain.isEvenBracketsRatio("key[[[]]]"));
-        }
-
-        @Test
-        @DisplayName("return true if the list not present")
-        public void test1646582010654() {
-            final IChain.Default chain = new IChain.Default(null);
-            assertTrue(chain.isEvenBracketsRatio("key"));
-        }
-
-        @Test
-        @DisplayName("return false if key contains odd ratio of brackets")
-        public void test1646582039541() {
-            final IChain.Default chain = new IChain.Default(null);
-            assertFalse(chain.isEvenBracketsRatio("key[[]"));
-        }
-    }
-
-    @Nested
     @DisplayName("#valueObjectToChainParts() method tests")
     public class ValueObjectToChainPartsMethodTests {
 
@@ -359,6 +312,142 @@ public class IChainUnitTests extends BaseTest {
             final List<IChainPart> parts = chain.readModel(new HashMap<>(), true, true);
             assertThat(parts).isEmpty();
         }
+
+        @Test
+        @DisplayName("Return non-empty list if raw data map is not empty")
+        public void test1646588665516() {
+            final IChain.Default chain = new IChain.Default(null);
+            final List<IChainPart> parts = chain.readModel(mapOf("foo", "bar"), true, true);
+            assertThat(parts).hasSize(1);
+            assertThat(parts.get(0).toString()).isEqualTo("foo=bar");
+        }
+    }
+
+    @Nested
+    @DisplayName("#isEvenBracketsRatio() method tests")
+    public class IsEvenBracketsRatioMethodTests {
+
+        @Test
+        @DisplayName("Required parameters")
+        public void test1646581863035() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertNPE(() -> chain.isEvenBracketsRatio(null), "key");
+        }
+
+        @Test
+        @DisplayName("return true if the list key is sequential (indexed)")
+        public void test1646581898521() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertTrue(chain.isEvenBracketsRatio("key[0][1][2]"));
+        }
+
+        @Test
+        @DisplayName("return true if the list key is sequential (unindexed)")
+        public void test1646581975124() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertTrue(chain.isEvenBracketsRatio("key[][][]"));
+        }
+
+        @Test
+        @DisplayName("return true if the list key is sequential (nested)")
+        public void test1646581988424() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertTrue(chain.isEvenBracketsRatio("key[[[]]]"));
+        }
+
+        @Test
+        @DisplayName("return true if the list not present")
+        public void test1646582010654() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertTrue(chain.isEvenBracketsRatio("key"));
+        }
+
+        @Test
+        @DisplayName("return false if key contains odd ratio of brackets")
+        public void test1646582039541() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertFalse(chain.isEvenBracketsRatio("key[[]"));
+        }
+    }
+
+    @Nested
+    @DisplayName("#hasNestedBrackets() method tests")
+    public class HasNestedBracketsMethodTests {
+
+        @Test
+        @DisplayName("Required parameters")
+        public void test1646590105290() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertNPE(() -> chain.hasNestedBrackets(null), "key");
+        }
+
+        @Test
+        @DisplayName("return true if key contains [[")
+        public void test1646590121050() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertTrue(chain.hasNestedBrackets("[["));
+        }
+
+        @Test
+        @DisplayName("return true if key contains ]]")
+        public void test1646590199295() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertTrue(chain.hasNestedBrackets("]]"));
+        }
+
+        @Test
+        @DisplayName("return false if key=[][]")
+        public void test1646590220520() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertFalse(chain.hasNestedBrackets("[][]"));
+        }
+    }
+
+    @Nested
+    @DisplayName("#assertKeyBrackets() method tests")
+    public class AssertKeyBracketsMethodTests {
+
+        @Test
+        @DisplayName("Required parameters")
+        public void test1646590274538() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertNPE(() -> chain.assertKeyBrackets(null), "key");
+        }
+
+        @Test
+        @DisplayName("Successfully key asserting if key in URL form format")
+        public void test1646590527993() {
+            final IChain.Default chain = new IChain.Default(null);
+            chain.assertKeyBrackets("foo[bar][0][1][car]=value");
+        }
+
+        @Test
+        @DisplayName("IllegalArgumentException incorrect ratio of opening and closing brackets")
+        public void test1646590330285() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertThrow(() -> chain.assertKeyBrackets("foo[bar]0]=value"))
+                    .assertClass(IllegalArgumentException.class)
+                    .assertMessageIs("The key contains an incorrect ratio of opening and closing brackets.\n" +
+                                     "Invalid key: foo[bar]0]=value\n");
+        }
+
+        @Test
+        @DisplayName("IllegalArgumentException list nesting [[]]")
+        public void test1646590381283() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertThrow(() -> chain.assertKeyBrackets("foo[bar][[0]]=value"))
+                    .assertClass(IllegalArgumentException.class)
+                    .assertMessageIs("Key nesting is not allowed.\n" +
+                                     "Invalid key: foo[bar][[0]]=value\n" +
+                                     "Expected nested object format: filter[foo][bar]\n" +
+                                     "Expected nested list format: filter[foo][0]\n");
+        }
+    }
+
+    @Nested
+    @DisplayName("#readUrlEncodedString() method tests")
+    public class ReadUrlEncodedStringMethodTests {
+
 
     }
 

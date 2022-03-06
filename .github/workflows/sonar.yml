@@ -8,6 +8,7 @@ on:
     types: [opened, synchronize, reopened]
 jobs:
   build:
+    if: "!contains(github.event.commits[0].message, '[skipCI]')"
     name: Analysis
     runs-on: ubuntu-latest
     steps:

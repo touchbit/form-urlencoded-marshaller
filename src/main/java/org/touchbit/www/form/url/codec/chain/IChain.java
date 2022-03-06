@@ -232,16 +232,18 @@ public interface IChain {
 
         /**
          * @param key url form parameter key
+         * @throws NullPointerException     if key is null
          * @throws IllegalArgumentException incorrect ratio of opening and closing brackets
          * @throws IllegalArgumentException list nesting [[]]
          */
         protected void assertKeyBrackets(String key) {
+            FormUrlUtils.parameterRequireNonNull(key, KEY_PARAMETER);
             if (!isEvenBracketsRatio(key)) {
                 throw new IllegalArgumentException("The key contains an incorrect ratio of opening and closing brackets.\n" +
                                                    "Invalid key: " + key + "\n");
             }
             if (hasNestedBrackets(key)) {
-                throw new IllegalArgumentException("Key contains nested keys.\n" +
+                throw new IllegalArgumentException("Key nesting is not allowed.\n" +
                                                    "Invalid key: " + key + "\n" +
                                                    "Expected nested object format: filter[foo][bar]\n" +
                                                    "Expected nested list format: filter[foo][0]\n");
