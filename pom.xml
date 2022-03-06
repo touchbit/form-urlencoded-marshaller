@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.touchbit.web</groupId>
+    <artifactId>form-urlencoded2pojo</artifactId>
+    <version>1.0.0</version>
+    <name>Pojo mapper for 'x-www-form-urlencoded' MIME type data</name>
+    <description>The mapper allows you to convert a FormUrlEncoded string to a pojo object and vice versa. Supports nesting of objects and lists. Supports indexed and non-indexed lists.</description>
+    <packaging>jar</packaging>
+
+    <licenses>
+        <license>
+            <name>Apache License 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>manual</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git@github.com:touchbit/form-urlencoded2pojo.git</connection>
+        <developerConnection>scm:git@github.com:touchbit/form-urlencoded2pojo.git</developerConnection>
+        <url>https://github.com/touchbit/form-urlencoded2pojo</url>
+    </scm>
+
+    <url>https://github.com/touchbit/form-urlencoded2pojo</url>
+
+    <developers>
+        <developer>
+            <id>oleg.shaburov</id>
+            <name>Oleg Shaburov</name>
+            <email>shaburov.o.a@gmail.com</email>
+            <roles>
+                <role>owner</role>
+            </roles>
+            <timezone>+3</timezone>
+        </developer>
+    </developers>
+
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/touchbit/form-urlencoded2pojo/issues</url>
+    </issueManagement>
+
+    <ciManagement>
+        <system>GitHub Actions</system>
+        <url>https://github.com/touchbit/form-urlencoded2pojo/actions</url>
+    </ciManagement>
+
+    <properties>
+        <jdk.version>1.8</jdk.version>
+        <maven.compiler.source>${jdk.version}</maven.compiler.source>
+        <maven.compiler.target>${jdk.version}</maven.compiler.target>
+        <encoding>UTF-8</encoding>
+        <file.encoding>${encoding}</file.encoding>
+        <source.encoding>${encoding}</source.encoding>
+        <project.build.sourceEncoding>${encoding}</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
+        <sonar.sources>src/main</sonar.sources>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.organization>touchbit</sonar.organization>
+        <sonar.java.binaries>target/classes</sonar.java.binaries>
+        <sonar.java.test.binaries>target/test-classes</sonar.java.test.binaries>
+        <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+        <sonar.exclusions>**/*.xml</sonar.exclusions>
+        <sonar.coverage.exclusions>**/*.xml</sonar.coverage.exclusions>
+        <sonar.test.exclusions>**/src/test/**/*.*</sonar.test.exclusions>
+        <sonar.cpd.exclusions/>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.12.0</version>
+        </dependency>
+        <!-- Test scope -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.8.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>5.8.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest</artifactId>
+            <version>2.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- compile phase -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.0</version>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <configuration>
+                            <source>${jdk.version}</source>
+                            <target>${jdk.version}</target>
+                            <encoding>${source.encoding}</encoding>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <copy todir="${project.build.directory}/classes/META-INF">
+                                    <fileset dir="${project.basedir}/../">
+                                        <include name="LICENSE"/>
+                                        <include name="NOTICE"/>
+                                    </fileset>
+                                </copy>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- test phase -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.7</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0-M5</version>
+                <configuration>
+                    <forkNode implementation="org.apache.maven.plugin.surefire.extensions.SurefireForkNodeFactory"/>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.0.0-M5</version>
+            </plugin>
+            <!-- verify phase -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>2.0.0</version>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>aggregate-add-third-party</goal>
+                        </goals>
+                        <configuration>
+                            <thirdPartyFilename>THIRD-PARTY.txt</thirdPartyFilename>
+                            <outputDirectory>${project.basedir}</outputDirectory>
+                            <sortArtifactByName>true</sortArtifactByName>
+                            <excludedScopes>test,provided</excludedScopes>
+                            <excludedArtifacts>
+                                (hamcrest|mockito.*|log4j.*|javafaker|junit.*|automaton|generex|objenesis|apiguardian-api|opentest4j|snakeyaml|byte-buddy.*)
+                            </excludedArtifacts>
+                            <licenseMerges>
+                                <licenseMerge>Apache License, Version 2.0|Apache-2.0</licenseMerge>
+                                <licenseMerge>Apache License, Version 2.0|Apache 2.0</licenseMerge>
+                                <licenseMerge>Apache License, Version 2.0|Apache License 2.0</licenseMerge>
+                                <licenseMerge>Apache License, Version 2.0|The Apache License, Version 2.0</licenseMerge>
+                                <licenseMerge>Apache License, Version 2.0|The Apache Software License, Version 2.0
+                                </licenseMerge>
+                            </licenseMerges>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- package phase -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.0.0</version>
+                <configuration>
+                    <archive>
+                        <index>true</index>
+                        <manifestEntries>
+                            <Built-By>Oleg Shaburov</Built-By>
+                            <X-Compile-Source-JDK>${maven.compiler.source}</X-Compile-Source-JDK>
+                            <X-Compile-Target-JDK>${maven.compiler.target}</X-Compile-Target-JDK>
+                            <Implementation-Title>${project.name}</Implementation-Title>
+                            <Implementation-Version>${project.version}</Implementation-Version>
+                            <Implementation-SymbolicName>${project.groupId}.${project.artifactId}</Implementation-SymbolicName>
+                            <Implementation-Vendor>Oleg Shaburov</Implementation-Vendor>
+                            <Implementation-Vendor-Id>org.touchbit</Implementation-Vendor-Id>
+                            <Implementation-DocURL>https://github.com/touchbit/form-urlencoded2pojo</Implementation-DocURL>
+                            <Implementation-License>https://www.apache.org/licenses/LICENSE-2.0.txt</Implementation-License>
+                            <Implementation-Description>${project.description}</Implementation-Description>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+            <!-- install phase -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <phase>install</phase>
+                    </execution>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <version>2.5.2</version>
+                <executions>
+                    <execution>
+                        <phase>install</phase>
+                        <configuration>
+                            <pomFile>pom.xml</pomFile>
+                            <updateReleaseInfo>true</updateReleaseInfo>
+                            <createChecksum>true</createChecksum>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>net.nicoulaj.maven.plugins</groupId>
+                <artifactId>checksum-maven-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>artifacts</goal>
+                        </goals>
+                        <phase>install</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <phase>install</phase>
+                        <configuration>
+                            <source>${jdk.version}</source>
+                            <failOnError>false</failOnError>
+                            <failOnWarnings>false</failOnWarnings>
+                            <detectOfflineLinks>false</detectOfflineLinks>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- deploy phase -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.6</version>
+                <configuration>
+                    <passphrase/>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                        <configuration>
+                            <keyname>${gpg.keyname}</keyname>
+                            <passphraseServerId>${gpg.keyname}</passphraseServerId>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.8</version>
+                <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>deploy</goal>
+                        </goals>
+                        <phase>deploy</phase>
+                        <configuration>
+                            <serverId>sonatype</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <updateReleaseInfo>true</updateReleaseInfo>
+                            <keepStagingRepositoryOnCloseRuleFailure>true</keepStagingRepositoryOnCloseRuleFailure>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>3.0.0-M1</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <distributionManagement>
+        <repository>
+            <id>sonatype</id>
+            <name>Nexus Release Repository</name>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+</project>
