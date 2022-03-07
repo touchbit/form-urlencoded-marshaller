@@ -20,6 +20,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.touchbit.www.form.url.codec.FormUrlUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.touchbit.www.form.url.codec.CodecConstant.*;
 
@@ -119,7 +120,7 @@ public interface IChain {
          * @param source - source {@link Map} for merging
          * @param target - target {@link Map} for merging
          * @return - merged target {@link Map}
-         * @throws NullPointerException     if source or target is null
+         * @throws NullPointerException if source or target is null
          */
         @SuppressWarnings("unchecked")
         protected Map<String, Object> mergeRawMap(final Object source, final Object target) {
@@ -151,16 +152,19 @@ public interface IChain {
             FormUrlUtils.parameterRequireNonNull(source, SOURCE_PARAMETER);
             FormUrlUtils.parameterRequireNonNull(target, TARGET_PARAMETER);
             if (FormUrlUtils.isChainList(target) && FormUrlUtils.isChainList(source)) {
-                return mergeRawList(source, target);
+                return mergeIChainLists(source, target);
             } else if (FormUrlUtils.isMap(target) && FormUrlUtils.isMap(source)) {
                 return mergeRawMap(source, target);
             } else if (FormUrlUtils.isSimple(target) && FormUrlUtils.isSimple(source)) {
                 // Fires when map keys match and points to a hidden list
                 // Example: foo=bar&foo=car -> foo=[bar, car]
-                return getNewIChainList(false, target, source);
+                return getNewIChainList(true, target, source);
             } else if (FormUrlUtils.isSimple(source) && FormUrlUtils.isChainList(target)) {
                 final boolean notIndexed = ((IChainList) target).isNotIndexed();
-                return mergeRawList(getNewIChainList(!notIndexed, source), target);
+                return mergeIChainLists(getNewIChainList(!notIndexed, source), target);
+            } else if (FormUrlUtils.isSimple(target) && FormUrlUtils.isChainList(source)) {
+                final boolean notIndexed = ((IChainList) source).isNotIndexed();
+                return mergeIChainLists(source, getNewIChainList(!notIndexed, target));
             }
             throw new IllegalArgumentException("Received incompatible value types to merge.\n" +
                                                "Source type: " + source.getClass().getName() + "\n" +
@@ -196,7 +200,7 @@ public interface IChain {
          * @throws NullPointerException     if source or target is null
          * @throws IllegalArgumentException incompatible types
          */
-        protected IChainList mergeRawList(final Object source, final Object target) {
+        protected IChainList mergeIChainLists(final Object source, final Object target) {
             FormUrlUtils.parameterRequireNonNull(source, SOURCE_PARAMETER);
             FormUrlUtils.parameterRequireNonNull(target, TARGET_PARAMETER);
             if (!(source instanceof IChainList && target instanceof IChainList)) {
@@ -216,10 +220,16 @@ public interface IChain {
                         final int i = sourceList.indexOf(o);
                         final Map<?, ?> sMap = (Map<?, ?>) sourceList.get(i);
                         final Map<?, ?> tMap = (Map<?, ?>) targetList.get(i);
+                        // unreliable heuristic for non-indexed arrays
                         if (sMap != null && tMap != null && !sMap.keySet().equals(tMap.keySet())) {
-                            // unreliable heuristic for non-indexed arrays
+                            // merge source maps list with target maps list if maps keys is different
+                            // merge [{foo=foo_val}] with [{bar=bar_val}]
+                            // result [{foo=foo_val, bar=bar_val}]
                             targetList.set(i, mergeRawMap(sMap, tMap));
                         } else {
+                            // append source maps list to target maps list if maps keys is same
+                            // append [{foo=source}] to [{foo=target}]
+                            // result [{foo=target}, {foo=source}]
                             targetList.addAll(sourceList);
                         }
                     }
@@ -228,46 +238,52 @@ public interface IChain {
                 }
                 return targetList;
             }
-            if (sourceList.isNotFilled() || targetList.isNotFilled()) { // TODO method tests
-                boolean isReverse = sourceList.size() < targetList.size();
-                final IChainList iSource = isReverse ? targetList : sourceList;
-                final IChainList iTarget = isReverse ? sourceList : targetList;
-                // The reverse ensures that the source will always be greater than the target.
+            boolean isReverse = sourceList.size() > targetList.size();
+            final IChainList longer = isReverse ? sourceList : targetList;
+            final IChainList shorter = isReverse ? targetList : sourceList;
+            if (longer.isNotFilled() || shorter.isNotFilled()) {
                 // For an indexed list, inserting the smaller into the larger is important.
-                // iSource [null, null, null, foo, null]
+                // longer  [null, null, null, foo, null]
                 //                ^^^
-                // iTarget [null, bar]
-                if (iSource.size() <= iTarget.size()) {
-                    iSource.stream() // insert map to list by index
+                // shorter [null, bar]
+                final List<Integer> insertIndexes = new ArrayList<>();
+                if (longer.size() >= shorter.size()) {
+                    insertIndexes.addAll(shorter.stream()
                             .filter(Map.class::isInstance)
-                            .map(iSource::indexOf)
-                            .forEach(i -> iSource.set(i, mergeRawMap(iSource.get(i), iTarget.get(i))));
+                            .map(shorter::indexOf)
+                            .collect(Collectors.toList()));
+                    for (Integer i : insertIndexes) { // insert map to list by index
+                        if (longer.get(i) == null) {
+                            longer.set(i, shorter.get(i));
+                        } else {
+                            final Map<String, Object> mergeResult = mergeRawMap(shorter.get(i), longer.get(i));
+                            longer.set(i, mergeResult);
+                        }
+                    }
                 }
-                iTarget.stream() // merge not inserted objects (map/list/simple)
-                        .map(v -> v == null ? null : iTarget.indexOf(v))
+                // Override not inserted objects by index
+                // Example: foo[0]=bar&foo[0]=car -> foo=[car]
+                shorter.stream()
+                        .map(v -> v == null ? null : shorter.indexOf(v))
                         .filter(Objects::nonNull)
-                        .forEach(i -> iSource.set(i, iTarget.get(i)));
-                return iSource;
+                        .filter(i -> !insertIndexes.contains(i))
+                        .forEach(i -> longer.set(i, shorter.get(i)));
             } else {
-                if (targetList.isEmpty() || sourceList.isEmpty()) {
-                    // nothing to merge
-                    return targetList.isEmpty() ? sourceList : targetList;
-                }
-                if (FormUrlUtils.isSimpleIChainList(targetList) && FormUrlUtils.isSimpleIChainList(sourceList)) {
+                if (FormUrlUtils.isSimpleIChainList(longer) && FormUrlUtils.isSimpleIChainList(shorter)) {
                     // overwrite simple values by same index
                     // Example: foo[0]=bar&foo[0]=car -> foo=[car]
-                    sourceList.forEach(e -> targetList.set(sourceList.indexOf(e), e));
+                    shorter.forEach(e -> longer.set(shorter.indexOf(e), e));
                 } else {
                     // merge complex values by same index
                     // Example: foo[0][bar]=ccc&foo[0][car]=jjj -> {foo=[{bar=ccc, car=jjj}]}
-                    for (Object sourceValue : sourceList) {
-                        final int i = sourceList.indexOf(sourceValue);
-                        final Object mergeResult = mergeObjectValues(sourceValue, targetList.get(i));
-                        targetList.set(i, mergeResult);
+                    for (Object sourceValue : shorter) {
+                        final int i = shorter.indexOf(sourceValue);
+                        final Object mergeResult = mergeObjectValues(sourceValue, longer.get(i));
+                        longer.set(i, mergeResult);
                     }
                 }
-                return targetList;
             }
+            return longer;
         }
 
         /**
