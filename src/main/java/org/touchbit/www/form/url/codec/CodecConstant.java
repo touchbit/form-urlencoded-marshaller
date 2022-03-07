@@ -36,6 +36,7 @@ public class CodecConstant {
     public static final String TARGET_PARAMETER = "target";
     public static final String SOURCE_PARAMETER = "source";
     public static final String CHAIN_PART_PARAMETER = "chainPart";
+    public static final String LIST_PARAMETER = "list";
 
     /**
      * Utility class. Forbidden instantiation.

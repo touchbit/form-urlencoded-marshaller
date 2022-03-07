@@ -579,7 +579,7 @@ public class IChainUnitTests extends BaseTest {
             source.add("bar");
             final IChainList objects = chain.mergeRawList(source, target);
             assertThat(objects).hasSize(3);
-            assertThat(objects).containsExactly("bar", null, "foo");
+            assertThat(objects.toString()).isEqualTo("[null, foo, bar]");
         }
 
         @Test
@@ -727,4 +727,300 @@ public class IChainUnitTests extends BaseTest {
 
     }
 
+    @Nested
+    @DisplayName("#mergeRawMap() method tests")
+    public class MergeRawMapMethodTests {
+
+        @Test
+        @DisplayName("Required parameters")
+        public void test1646595030951() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertNPE(() -> chain.mergeRawMap(null, mapOf()), "source");
+            assertNPE(() -> chain.mergeRawMap(mapOf(), null), "target");
+        }
+
+        @Test
+        @DisplayName("IllegalArgumentException incompatible types (source)")
+        public void test1646595033381() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertThrow(() -> chain.mergeRawMap(new Object(), mapOf()))
+                    .assertClass(IllegalArgumentException.class)
+                    .assertMessageIs("Received incompatible types to merge\n" +
+                                     "Expected type: interface java.util.Map\n" +
+                                     "Actual source: class java.lang.Object\n" +
+                                     "Actual target: class java.util.HashMap\n");
+        }
+
+        @Test
+        @DisplayName("IllegalArgumentException incompatible types (target)")
+        public void test1646595036108() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertThrow(() -> chain.mergeRawMap(mapOf(), new Object()))
+                    .assertClass(IllegalArgumentException.class)
+                    .assertMessageIs("Received incompatible types to merge\n" +
+                                     "Expected type: interface java.util.Map\n" +
+                                     "Actual source: class java.util.HashMap\n" +
+                                     "Actual target: class java.lang.Object\n");
+        }
+
+        @Test
+        @DisplayName("merge plain source and target maps (with different keys)")
+        public void test1646595210758() {
+            final IChain.Default chain = new IChain.Default(null);
+            final Map<String, Object> map = chain.mergeRawMap(mapOf("foo", "foo_value"), mapOf("bar", "bar_value"));
+            assertThat(map).hasSize(2);
+            assertThat(map.toString()).isEqualTo("{bar=bar_value, foo=foo_value}");
+        }
+
+        @Test
+        @DisplayName("merge plain source and target maps (with same keys)")
+        public void test1646605712727() {
+            final IChain.Default chain = new IChain.Default(null);
+            final Map<String, Object> map = chain.mergeRawMap(mapOf("foo", "value_1"), mapOf("foo", "value_2"));
+            assertThat(map).hasSize(1);
+            assertThat(map.toString()).isEqualTo("{foo=[value_2, value_1]}");
+        }
+
+        @Test
+        @DisplayName("merge source and target maps with nested maps (with different keys)")
+        public void test1646605193640() {
+            final IChain.Default chain = new IChain.Default(null);
+            final Map<String, Object> source = mapOf("foo", mapOf("bar1", "value1"));
+            final Map<String, Object> target = mapOf("foo", mapOf("bar2", "value2"));
+            final Map<String, Object> map = chain.mergeRawMap(source, target);
+            assertThat(map).hasSize(1);
+            assertThat(map.toString()).isEqualTo("{foo={bar1=value1, bar2=value2}}");
+        }
+
+        @Test
+        @DisplayName("merge source and target maps with nested maps (with same keys)")
+        public void test1646605911599() {
+            final IChain.Default chain = new IChain.Default(null);
+            final Map<String, Object> source = mapOf("foo", mapOf("bar", "source_value"));
+            final Map<String, Object> target = mapOf("foo", mapOf("bar", "target_value"));
+            final Map<String, Object> map = chain.mergeRawMap(source, target);
+            assertThat(map).hasSize(1);
+            assertThat(map.toString()).isEqualTo("{foo={bar=[target_value, source_value]}}");
+        }
+
+        @Test
+        @DisplayName("merge source and target maps with nested indexed list (different keys)")
+        public void test1646607125585() {
+            final IChain.Default chain = new IChain.Default(null);
+            final Map<String, Object> source = mapOf("foo", chainListOf(true, "value1"));
+            final Map<String, Object> target = mapOf("bar", chainListOf(true, "value2"));
+            final Map<String, Object> map = chain.mergeRawMap(source, target);
+            assertThat(map.toString()).isEqualTo("{bar=[value2], foo=[value1]}");
+        }
+
+        @Test
+        @DisplayName("merge source and target maps with nested unindexed list (different keys)")
+        public void test1646607373565() {
+            final IChain.Default chain = new IChain.Default(null);
+            final Map<String, Object> source = mapOf("foo", chainListOf(false, "value1"));
+            final Map<String, Object> target = mapOf("bar", chainListOf(false, "value2"));
+            final Map<String, Object> map = chain.mergeRawMap(source, target);
+            assertThat(map.toString()).isEqualTo("{bar=[value2], foo=[value1]}");
+        }
+
+        @Test
+        @DisplayName("merge source and target maps with nested indexed list (same keys)")
+        public void test1646607394374() {
+            final IChain.Default chain = new IChain.Default(null);
+            final Map<String, Object> source = mapOf("foo", chainListOf(true, "source_1", "source_2"));
+            final Map<String, Object> target = mapOf("foo", chainListOf(true, "target_1", "target_2"));
+            final Map<String, Object> map = chain.mergeRawMap(source, target);
+            // overwrite target list values by index
+            assertThat(map.toString()).isEqualTo("{foo=[source_1, source_2]}");
+        }
+
+        @Test
+        @DisplayName("merge source and target maps with nested unindexed list (same keys)")
+        public void test1646607959613() {
+            final IChain.Default chain = new IChain.Default(null);
+            final Map<String, Object> source = mapOf("foo", chainListOf(false, "source_1", "source_2"));
+            final Map<String, Object> target = mapOf("foo", chainListOf(false, "target_1", "target_2"));
+            final Map<String, Object> map = chain.mergeRawMap(source, target);
+            // append source list to target list
+            assertThat(map.toString()).isEqualTo("{foo=[target_1, target_2, source_1, source_2]}");
+        }
+
+    }
+
+    @Nested
+    @DisplayName("#mergeObjectValues() method tests")
+    public class MergeObjectValuesMethodTests {
+
+        @Test
+        @DisplayName("Required parameters")
+        public void test1646610637161() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertNPE(() -> chain.mergeObjectValues(null, mapOf()), "source");
+            assertNPE(() -> chain.mergeObjectValues(mapOf(), null), "target");
+        }
+
+        @Test
+        @DisplayName("Merge IChain indexed lists")
+        public void test1646610872564() {
+            final IChain.Default chain = new IChain.Default(null);
+            final Object o = chain.mergeObjectValues(chainListOf(true, "foo"), chainListOf(true, "bar"));
+            // source 'foo' overwrite target 'bar' by index
+            assertThat(o.toString()).isEqualTo("[foo]");
+        }
+
+        @Test
+        @DisplayName("Merge IChain unindexed lists")
+        public void test1646611066822() {
+            final IChain.Default chain = new IChain.Default(null);
+            final Object o = chain.mergeObjectValues(chainListOf(false, "foo"), chainListOf(false, "bar"));
+            // source 'foo' append to target 'bar'
+            assertThat(o.toString()).isEqualTo("[bar, foo]");
+        }
+
+        @Test
+        @DisplayName("Merge Maps with simple values (different keys)")
+        public void test1646611124532() {
+            final IChain.Default chain = new IChain.Default(null);
+            final Object o = chain.mergeObjectValues(mapOf("foo", "source"), mapOf("bar", "target"));
+            assertThat(o.toString()).isEqualTo("{bar=target, foo=source}");
+        }
+
+        @Test
+        @DisplayName("Merge Maps with simple values (same keys)")
+        public void test1646611226416() {
+            final IChain.Default chain = new IChain.Default(null);
+            final Object o = chain.mergeObjectValues(mapOf("foo", "source"), mapOf("foo", "target"));
+            assertThat(o.toString()).isEqualTo("{foo=[target, source]}");
+        }
+
+        @Test
+        @DisplayName("Merge simple values")
+        public void test1646611373306() {
+            final IChain.Default chain = new IChain.Default(null);
+            final Object o = chain.mergeObjectValues("source", "target");
+            assertThat(o.toString()).isEqualTo("[target, source]");
+        }
+
+        @Test
+        @DisplayName("IllegalArgumentException incompatible types")
+        public void test1646611420769() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertThrow(() -> chain.mergeObjectValues(mapOf("foo", "source"), chainListOf(true, "target")))
+                    .assertClass(IllegalArgumentException.class)
+                    .assertMessageIs("Received incompatible value types to merge.\n" +
+                                     "Source type: java.util.HashMap\n" +
+                                     "Source value: {foo=source}\n" +
+                                     "Target type: org.touchbit.www.form.url.codec.chain.IChainList$Default\n" +
+                                     "Target value: [target]\n");
+        }
+    }
+
+    @Nested
+    @DisplayName("#getNewIChainList() method tests")
+    public class GetNewIChainListMethodTests {
+
+        @Test
+        @DisplayName("New empty list")
+        public void test1646611737180() {
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainList list = chain.getNewIChainList(true);
+            assertThat(list).isEmpty();
+            assertThat(list.isNotIndexed()).isFalse();
+        }
+
+        @Test
+        @DisplayName("New empty list")
+        public void test1646611817471() {
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainList list = chain.getNewIChainList(false, "foo", "bar");
+            assertThat(list).containsExactly("foo", "bar");
+            assertThat(list.isNotIndexed()).isTrue();
+        }
+    }
+
+    @Nested
+    @DisplayName("#chainPartsToRawData() method tests")
+    public class ChainPartsToRawDataMethodTests {
+
+        @Test
+        @DisplayName("Required parameters")
+        public void test1646612033683() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertNPE(() -> chain.chainPartsToRawData(null), "list");
+        }
+
+        @Test
+        @DisplayName("Return empty map if IChainPart list = []")
+        public void test1646612064054() {
+            final IChain.Default chain = new IChain.Default(null);
+            List<IChainPart> list = new ArrayList<>();
+            final Map<String, Object> map = chain.chainPartsToRawData(list);
+            assertThat(map).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Return not empty map if IChainPart list not empty (indexed)")
+        public void test1646612149186() {
+            final IChainPart.Default f1 = new IChainPart.Default("foo[0][bar][0]", "bar_value_00", true, true);
+            final IChainPart.Default f2 = new IChainPart.Default("foo[0][bar][1]", "bar_value_01", true, true);
+            final IChainPart.Default f3 = new IChainPart.Default("foo[1][bar][0]", "bar_value_10", true, true);
+            final IChainPart.Default f4 = new IChainPart.Default("foo[1][bar][1]", "bar_value_11", true, true);
+            final IChain.Default chain = new IChain.Default(null);
+            final Map<String, Object> map = chain.chainPartsToRawData(listOf(f1, f2, f3, f4));
+            assertThat(map.toString()).isEqualTo("{foo=[" +
+                                                 "{bar=[bar_value_00, bar_value_01]}, " +
+                                                 "{bar=[bar_value_10, bar_value_11]}" +
+                                                 "]}");
+        }
+
+        @Test
+        @DisplayName("Return not empty map if IChainPart list not empty (mixed index)")
+        public void test1646612787824() {
+            final IChainPart.Default f1 = new IChainPart.Default("foo[0][bar][]", "bar_value_00", true, true);
+            final IChainPart.Default f2 = new IChainPart.Default("foo[0][bar][]", "bar_value_01", true, true);
+            final IChainPart.Default f3 = new IChainPart.Default("foo[1][bar][]", "bar_value_10", true, true);
+            final IChainPart.Default f4 = new IChainPart.Default("foo[1][bar][]", "bar_value_11", true, true);
+            final IChain.Default chain = new IChain.Default(null);
+            final Map<String, Object> map = chain.chainPartsToRawData(listOf(f1, f2, f3, f4));
+            assertThat(map.toString()).isEqualTo("{foo=[" +
+                                                 "{bar=[bar_value_00, bar_value_01]}, " +
+                                                 "{bar=[bar_value_10, bar_value_11]}" +
+                                                 "]}");
+        }
+
+        @Test
+        @DisplayName("Return not empty map if IChainPart list not empty (hidden array value)")
+        public void test1646612866834() {
+            final IChainPart.Default f1 = new IChainPart.Default("foo[0][bar]", "bar_value_00", true, true);
+            final IChainPart.Default f2 = new IChainPart.Default("foo[0][bar]", "bar_value_01", true, true);
+            final IChainPart.Default f3 = new IChainPart.Default("foo[1][bar]", "bar_value_10", true, true);
+            final IChainPart.Default f4 = new IChainPart.Default("foo[1][bar]", "bar_value_11", true, true);
+            final IChain.Default chain = new IChain.Default(null);
+            final Map<String, Object> map = chain.chainPartsToRawData(listOf(f1, f2, f3, f4));
+            assertThat(map.toString()).isEqualTo("{foo=[" +
+                                                 "{bar=[bar_value_00, bar_value_01]}, " +
+                                                 "{bar=[bar_value_10, bar_value_11]}" +
+                                                 "]}");
+        }
+
+        @Test
+        @DisplayName("Return")
+        public void test1646613058807() {
+            final IChainPart.Default f1 = new IChainPart.Default("foo[][bar]", "bar_value_00", true, false);
+            final IChainPart.Default f2 = new IChainPart.Default("foo[][bar]", "bar_value_01", true, false);
+            final IChainPart.Default f3 = new IChainPart.Default("foo[][bar]", "bar_value_10", true, false);
+            final IChainPart.Default f4 = new IChainPart.Default("foo[][bar]", "bar_value_11", true, false);
+            final IChain.Default chain = new IChain.Default(null);
+            final Map<String, Object> map = chain.chainPartsToRawData(listOf(f1, f2, f3, f4));
+            assertThat(map.toString()).isEqualTo("{foo=[" +
+                                                 "{bar=bar_value_00}, " +
+                                                 "{bar=bar_value_01}, " +
+                                                 "{bar=bar_value_10}, " +
+                                                 "{bar=bar_value_11}" +
+                                                 "]}");
+
+        }
+
+
+    }
 }

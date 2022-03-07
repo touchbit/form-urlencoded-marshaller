@@ -150,9 +150,9 @@ public interface IChainPart {
                     }
                     nested = tempMap;
                 } else {
-                    final IChainList chainList;
-                    if (previous.isIndexedList()) {
-                        chainList = new IChainList.Default(true);
+                    final boolean isIndexed = previous.isIndexedList();
+                    final IChainList chainList = getNewIChainList(isIndexed);
+                    if (isIndexed) {
                         // go around java.lang.IndexOutOfBoundsException: Index: 1, Size: 0
                         // Store the value strictly by index (null value)
                         for (int i = 0; i < previous.getIndex(); i++) {
@@ -164,7 +164,6 @@ public interface IChainPart {
                             chainList.add(previous.getIndex(), nested);
                         }
                     } else {
-                        chainList = new IChainList.Default(false);
                         if (isLast.compareAndSet(true, false)) {
                             chainList.add(value);
                         } else {
@@ -286,5 +285,17 @@ public interface IChainPart {
         public String toString() {
             return key + "=" + (value == null ? "<null>" : value);
         }
+
+        /**
+         * @param isIndexed - sign that form array is indexed
+         * @param values    - list values
+         * @return new instance of {@link IChainList}
+         */
+        protected IChainList getNewIChainList(final boolean isIndexed, final Object... values) {
+            final IChainList.Default list = new IChainList.Default(isIndexed);
+            list.addAll(Arrays.asList(values));
+            return list;
+        }
+
     }
 }

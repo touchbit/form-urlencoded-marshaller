@@ -2,6 +2,7 @@ package org.touchbit.www.form.url;
 
 import org.touchbit.test.asserter.ThrowableAsserter;
 import org.touchbit.test.asserter.ThrowableRunnable;
+import org.touchbit.www.form.url.codec.chain.IChainList;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -56,9 +57,19 @@ public class BaseTest {
         return Arrays.stream(items).collect(Collectors.toList());
     }
 
+    public static IChainList chainListOf(boolean isIndexed, Object... items) {
+        final IChainList.Default list = new IChainList.Default(isIndexed);
+        list.addAll(Arrays.asList(items));
+        return list;
+    }
+
     @SafeVarargs
     public static <C> Set<C> setOf(C... items) {
         return Arrays.stream(items).collect(Collectors.toSet());
+    }
+
+    public static Map<String, Object> mapOf() {
+        return new HashMap<>();
     }
 
     public static Map<String, Object> mapOf(String k1, Object v1) {

@@ -17,6 +17,7 @@
 package org.touchbit.www.form.url.codec;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.touchbit.www.form.url.codec.chain.IChainList;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -209,6 +210,14 @@ public class FormUrlUtils {
         return object instanceof Collection;
     }
 
+    /**
+     * @param object - nullable object
+     * @return true if object instanceof {@link IChainList}
+     */
+    public static boolean isChainList(Object object) {
+        return object instanceof IChainList;
+    }
+
     public static boolean isCollection(Field field) {
         parameterRequireNonNull(field, FIELD_PARAMETER);
         return Collection.class.isAssignableFrom(field.getType());
@@ -244,6 +253,22 @@ public class FormUrlUtils {
                object instanceof Double ||
                object instanceof BigInteger ||
                object instanceof BigDecimal;
+    }
+
+    /**
+     * @param list - nullable {@link IChainList}
+     * @return true if list contains only object instanceof simple java data type (String, Integer, etc.)
+     */
+    public static boolean isSimpleIChainList(IChainList list) {
+        return list != null && list.stream().allMatch(FormUrlUtils::isSimple);
+    }
+
+    /**
+     * @param list - nullable {@link IChainList}
+     * @return true if list contains only object instanceof simple java data type (String, Integer, etc.)
+     */
+    public static boolean isMapIChainList(IChainList list) {
+        return list != null && list.stream().allMatch(FormUrlUtils::isMap);
     }
 
 }
