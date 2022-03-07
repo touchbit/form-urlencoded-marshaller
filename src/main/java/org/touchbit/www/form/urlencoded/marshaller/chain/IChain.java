@@ -17,8 +17,9 @@
 package org.touchbit.www.form.urlencoded.marshaller.chain;
 
 import org.apache.commons.lang3.math.NumberUtils;
-import org.touchbit.www.form.urlencoded.marshaller.CodecConstant;
-import org.touchbit.www.form.urlencoded.marshaller.FormUrlUtils;
+import org.touchbit.www.form.urlencoded.marshaller.IFormUrlMarshallerConfiguration;
+import org.touchbit.www.form.urlencoded.marshaller.util.CodecConstant;
+import org.touchbit.www.form.urlencoded.marshaller.util.FormUrlUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -58,6 +59,18 @@ public interface IChain {
          * chain data represents by {@link IChainPart} list
          */
         private final List<IChainPart> chainParts;
+
+        /**
+         * Chaining from raw data
+         *
+         * @param rawData       - from url encoded parameters raw representation
+         * @param configuration - mapper configuration
+         * @throws NullPointerException - rawData is null
+         */
+        public Default(final Map<String, Object> rawData,
+                       final IFormUrlMarshallerConfiguration configuration) {
+            this(rawData, configuration.isImplicitList(), configuration.isExplicitList());
+        }
 
         /**
          * Chaining from raw data
@@ -196,7 +209,7 @@ public interface IChain {
          * @throws NullPointerException     if source or target is null
          * @throws IllegalArgumentException incompatible types
          */
-        @SuppressWarnings("java:S125")
+        @SuppressWarnings({"java:S125", "java:S3776"})
         protected IChainList mergeIndexedIChainLists(final IChainList source, final IChainList target) {
             FormUrlUtils.parameterRequireNonNull(source, CodecConstant.SOURCE_PARAMETER);
             FormUrlUtils.parameterRequireNonNull(target, CodecConstant.TARGET_PARAMETER);

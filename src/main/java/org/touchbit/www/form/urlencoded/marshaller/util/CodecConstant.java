@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package org.touchbit.www.form.urlencoded.marshaller;
+package org.touchbit.www.form.urlencoded.marshaller.util;
 
 public class CodecConstant {
 
+    public static final String OBJECT_PARAMETER = "object";
+    public static final String A_CLASS_PARAMETER = "aClass";
     public static final String MODEL_PARAMETER = "model";
     public static final String FIELD_PARAMETER = "field";
     public static final String TYPE_PARAMETER = "type";

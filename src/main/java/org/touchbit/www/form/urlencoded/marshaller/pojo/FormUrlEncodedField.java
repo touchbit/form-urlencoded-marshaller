@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package org.touchbit.www.form.urlencoded.marshaller;
+package org.touchbit.www.form.urlencoded.marshaller.pojo;
+
+import org.touchbit.www.form.urlencoded.marshaller.FormUrlMarshaller;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
@@ -24,12 +26,20 @@ import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Deserialize extra fields as Map
- * <p>
+ * Named pair for a form-encoded request/response.
+ * Values are converted to URL encoded form and back to model using {@link FormUrlMarshaller}.
+ * null values are ignored.
+ * Passing a List or array will result in a field pair for each non-null item.
  * Simple Example:
  * <pre><code>
  * &#64;FormUrlEncoded()
  * public class ExampleModel {
+ *
+ *     &#64;FormUrlEncodedField("foo")
+ *     private String foo;
+ *
+ *     &#64;FormUrlEncodedField("bar")
+ *     private List<Object> bar;
  *
  *     &#64;FormUrlEncodedAdditionalProperties()
  *     private Map<String, Object> additionalProperties;
@@ -40,12 +50,23 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Oleg Shaburov (shaburov.o.a@gmail.com)
  * Created: 19.02.2022
- * @see FormUrlCodec
+ * @see FormUrlMarshaller
  * @see FormUrlEncoded
- * @see FormUrlEncodedField
+ * @see FormUrlEncodedAdditionalProperties
  */
 @Documented
 @Target(FIELD)
 @Retention(RUNTIME)
-public @interface FormUrlEncodedAdditionalProperties {
+public @interface FormUrlEncodedField {
+
+    /**
+     * @return url form key name
+     */
+    String value();
+
+    /**
+     * @return true if the field value is already URL-encoded.
+     */
+    boolean encoded() default false;
+
 }

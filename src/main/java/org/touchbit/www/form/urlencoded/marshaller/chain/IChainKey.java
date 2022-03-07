@@ -17,8 +17,8 @@
 package org.touchbit.www.form.urlencoded.marshaller.chain;
 
 import org.apache.commons.lang3.math.NumberUtils;
-import org.touchbit.www.form.urlencoded.marshaller.CodecConstant;
-import org.touchbit.www.form.urlencoded.marshaller.FormUrlUtils;
+import org.touchbit.www.form.urlencoded.marshaller.util.CodecConstant;
+import org.touchbit.www.form.urlencoded.marshaller.util.FormUrlUtils;
 
 import java.lang.reflect.Type;
 import java.util.List;

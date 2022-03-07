@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package org.touchbit.www.form.urlencoded.marshaller;
+package org.touchbit.www.form.urlencoded.marshaller.util;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.touchbit.www.form.urlencoded.marshaller.chain.IChainList;
+import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncoded;
+import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncodedField;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -25,10 +27,11 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.touchbit.www.form.urlencoded.marshaller.util.CodecConstant.A_CLASS_PARAMETER;
+import static org.touchbit.www.form.urlencoded.marshaller.util.CodecConstant.OBJECT_PARAMETER;
 
 /**
  * @author Oleg Shaburov (shaburov.o.a@gmail.com)
@@ -50,6 +53,18 @@ public class FormUrlUtils {
      */
     public static void parameterRequireNonNull(Object parameter, String parameterName) {
         Objects.requireNonNull(parameter, "Parameter '" + parameterName + "' is required and cannot be null.");
+    }
+
+    public static List<Field> getFormUrlEncodedFields(final Object object) {
+        parameterRequireNonNull(object, OBJECT_PARAMETER);
+        return getFormUrlEncodedFields(object.getClass());
+    }
+
+    public static List<Field> getFormUrlEncodedFields(final Class<?> aClass) {
+        parameterRequireNonNull(aClass, A_CLASS_PARAMETER);
+        return FieldUtils.getFieldsListWithAnnotation(aClass, FormUrlEncodedField.class).stream()
+                .filter(f -> !Modifier.isStatic(f.getModifiers()))
+                .collect(Collectors.toList());
     }
 
     public static boolean isConstantField(final Field field) {
@@ -99,13 +114,11 @@ public class FormUrlUtils {
         }
     }
 
-
     public static boolean isGenericMap(final Field field) {
         FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
         final ParameterizedType type = getParameterizedType(field);
         return type != null && type.getRawType() == Map.class;
     }
-
 
     public static boolean isGenericMap(final Type type) {
         FormUrlUtils.parameterRequireNonNull(type, CodecConstant.TYPE_PARAMETER);
@@ -212,6 +225,14 @@ public class FormUrlUtils {
      */
     public static boolean isMap(Object object) {
         return object instanceof Map;
+    }
+
+    /**
+     * @param object - nullable object
+     * @return true if object class contains {@link FormUrlEncoded} annotation
+     */
+    public static boolean isPojo(Object object) {
+        return object != null && object.getClass().isAnnotationPresent(FormUrlEncoded.class);
     }
 
     /**

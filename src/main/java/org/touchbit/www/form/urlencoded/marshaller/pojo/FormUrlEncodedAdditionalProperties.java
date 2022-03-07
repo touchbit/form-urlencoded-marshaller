@@ -14,44 +14,40 @@
  * limitations under the License.
  */
 
-package org.touchbit.www.form.urlencoded.marshaller;
+package org.touchbit.www.form.urlencoded.marshaller.pojo;
+
+import org.touchbit.www.form.urlencoded.marshaller.FormUrlMarshaller;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Indicates that who class is the URI model.
- * Requests made with this annotation will have application/x-www-form-urlencoded MIME type.
- * Field names and values will be UTF-8 encoded before being URI-encoded in accordance to RFC-3986.
+ * Deserialize extra fields as Map
+ * <p>
  * Simple Example:
  * <pre><code>
  * &#64;FormUrlEncoded()
  * public class ExampleModel {
  *
- *     &#64;FormUrlEncodedField("foo")
- *     private String foo;
- *
- *     &#64;FormUrlEncodedField("bar")
- *     private List<Object> bar;
- *
  *     &#64;FormUrlEncodedAdditionalProperties()
  *     private Map<String, Object> additionalProperties;
+ *
  * }
  * </code></pre>
  * <p>
  *
  * @author Oleg Shaburov (shaburov.o.a@gmail.com)
  * Created: 19.02.2022
- * @see FormUrlCodec
+ * @see FormUrlMarshaller
+ * @see FormUrlEncoded
  * @see FormUrlEncodedField
- * @see FormUrlEncodedAdditionalProperties
  */
 @Documented
-@Target(TYPE)
+@Target(FIELD)
 @Retention(RUNTIME)
-public @interface FormUrlEncoded {
+public @interface FormUrlEncodedAdditionalProperties {
 }
