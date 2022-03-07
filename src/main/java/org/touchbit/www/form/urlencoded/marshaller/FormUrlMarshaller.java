@@ -68,10 +68,8 @@ import static org.touchbit.www.form.urlencoded.marshaller.util.CodecConstant.VAL
  */
 public class FormUrlMarshaller implements IFormUrlMarshaller {
 
-    private static final String CONVERSION_UNSUPPORTED_TYPE_ERR_MSG = "Received unsupported type for conversion: ";
-
     public static final FormUrlMarshaller INSTANCE = new FormUrlMarshaller();
-
+    private static final String CONVERSION_UNSUPPORTED_TYPE_ERR_MSG = "Received unsupported type for conversion: ";
     private final IFormUrlMarshallerConfiguration configuration;
 
     public FormUrlMarshaller() {

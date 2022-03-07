@@ -52,7 +52,6 @@ public interface IFormUrlMarshaller {
      * @param <M>           - FormUrlEncoded model type
      * @return completed model
      */
-
     <M> M unmarshal(Class<M> modelClass, String encodedString);
 
 }

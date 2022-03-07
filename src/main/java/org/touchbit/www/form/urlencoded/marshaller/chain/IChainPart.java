@@ -52,12 +52,6 @@ public interface IChainPart {
     IChainPart appendIndex(int index);
 
     /**
-     * @param value - form parameter value
-     * @return this {@link IChainPart}
-     */
-    IChainPart setValue(final String value);
-
-    /**
      * @return a full copy of the current instance of {@link IChainPart}
      */
     IChainPart copy();
@@ -76,6 +70,12 @@ public interface IChainPart {
      * @return form parameter value
      */
     String getValue();
+
+    /**
+     * @param value - form parameter value
+     * @return this {@link IChainPart}
+     */
+    IChainPart setValue(final String value);
 
     /**
      * @return sign of an unindexed array (true)
@@ -237,16 +237,6 @@ public interface IChainPart {
         }
 
         /**
-         * @param value - {@link Default#value}
-         * @return this {@link Default}
-         */
-        @Override
-        public Default setValue(final String value) {
-            this.value = value;
-            return this;
-        }
-
-        /**
          * @return {@link Default#key}
          */
         @Override
@@ -260,6 +250,16 @@ public interface IChainPart {
         @Override
         public String getValue() {
             return value;
+        }
+
+        /**
+         * @param value - {@link Default#value}
+         * @return this {@link Default}
+         */
+        @Override
+        public Default setValue(final String value) {
+            this.value = value;
+            return this;
         }
 
         /**
