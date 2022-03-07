@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package org.touchbit.www.form.url.codec;
+package org.touchbit.www.form.urlencoded.marshaller;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.touchbit.www.form.url.codec.chain.IChainList;
+import org.touchbit.www.form.urlencoded.marshaller.chain.IChainList;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -30,43 +30,15 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 
-import static org.touchbit.www.form.url.codec.CodecConstant.*;
-
 /**
- * Convert model (JavaBean) to URL encoded form and back to model.
- * Model example:
- * <pre><code>
- * &#64;FormUrlEncoded()
- * public class Model {
- *
- *     &#64;FormUrlEncodedField("foo")
- *     private String foo;
- *
- *     &#64;FormUrlEncodedField("bar")
- *     private List<Integer> bar;
- *
- *     &#64;FormUrlEncodedAdditionalProperties()
- *     private Map<String, Object> additionalProperties;
- *
- * }
- * </code></pre>
- * <p>
- * Usage:
- * <pre><code>
- *     Model model = new Model().foo("text").bar(1,2,3);
- *     Strung formUrlEncodedString = FormUrlEncodedMapper.INSTANCE.marshal(model);
- *     Model formUrlDecodedModel = FormUrlEncodedMapper.INSTANCE.unmarshal(formUrlEncodedString);
- * </code></pre>
- * <p>
- *
  * @author Oleg Shaburov (shaburov.o.a@gmail.com)
  * Created: 19.02.2022
- * @see FormUrlEncoded
- * @see FormUrlEncodedField
- * @see FormUrlEncodedAdditionalProperties
  */
 public class FormUrlUtils {
 
+    /**
+     * Utility class. Forbidden instantiation.
+     */
     private FormUrlUtils() {
         throw new UnsupportedOperationException();
     }
@@ -80,9 +52,8 @@ public class FormUrlUtils {
         Objects.requireNonNull(parameter, "Parameter '" + parameterName + "' is required and cannot be null.");
     }
 
-
     public static boolean isConstantField(final Field field) {
-        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
         final int modifiers = field.getModifiers();
         return Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers);
     }
@@ -94,7 +65,7 @@ public class FormUrlUtils {
 
     public static boolean isNotAssignableConstantField(final Class<?> aClass, final Field field) {
         FormUrlUtils.parameterRequireNonNull(aClass, "aClass");
-        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
         return !aClass.isAssignableFrom(field.getType()) && !isConstantField(field);
     }
 
@@ -105,18 +76,18 @@ public class FormUrlUtils {
 
     public static boolean isAssignableConstantField(final Class<?> aClass, final Field field) {
         FormUrlUtils.parameterRequireNonNull(aClass, "aClass");
-        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
         return aClass.isAssignableFrom(field.getType()) && isConstantField(field);
     }
 
     public static boolean isJacocoDataField(final Field field) {
-        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
         return field.getName().contains("jacocoData");
     }
 
     public static Object readField(final Object object, final Field field) {
         FormUrlUtils.parameterRequireNonNull(object, "object");
-        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
         return readField(object, field.getName());
     }
 
@@ -130,54 +101,54 @@ public class FormUrlUtils {
 
 
     public static boolean isGenericMap(final Field field) {
-        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
         final ParameterizedType type = getParameterizedType(field);
         return type != null && type.getRawType() == Map.class;
     }
 
 
     public static boolean isGenericMap(final Type type) {
-        FormUrlUtils.parameterRequireNonNull(type, TYPE_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(type, CodecConstant.TYPE_PARAMETER);
         final ParameterizedType parameterizedType = getParameterizedType(type);
         return parameterizedType != null && parameterizedType.getRawType() == Map.class;
     }
 
 
     public static boolean isGenericCollection(final Field field) {
-        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
         final ParameterizedType type = getParameterizedType(field);
         return type != null && type.getRawType() == Collection.class;
     }
 
 
     public static boolean isGenericCollection(final Type type) {
-        FormUrlUtils.parameterRequireNonNull(type, TYPE_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(type, CodecConstant.TYPE_PARAMETER);
         final ParameterizedType parameterizedType = getParameterizedType(type);
         return parameterizedType != null && parameterizedType.getRawType() == Collection.class;
     }
 
 
     public static boolean isArray(final Field field) {
-        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
         return field.getType().isArray();
     }
 
 
     public static boolean isArray(final Type type) {
-        FormUrlUtils.parameterRequireNonNull(type, TYPE_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(type, CodecConstant.TYPE_PARAMETER);
         return (type instanceof Class) && ((Class<?>) type).isArray();
     }
 
 
     public static ParameterizedType getParameterizedType(final Field field) {
-        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
         final Type genericType = field.getGenericType();
         return getParameterizedType(genericType);
     }
 
 
     public static ParameterizedType getParameterizedType(final Type type) {
-        FormUrlUtils.parameterRequireNonNull(type, TYPE_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(type, CodecConstant.TYPE_PARAMETER);
         if (type instanceof ParameterizedType) {
             return (ParameterizedType) type;
         }
@@ -191,7 +162,7 @@ public class FormUrlUtils {
      */
     @SuppressWarnings({"java:S1452"})
     public static Collection<?> arrayToCollection(final Object value) {
-        FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(value, CodecConstant.VALUE_PARAMETER);
         if (isArray(value)) {
             return Arrays.asList((Object[]) value);
         }
@@ -218,8 +189,12 @@ public class FormUrlUtils {
         return object instanceof IChainList;
     }
 
+    /**
+     * @param field - an object field
+     * @return true if object field instanceof {@link Collection}
+     */
     public static boolean isCollection(Field field) {
-        parameterRequireNonNull(field, FIELD_PARAMETER);
+        parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
         return Collection.class.isAssignableFrom(field.getType());
     }
 

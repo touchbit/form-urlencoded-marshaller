@@ -1,9 +1,9 @@
-package org.touchbit.www.form.url.codec.chain;
+package org.touchbit.www.form.urlencoded.marshaller.chain;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.touchbit.www.form.url.BaseTest;
+import org.touchbit.BaseTest;
 
 import java.util.List;
 import java.util.Map;

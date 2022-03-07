@@ -5,10 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.touchbit.web</groupId>
-    <artifactId>form-urlencoded2pojo</artifactId>
+    <artifactId>form-urlencoded-marshaller</artifactId>
     <version>1.0.0</version>
-    <name>Pojo mapper for 'x-www-form-urlencoded' MIME type data</name>
-    <description>The mapper allows you to convert a FormUrlEncoded string to a pojo object and vice versa. Supports nesting of objects and lists. Supports indexed and non-indexed lists.</description>
+    <name>Marshaller for "x-www-form-urlencoded" data (pojo/string)</name>
+    <description>The marshaller allows you to convert a FormUrlEncoded string to a pojo object and vice versa. Supports
+        nesting of objects and lists. Supports indexed and non-indexed lists.
+    </description>
     <packaging>jar</packaging>
 
     <licenses>
@@ -20,12 +22,12 @@
     </licenses>
 
     <scm>
-        <connection>scm:git@github.com:touchbit/form-urlencoded2pojo.git</connection>
-        <developerConnection>scm:git@github.com:touchbit/form-urlencoded2pojo.git</developerConnection>
-        <url>https://github.com/touchbit/form-urlencoded2pojo</url>
+        <connection>scm:git@github.com:touchbit/form-urlencoded-marshaller.git</connection>
+        <developerConnection>scm:git@github.com:touchbit/form-urlencoded-marshaller.git</developerConnection>
+        <url>https://github.com/touchbit/form-urlencoded-marshaller</url>
     </scm>
 
-    <url>https://github.com/touchbit/form-urlencoded2pojo</url>
+    <url>https://github.com/touchbit/form-urlencoded-marshaller</url>
 
     <developers>
         <developer>
@@ -41,12 +43,12 @@
 
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/touchbit/form-urlencoded2pojo/issues</url>
+        <url>https://github.com/touchbit/form-urlencoded-marshaller/issues</url>
     </issueManagement>
 
     <ciManagement>
         <system>GitHub Actions</system>
-        <url>https://github.com/touchbit/form-urlencoded2pojo/actions</url>
+        <url>https://github.com/touchbit/form-urlencoded-marshaller/actions</url>
     </ciManagement>
 
     <properties>
@@ -205,11 +207,14 @@
                             <X-Compile-Target-JDK>${maven.compiler.target}</X-Compile-Target-JDK>
                             <Implementation-Title>${project.name}</Implementation-Title>
                             <Implementation-Version>${project.version}</Implementation-Version>
-                            <Implementation-SymbolicName>${project.groupId}.${project.artifactId}</Implementation-SymbolicName>
+                            <Implementation-SymbolicName>${project.groupId}.${project.artifactId}
+                            </Implementation-SymbolicName>
                             <Implementation-Vendor>Oleg Shaburov</Implementation-Vendor>
                             <Implementation-Vendor-Id>org.touchbit</Implementation-Vendor-Id>
-                            <Implementation-DocURL>https://github.com/touchbit/form-urlencoded2pojo</Implementation-DocURL>
-                            <Implementation-License>https://www.apache.org/licenses/LICENSE-2.0.txt</Implementation-License>
+                            <Implementation-DocURL>https://github.com/touchbit/form-urlencoded-marshaller
+                            </Implementation-DocURL>
+                            <Implementation-License>https://www.apache.org/licenses/LICENSE-2.0.txt
+                            </Implementation-License>
                             <Implementation-Description>${project.description}</Implementation-Description>
                         </manifestEntries>
                     </archive>

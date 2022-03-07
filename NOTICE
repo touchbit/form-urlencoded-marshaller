@@ -1,6 +1,6 @@
-form-urlencoded2pojo
+form-urlencoded-marshaller
 ----------------------------------------------------------------------
-Pojo mapper for 'x-www-form-urlencoded' MIME type data
+Marshaller for "x-www-form-urlencoded" data (pojo/string)
 Distributed under license 'Apache License Version 2.0'
-Copyright 2022 form-urlencoded2pojo project authors and contributors
+Copyright 2022 form-urlencoded-marshaller project authors/contributors
 ----------------------------------------------------------------------

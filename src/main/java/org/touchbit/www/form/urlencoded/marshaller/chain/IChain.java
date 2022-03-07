@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package org.touchbit.www.form.url.codec.chain;
+package org.touchbit.www.form.urlencoded.marshaller.chain;
 
 import org.apache.commons.lang3.math.NumberUtils;
-import org.touchbit.www.form.url.codec.FormUrlUtils;
+import org.touchbit.www.form.urlencoded.marshaller.CodecConstant;
+import org.touchbit.www.form.urlencoded.marshaller.FormUrlUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static org.touchbit.www.form.url.codec.CodecConstant.*;
 
 /**
  * Interface for storing a chain of from url encoded parameters
@@ -71,7 +70,7 @@ public interface IChain {
         public Default(final Map<String, Object> rawData,
                        final boolean implicitList,
                        final boolean explicitList) {
-            FormUrlUtils.parameterRequireNonNull(rawData, RAW_DATA_PARAMETER);
+            FormUrlUtils.parameterRequireNonNull(rawData, CodecConstant.RAW_DATA_PARAMETER);
             this.rawData = rawData;
             if (rawData.isEmpty()) {
                 this.chainParts = new ArrayList<>();
@@ -104,7 +103,7 @@ public interface IChain {
          * @return filled raw data
          */
         protected Map<String, Object> chainPartsToRawData(final List<IChainPart> list) {
-            FormUrlUtils.parameterRequireNonNull(list, LIST_PARAMETER);
+            FormUrlUtils.parameterRequireNonNull(list, CodecConstant.LIST_PARAMETER);
             final Map<String, Object> result = new HashMap<>();
             list.stream()
                     .map(IChainPart::getRawDataValue)
@@ -124,8 +123,8 @@ public interface IChain {
          */
         @SuppressWarnings("unchecked")
         protected Map<String, Object> mergeRawMap(final Object source, final Object target) {
-            FormUrlUtils.parameterRequireNonNull(source, SOURCE_PARAMETER);
-            FormUrlUtils.parameterRequireNonNull(target, TARGET_PARAMETER);
+            FormUrlUtils.parameterRequireNonNull(source, CodecConstant.SOURCE_PARAMETER);
+            FormUrlUtils.parameterRequireNonNull(target, CodecConstant.TARGET_PARAMETER);
             if (!(source instanceof Map && target instanceof Map)) {
                 throw new IllegalArgumentException("Received incompatible types to merge\n" +
                                                    "Expected type: " + Map.class + "\n" +
@@ -149,8 +148,8 @@ public interface IChain {
          * @throws IllegalArgumentException incompatible types
          */
         protected Object mergeObjectValues(final Object source, final Object target) {
-            FormUrlUtils.parameterRequireNonNull(source, SOURCE_PARAMETER);
-            FormUrlUtils.parameterRequireNonNull(target, TARGET_PARAMETER);
+            FormUrlUtils.parameterRequireNonNull(source, CodecConstant.SOURCE_PARAMETER);
+            FormUrlUtils.parameterRequireNonNull(target, CodecConstant.TARGET_PARAMETER);
             if (FormUrlUtils.isChainList(target) && FormUrlUtils.isChainList(source)) {
                 return mergeIChainLists(source, target);
             } else if (FormUrlUtils.isMap(target) && FormUrlUtils.isMap(source)) {
@@ -201,8 +200,8 @@ public interface IChain {
          * @throws IllegalArgumentException incompatible types
          */
         protected IChainList mergeIChainLists(final Object source, final Object target) {
-            FormUrlUtils.parameterRequireNonNull(source, SOURCE_PARAMETER);
-            FormUrlUtils.parameterRequireNonNull(target, TARGET_PARAMETER);
+            FormUrlUtils.parameterRequireNonNull(source, CodecConstant.SOURCE_PARAMETER);
+            FormUrlUtils.parameterRequireNonNull(target, CodecConstant.TARGET_PARAMETER);
             if (!(source instanceof IChainList && target instanceof IChainList)) {
                 throw new IllegalArgumentException("Received incompatible types to merge\n" +
                                                    "Expected type: " + IChainList.class + "\n" +
@@ -324,7 +323,7 @@ public interface IChain {
          * @throws IllegalArgumentException list nesting [[]]
          */
         protected void assertKeyBrackets(String key) {
-            FormUrlUtils.parameterRequireNonNull(key, KEY_PARAMETER);
+            FormUrlUtils.parameterRequireNonNull(key, CodecConstant.KEY_PARAMETER);
             if (!isEvenBracketsRatio(key)) {
                 throw new IllegalArgumentException("The key contains an incorrect ratio of opening and closing brackets.\n" +
                                                    "Invalid key: " + key + "\n");
@@ -343,7 +342,7 @@ public interface IChain {
          * @throws NullPointerException if key is null
          */
         protected boolean hasNestedBrackets(String key) {
-            FormUrlUtils.parameterRequireNonNull(key, KEY_PARAMETER);
+            FormUrlUtils.parameterRequireNonNull(key, CodecConstant.KEY_PARAMETER);
             return key.contains("]]") || key.contains("[[");
         }
 
@@ -353,7 +352,7 @@ public interface IChain {
          * @throws NullPointerException if key is null
          */
         protected boolean isEvenBracketsRatio(String key) {
-            FormUrlUtils.parameterRequireNonNull(key, KEY_PARAMETER);
+            FormUrlUtils.parameterRequireNonNull(key, CodecConstant.KEY_PARAMETER);
             final Deque<Character> deque = new LinkedList<>();
             final Map<Character, Character> supported = Collections.singletonMap(']', '[');
             for (char c : key.toCharArray()) {
@@ -376,7 +375,7 @@ public interface IChain {
         protected List<IChainPart> readModel(final Map<String, Object> rawData,
                                              final boolean implicitList,
                                              final boolean explicitList) {
-            FormUrlUtils.parameterRequireNonNull(rawData, RAW_DATA_PARAMETER);
+            FormUrlUtils.parameterRequireNonNull(rawData, CodecConstant.RAW_DATA_PARAMETER);
             final List<IChainPart> result = new ArrayList<>();
             for (Map.Entry<String, Object> entry : rawData.entrySet()) {
                 final String key = entry.getKey();
@@ -401,8 +400,8 @@ public interface IChain {
          * @throws IllegalArgumentException - unsupported value type
          */
         protected List<IChainPart> valueObjectToChainParts(final IChainPart chainPart, Object value) {
-            FormUrlUtils.parameterRequireNonNull(chainPart, CHAIN_PART_PARAMETER);
-            FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
+            FormUrlUtils.parameterRequireNonNull(chainPart, CodecConstant.CHAIN_PART_PARAMETER);
+            FormUrlUtils.parameterRequireNonNull(value, CodecConstant.VALUE_PARAMETER);
             final List<IChainPart> result = new ArrayList<>();
             if (FormUrlUtils.isSimple(value)) {
                 result.add(simpleToChainPart(chainPart, value));
@@ -432,7 +431,7 @@ public interface IChain {
          */
         protected List<IChainPart> mapToChainPart(IChainPart chainPart, Map<?, ?> value) {
             FormUrlUtils.parameterRequireNonNull(chainPart, "chainPart");
-            FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
+            FormUrlUtils.parameterRequireNonNull(value, CodecConstant.VALUE_PARAMETER);
             final List<IChainPart> result = new ArrayList<>();
             for (Map.Entry<?, ?> entry : value.entrySet()) {
                 final String eKey = String.valueOf(entry.getKey());
@@ -457,8 +456,8 @@ public interface IChain {
          * @throws NullPointerException - chainPart or value is null
          */
         protected IChainPart simpleToChainPart(IChainPart chainPart, final Object value) {
-            FormUrlUtils.parameterRequireNonNull(chainPart, CHAIN_PART_PARAMETER);
-            FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
+            FormUrlUtils.parameterRequireNonNull(chainPart, CodecConstant.CHAIN_PART_PARAMETER);
+            FormUrlUtils.parameterRequireNonNull(value, CodecConstant.VALUE_PARAMETER);
             return chainPart.setValue(String.valueOf(value));
         }
 
@@ -475,8 +474,8 @@ public interface IChain {
          * @throws NullPointerException - chainPart or value is null
          */
         protected List<IChainPart> collectionToChainPart(IChainPart chainPart, final Collection<?> value) {
-            FormUrlUtils.parameterRequireNonNull(chainPart, CHAIN_PART_PARAMETER);
-            FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
+            FormUrlUtils.parameterRequireNonNull(chainPart, CodecConstant.CHAIN_PART_PARAMETER);
+            FormUrlUtils.parameterRequireNonNull(value, CodecConstant.VALUE_PARAMETER);
             final List<IChainPart> result = new ArrayList<>();
             final List<?> list;
             if (value instanceof List) {
@@ -519,6 +518,7 @@ public interface IChain {
         }
 
         /**
+         * @param prettyPrint - {@code prettyPrint ? "&\n" : "&"}
          * @return pretty printed URL form data (without value encoding/decoding)
          */
         public String toString(boolean prettyPrint) {

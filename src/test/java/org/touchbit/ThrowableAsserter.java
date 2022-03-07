@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.touchbit.test.asserter;
+package org.touchbit;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;

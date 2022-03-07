@@ -1,9 +1,9 @@
-package org.touchbit.www.form.url.codec.chain;
+package org.touchbit.www.form.urlencoded.marshaller.chain;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.touchbit.www.form.url.BaseTest;
+import org.touchbit.BaseTest;
 
 import java.util.*;
 
@@ -523,9 +523,9 @@ public class IChainUnitTests extends BaseTest {
             assertThrow(() -> chain.mergeIChainLists(new Object(), target))
                     .assertClass(IllegalArgumentException.class)
                     .assertMessageIs("Received incompatible types to merge\n" +
-                                     "Expected type: interface org.touchbit.www.form.url.codec.chain.IChainList\n" +
+                                     "Expected type: " + IChainList.class + "\n" +
                                      "Actual source: class java.lang.Object\n" +
-                                     "Actual target: class org.touchbit.www.form.url.codec.chain.IChainList$Default\n");
+                                     "Actual target: " + IChainList.Default.class + "\n");
         }
 
         @Test
@@ -536,8 +536,8 @@ public class IChainUnitTests extends BaseTest {
             assertThrow(() -> chain.mergeIChainLists(source, new Object()))
                     .assertClass(IllegalArgumentException.class)
                     .assertMessageIs("Received incompatible types to merge\n" +
-                                     "Expected type: interface org.touchbit.www.form.url.codec.chain.IChainList\n" +
-                                     "Actual source: class org.touchbit.www.form.url.codec.chain.IChainList$Default\n" +
+                                     "Expected type: " + IChainList.class + "\n" +
+                                     "Actual source: " + IChainList.Default.class + "\n" +
                                      "Actual target: class java.lang.Object\n");
         }
 
@@ -549,9 +549,9 @@ public class IChainUnitTests extends BaseTest {
             assertThrow(() -> chain.mergeIChainLists(new ArrayList<>(), target))
                     .assertClass(IllegalArgumentException.class)
                     .assertMessageIs("Received incompatible types to merge\n" +
-                                     "Expected type: interface org.touchbit.www.form.url.codec.chain.IChainList\n" +
+                                     "Expected type: " + IChainList.class + "\n" +
                                      "Actual source: class java.util.ArrayList\n" +
-                                     "Actual target: class org.touchbit.www.form.url.codec.chain.IChainList$Default\n");
+                                     "Actual target: " + IChainList.Default.class + "\n");
         }
 
         @Test
@@ -1014,7 +1014,7 @@ public class IChainUnitTests extends BaseTest {
                     .assertMessageIs("Received incompatible value types to merge.\n" +
                                      "Source type: java.util.HashMap\n" +
                                      "Source value: {foo=source}\n" +
-                                     "Target type: org.touchbit.www.form.url.codec.chain.IChainList$Default\n" +
+                                     "Target type: " + IChainList.Default.class.getName() + "\n" +
                                      "Target value: [target]\n");
         }
     }

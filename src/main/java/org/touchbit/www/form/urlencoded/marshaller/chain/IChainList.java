@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.touchbit.www.form.url.codec.chain;
+package org.touchbit.www.form.urlencoded.marshaller.chain;
 
 import java.util.ArrayList;
 import java.util.List;

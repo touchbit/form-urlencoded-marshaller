@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package org.touchbit.www.form.url.codec.chain;
+package org.touchbit.www.form.urlencoded.marshaller.chain;
 
 import org.apache.commons.lang3.math.NumberUtils;
-import org.touchbit.www.form.url.codec.FormUrlUtils;
+import org.touchbit.www.form.urlencoded.marshaller.CodecConstant;
+import org.touchbit.www.form.urlencoded.marshaller.FormUrlUtils;
 
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
-
-import static org.touchbit.www.form.url.codec.CodecConstant.KEY_PARAMETER;
 
 /**
  * Representing a single from url key in {@link IChainPart} keychain
@@ -82,7 +81,7 @@ interface IChainKey {
          * @throws NullPointerException if key is null
          */
         public Default(final String key) {
-            FormUrlUtils.parameterRequireNonNull(key, KEY_PARAMETER);
+            FormUrlUtils.parameterRequireNonNull(key, CodecConstant.KEY_PARAMETER);
             if (key.isEmpty() || NumberUtils.isDigits(key)) {
                 this.type = List.class;
                 this.keyName = null;

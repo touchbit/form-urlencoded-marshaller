@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package org.touchbit.www.form.url.codec;
+package org.touchbit.www.form.urlencoded.marshaller;
 
 import java.nio.charset.Charset;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.touchbit.www.form.url.codec.CodecConstant.*;
 
 /**
  * @author Oleg Shaburov (shaburov.o.a@gmail.com)
@@ -48,7 +47,7 @@ public interface IFormUrlCodec {
      * @return model string representation
      */
     default String marshal(Object model) {
-        FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(model, CodecConstant.MODEL_PARAMETER);
         return marshal(model, UTF_8, false);
     }
 
@@ -86,8 +85,8 @@ public interface IFormUrlCodec {
      */
     
     default <M> M unmarshal(Class<M> modelClass, String encodedString) {
-        FormUrlUtils.parameterRequireNonNull(modelClass, MODEL_CLASS_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(encodedString, ENCODED_STRING_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(modelClass, CodecConstant.MODEL_CLASS_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(encodedString, CodecConstant.ENCODED_STRING_PARAMETER);
         return unmarshal(modelClass, encodedString, UTF_8);
     }
 

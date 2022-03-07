@@ -1,9 +1,9 @@
-package org.touchbit.www.form.url.codec.chain;
+package org.touchbit.www.form.urlencoded.marshaller.chain;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.touchbit.www.form.url.BaseTest;
+import org.touchbit.BaseTest;
 
 import java.util.List;
 import java.util.Map;
@@ -299,7 +299,7 @@ public class IChainPartUnitTests extends BaseTest {
                     .assertClass(IllegalArgumentException.class)
                     .assertMessageIs("Unable to process key. The key does not belong to the 'Map' type.\n" +
                                      "Key: 0\n" +
-                                     "Key type: class org.touchbit.www.form.url.codec.chain.IChainList$Default\n" +
+                                     "Key type: " + IChainList.Default.class + "\n" +
                                      "Key structure: [null]\n");
         }
 

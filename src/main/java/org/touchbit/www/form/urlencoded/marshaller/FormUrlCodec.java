@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.touchbit.www.form.url.codec;
+package org.touchbit.www.form.urlencoded.marshaller;
 
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.reflect.ConstructorUtils;
@@ -29,8 +29,6 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
-
-import static org.touchbit.www.form.url.codec.CodecConstant.*;
 
 /**
  * Convert model (JavaBean or {@code Map<String, ?>}) to URL encoded form and back to model.
@@ -98,7 +96,7 @@ public class FormUrlCodec implements IFormUrlCodec {
     @Override
 
     public String marshal(final Object model, final Charset codingCharset, final boolean indexedArray) {
-        FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(model, CodecConstant.MODEL_PARAMETER);
         final List<Field> annotated = Arrays.stream(model.getClass().getDeclaredFields())
                 .filter(f -> f.isAnnotationPresent(FormUrlEncodedField.class))
                 .collect(Collectors.toList());
@@ -149,9 +147,9 @@ public class FormUrlCodec implements IFormUrlCodec {
     @Override
 
     public <M> M unmarshal(final Class<M> modelClass, final String encodedString, final Charset codingCharset) {
-        FormUrlUtils.parameterRequireNonNull(modelClass, MODEL_CLASS_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(encodedString, ENCODED_STRING_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(codingCharset, CODING_CHARSET_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(modelClass, CodecConstant.MODEL_CLASS_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(encodedString, CodecConstant.ENCODED_STRING_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(codingCharset, CodecConstant.CODING_CHARSET_PARAMETER);
         final M model;
         try {
             model = ConstructorUtils.invokeConstructor(modelClass);
@@ -208,9 +206,9 @@ public class FormUrlCodec implements IFormUrlCodec {
                                                  final Field field,
                                                  final Charset codingCharset,
                                                  final boolean indexedArray) {
-        FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(codingCharset, CODING_CHARSET_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(model, CodecConstant.MODEL_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(codingCharset, CodecConstant.CODING_CHARSET_PARAMETER);
         StringJoiner result = new StringJoiner("&");
         for (Map.Entry<String, Object> entry : readAdditionalProperties(model, field).entrySet()) {
             final String rawName = entry.getKey();
@@ -257,7 +255,7 @@ public class FormUrlCodec implements IFormUrlCodec {
      */
     @SuppressWarnings("java:S1452")
     protected Collection<?> arrayToCollection(Object value) {
-        FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(value, CodecConstant.VALUE_PARAMETER);
         if (value.getClass().isArray()) {
             return Arrays.asList((Object[]) value);
         }
@@ -278,8 +276,8 @@ public class FormUrlCodec implements IFormUrlCodec {
 
     @SuppressWarnings("unchecked")
     protected Map<String, Object> readAdditionalProperties(final Object model, final Field field) {
-        FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(model, CodecConstant.MODEL_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
         final Map<String, Object> additionalProperties;
         try {
             additionalProperties = (Map<String, Object>) FieldUtils.readField(model, field.getName(), true);
@@ -314,10 +312,10 @@ public class FormUrlCodec implements IFormUrlCodec {
                                                          final Field field,
                                                          final String formFieldName,
                                                          final Charset codingCharset) {
-        FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(formFieldName, FORM_FIELD_NAME_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(codingCharset, CODING_CHARSET_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(model, CodecConstant.MODEL_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(formFieldName, CodecConstant.FORM_FIELD_NAME_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(codingCharset, CodecConstant.CODING_CHARSET_PARAMETER);
         final Object rawValue;
         try {
             rawValue = FieldUtils.readField(model, field.getName(), true);
@@ -366,10 +364,10 @@ public class FormUrlCodec implements IFormUrlCodec {
                                                     final String formFieldName,
                                                     final Charset codingCharset,
                                                     final boolean indexedArray) {
-        FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(formFieldName, FORM_FIELD_NAME_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(codingCharset, CODING_CHARSET_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(model, CodecConstant.MODEL_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(formFieldName, CodecConstant.FORM_FIELD_NAME_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(codingCharset, CodecConstant.CODING_CHARSET_PARAMETER);
         final StringJoiner result = new StringJoiner("&");
         final Object[] array;
         try {
@@ -429,10 +427,10 @@ public class FormUrlCodec implements IFormUrlCodec {
                                                          final String formFieldName,
                                                          final Charset codingCharset,
                                                          final boolean indexedArray) {
-        FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(formFieldName, FORM_FIELD_NAME_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(codingCharset, CODING_CHARSET_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(model, CodecConstant.MODEL_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(formFieldName, CodecConstant.FORM_FIELD_NAME_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(codingCharset, CodecConstant.CODING_CHARSET_PARAMETER);
         final StringJoiner result = new StringJoiner("&");
         final Collection<?> collection;
         try {
@@ -488,10 +486,10 @@ public class FormUrlCodec implements IFormUrlCodec {
                                                              final Field field,
                                                              final Map<String, List<String>> parsed,
                                                              final List<Field> handled) {
-        FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(parsed, PARSED_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(handled, HANDLED_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(model, CodecConstant.MODEL_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(parsed, CodecConstant.PARSED_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(handled, CodecConstant.HANDLED_PARAMETER);
         final Map<String, List<String>> unhandled = new HashMap<>(parsed);
         final Map<String, Object> additionalProperties = initAdditionalProperties(model, field);
         handled.stream()
@@ -525,9 +523,9 @@ public class FormUrlCodec implements IFormUrlCodec {
      */
 
     protected Object unmarshalDecodedValueToFieldType(final Object model, final Field field, final List<String> value) {
-        FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(model, CodecConstant.MODEL_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(value, CodecConstant.VALUE_PARAMETER);
         if (value.isEmpty()) {
             throw new FormUrlCodecException("The 'value' field does not contain data to be converted.");
         }
@@ -563,10 +561,10 @@ public class FormUrlCodec implements IFormUrlCodec {
                                                        final Field field,
                                                        final Class<?> fieldType,
                                                        final List<String> value) {
-        FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(fieldType, FIELD_TYPE_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(model, CodecConstant.MODEL_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(fieldType, CodecConstant.FIELD_TYPE_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(value, CodecConstant.VALUE_PARAMETER);
         if (value.isEmpty()) {
             throw new FormUrlCodecException("The 'value' field does not contain data to be converted.");
         }
@@ -612,10 +610,10 @@ public class FormUrlCodec implements IFormUrlCodec {
                                                         final Field field,
                                                         final Class<?> fieldType,
                                                         final List<String> value) {
-        FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(fieldType, FIELD_TYPE_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(model, CodecConstant.MODEL_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(fieldType, CodecConstant.FIELD_TYPE_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(value, CodecConstant.VALUE_PARAMETER);
         if (!fieldType.isArray()) {
             throw new FormUrlCodecException("Mismatch types. Got a single type instead of an array.\n" +
                                             MODEL_TYPE_ERR_MSG + model.getClass().getName() + "\n" +
@@ -671,10 +669,10 @@ public class FormUrlCodec implements IFormUrlCodec {
                                                                           final Field field,
                                                                           final ParameterizedType parameterizedType,
                                                                           final List<String> value) {
-        FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(parameterizedType, PARAMETERIZED_TYPE_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(model, CodecConstant.MODEL_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(value, CodecConstant.VALUE_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(parameterizedType, CodecConstant.PARAMETERIZED_TYPE_PARAMETER);
         final Type rawType = parameterizedType.getRawType();
         final Type targetType = parameterizedType.getActualTypeArguments()[0];
         if (Collection.class.isAssignableFrom((Class<?>) rawType)) {
@@ -734,8 +732,8 @@ public class FormUrlCodec implements IFormUrlCodec {
      */
     @SuppressWarnings("java:S3776")
     protected Object convertUrlDecodedStringValueToType(final String value, final Type targetType) {
-        FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(targetType, TARGET_TYPE_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(value, CodecConstant.VALUE_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(targetType, CodecConstant.TARGET_TYPE_PARAMETER);
         if (targetType instanceof Class && ((Class<?>) targetType).isPrimitive()) {
             throw new IllegalArgumentException("It is forbidden to use primitive types " +
                                                "in FormUrlEncoded models: " + targetType);
@@ -785,9 +783,9 @@ public class FormUrlCodec implements IFormUrlCodec {
      */
 
     protected <M> void writeFieldValue(final M model, final Field field, final Object value) {
-        FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(model, CodecConstant.MODEL_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(value, CodecConstant.VALUE_PARAMETER);
         try {
             FieldUtils.writeDeclaredField(model, field.getName(), value, true);
         } catch (Exception e) {
@@ -817,7 +815,7 @@ public class FormUrlCodec implements IFormUrlCodec {
      */
 
     protected Field getAdditionalPropertiesField(final Class<?> modelClass) {
-        FormUrlUtils.parameterRequireNonNull(modelClass, MODEL_CLASS_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(modelClass, CodecConstant.MODEL_CLASS_PARAMETER);
         final List<Field> fields = Arrays.asList(modelClass.getDeclaredFields());
         final List<Field> additionalProperties = fields.stream()
                 .filter(f -> f.isAnnotationPresent(FormUrlEncodedAdditionalProperties.class))
@@ -870,8 +868,8 @@ public class FormUrlCodec implements IFormUrlCodec {
 
     @SuppressWarnings("unchecked")
     protected Map<String, Object> initAdditionalProperties(final Object model, final Field field) {
-        FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(model, CodecConstant.MODEL_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
         final String fieldName = field.getName();
         try {
             if (Modifier.isFinal(field.getModifiers())) {
@@ -917,8 +915,8 @@ public class FormUrlCodec implements IFormUrlCodec {
 
     protected Map<String, List<String>> parseAndDecodeUrlEncodedString(final String urlEncodedString,
                                                                        final Charset codingCharset) {
-        FormUrlUtils.parameterRequireNonNull(urlEncodedString, ENCODED_STRING_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(codingCharset, CODING_CHARSET_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(urlEncodedString, CodecConstant.ENCODED_STRING_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(codingCharset, CodecConstant.CODING_CHARSET_PARAMETER);
         final Map<String, List<String>> result = new HashMap<>();
         if (urlEncodedString.trim().length() == 0) {
             return result;
@@ -963,7 +961,7 @@ public class FormUrlCodec implements IFormUrlCodec {
      */
 
     protected String getFormUrlEncodedFieldName(final Field field) {
-        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
         final FormUrlEncodedField annotation = field.getAnnotation(FormUrlEncodedField.class);
         if (annotation == null) {
             throw new FormUrlCodecException("Field does not contain a required annotation.\n" +

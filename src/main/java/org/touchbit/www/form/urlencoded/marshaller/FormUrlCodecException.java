@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.touchbit.www.form.url.codec;
+package org.touchbit.www.form.urlencoded.marshaller;
 
 /**
  * @author Oleg Shaburov (shaburov.o.a@gmail.com)

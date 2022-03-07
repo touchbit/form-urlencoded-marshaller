@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.touchbit.www.form.url.codec;
+package org.touchbit.www.form.urlencoded.marshaller;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
