@@ -504,6 +504,229 @@ public class IChainUnitTests extends BaseTest {
     }
 
     @Nested
+    @DisplayName("#mergeNonIndexedIChainLists() method tests")
+    public class MergeNonIndexedIChainListsMethodTests {
+
+        @Test
+        @DisplayName("Required parameters")
+        public void test1646663516549() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertNPE(() -> chain.mergeNonIndexedIChainLists(null, new IChainList.Default(true)), "source");
+            assertNPE(() -> chain.mergeNonIndexedIChainLists(new IChainList.Default(true), null), "target");
+        }
+
+        @Test
+        @DisplayName("append source list to target list (unindexed)")
+        public void test1646593062091() {
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainList.Default target = new IChainList.Default(false);
+            target.add(null);
+            target.add("foo");
+            final IChainList.Default source = new IChainList.Default(false);
+            source.add("bar");
+            final IChainList objects = chain.mergeNonIndexedIChainLists(source, target);
+            assertThat(objects.toString()).isEqualTo("[null, foo, bar]");
+        }
+
+        @Test
+        @DisplayName("append source maps list to target maps list if maps keys is same (unindexed)")
+        public void test1646654789221() {
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainList.Default target = new IChainList.Default(false);
+            target.add(mapOf("foo", "target_value"));
+            final IChainList.Default source = new IChainList.Default(false);
+            source.add(mapOf("foo", "source_value"));
+            final IChainList objects = chain.mergeNonIndexedIChainLists(source, target);
+            assertThat(objects.toString()).isEqualTo("[{foo=target_value}, {foo=source_value}]");
+        }
+
+        @Test
+        @DisplayName("straight lists if target list more than source list (unindexed)")
+        public void test1646593247852() {
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainList.Default target = new IChainList.Default(false);
+            target.add("foo");
+            final IChainList.Default source = new IChainList.Default(false);
+            source.add(null);
+            source.add("bar");
+            final IChainList objects = chain.mergeNonIndexedIChainLists(source, target);
+            assertThat(objects).hasSize(3);
+            assertThat(objects).containsExactly("foo", null, "bar");
+        }
+
+        @Test
+        @DisplayName("merge nullable lists (unindexed list)")
+        public void test1646594612101() {
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainList.Default target = new IChainList.Default(false);
+            target.add(null);
+            final IChainList.Default source = new IChainList.Default(false);
+            source.add(null);
+            source.add(null);
+            final IChainList objects = chain.mergeNonIndexedIChainLists(source, target);
+            assertThat(objects).hasSize(3);
+            assertThat(objects).containsExactly(null, null, null);
+        }
+
+        @Test
+        @DisplayName("merge empty target and source list (unindexed)")
+        public void test1646656478924() {
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainList.Default target = new IChainList.Default(false);
+            final IChainList.Default source = new IChainList.Default(false);
+            final IChainList objects = chain.mergeNonIndexedIChainLists(source, target);
+            assertThat(objects).isEqualTo(target);
+        }
+
+        @Test
+        @DisplayName("merge internal map (unindexed list)")
+        public void test1646594061126() {
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainList.Default target = new IChainList.Default(false);
+            target.add(mapOf("foo", "a"));
+            final IChainList.Default source = new IChainList.Default(false);
+            source.add(mapOf("bar", "b"));
+            final IChainList objects = chain.mergeNonIndexedIChainLists(source, target);
+            assertThat(objects).hasSize(1);
+            assertThat(objects).containsExactly(mapOf("foo", "a", "bar", "b"));
+        }
+
+    }
+
+    @Nested
+    @DisplayName("#mergeIndexedIChainLists() method tests")
+    public class MergeIndexedIChainListsMethodTests {
+
+        @Test
+        @DisplayName("Required parameters")
+        public void test1646663522227() {
+            final IChain.Default chain = new IChain.Default(null);
+            assertNPE(() -> chain.mergeIndexedIChainLists(null, new IChainList.Default(true)), "source");
+            assertNPE(() -> chain.mergeIndexedIChainLists(new IChainList.Default(true), null), "target");
+        }
+
+        @Test
+        @DisplayName("reverse lists if target list more than source list (indexed)")
+        public void test1646592893081() {
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainList.Default target = new IChainList.Default(true);
+            target.add(null);
+            target.add("foo");
+            final IChainList.Default source = new IChainList.Default(true);
+            source.add("bar");
+            final IChainList objects = chain.mergeIndexedIChainLists(source, target);
+            assertThat(objects.toString()).isEqualTo("[bar, foo]");
+        }
+
+        @Test
+        @DisplayName("merge lists if target list length equals source list length (indexed)")
+        public void test1646655610531() {
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainList.Default target = new IChainList.Default(true);
+            target.add(null);
+            target.add("foo");
+            final IChainList.Default source = new IChainList.Default(true);
+            source.add("bar");
+            source.add(null);
+            final IChainList objects = chain.mergeIndexedIChainLists(source, target);
+            assertThat(objects.toString()).isEqualTo("[bar, foo]");
+        }
+
+        @Test
+        @DisplayName("straight lists if target list more than source list (indexed)")
+        public void test1646593238145() {
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainList.Default target = new IChainList.Default(true);
+            target.add("foo");
+            final IChainList.Default source = new IChainList.Default(true);
+            source.add(null);
+            source.add("bar");
+            final IChainList objects = chain.mergeIndexedIChainLists(source, target);
+            assertThat(objects.toString()).isEqualTo("[foo, bar]");
+        }
+
+        @Test
+        @DisplayName("insert internal map (indexed list)")
+        public void test1646593443676() {
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainList.Default target = new IChainList.Default(true);
+            target.add(mapOf("foo", "a"));
+            final IChainList.Default source = new IChainList.Default(true);
+            source.add(null);
+            source.add(mapOf("bar", "b"));
+            final IChainList objects = chain.mergeIndexedIChainLists(source, target);
+            assertThat(objects).hasSize(2);
+            assertThat(objects).containsExactly(mapOf("foo", "a"), mapOf("bar", "b"));
+        }
+
+        @Test
+        @DisplayName("merge internal map if source not filled (indexed list)")
+        public void test1646593706927() {
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainList.Default target = new IChainList.Default(true);
+            target.add(mapOf("bar", "b"));
+            target.add(mapOf("foo1", "a"));
+            final IChainList.Default source = new IChainList.Default(true);
+            source.add(null);
+            source.add(mapOf("foo2", "c"));
+            final IChainList objects = chain.mergeIndexedIChainLists(source, target);
+            assertThat(objects).hasSize(2);
+            assertThat(objects).containsExactly(mapOf("bar", "b"), mapOf("foo1", "a", "foo2", "c"));
+        }
+
+        @Test
+        @DisplayName("merge internal map if source is filled (indexed list)")
+        public void test1646593979381() {
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainList.Default target = new IChainList.Default(true);
+            target.add(mapOf("bar", "b"));
+            final IChainList.Default source = new IChainList.Default(true);
+            source.add(mapOf("foo2", "c"));
+            final IChainList objects = chain.mergeIndexedIChainLists(source, target);
+            assertThat(objects).hasSize(1);
+            assertThat(objects).containsExactly(mapOf("bar", "b", "foo2", "c"));
+        }
+
+        @Test
+        @DisplayName("merge nullable lists (indexed list)")
+        public void test1646594509714() {
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainList.Default target = new IChainList.Default(true);
+            target.add(null);
+            final IChainList.Default source = new IChainList.Default(true);
+            source.add(null);
+            source.add(null);
+            final IChainList objects = chain.mergeIndexedIChainLists(source, target);
+            assertThat(objects).hasSize(2);
+            assertThat(objects).containsExactly(null, null);
+        }
+
+        @Test
+        @DisplayName("merge empty target and source list (indexed)")
+        public void test1646594736999() {
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainList.Default target = new IChainList.Default(true);
+            final IChainList.Default source = new IChainList.Default(true);
+            final IChainList objects = chain.mergeIndexedIChainLists(source, target);
+            assertThat(objects).isEqualTo(target);
+        }
+
+        @Test
+        @DisplayName("overwrite value by same index (indexed)")
+        public void test1646656532750() {
+            // foo[0]=bar&foo[0]=car -> foo=[car]
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainList.Default target = new IChainList.Default(true);
+            target.add("bar");
+            final IChainList.Default source = new IChainList.Default(true);
+            source.add("car");
+            final IChainList objects = chain.mergeIndexedIChainLists(source, target);
+            assertThat(objects.toString()).isEqualTo("[car]");
+        }
+
+    }
+
+    @Nested
     @DisplayName("#mergeIChainLists() method tests")
     public class MergeIChainListsMethodTests {
 
@@ -555,165 +778,15 @@ public class IChainUnitTests extends BaseTest {
         }
 
         @Test
-        @DisplayName("reverse lists if target list more than source list (indexed)")
-        public void test1646592893081() {
+        @DisplayName("IllegalArgumentException different IChainList types (indexed/unindexed)")
+        public void test1646663678542() {
             final IChain.Default chain = new IChain.Default(null);
-            final IChainList.Default target = new IChainList.Default(true);
-            target.add(null);
-            target.add("foo");
-            final IChainList.Default source = new IChainList.Default(true);
-            source.add("bar");
-            final IChainList objects = chain.mergeIChainLists(source, target);
-            assertThat(objects.toString()).isEqualTo("[bar, foo]");
-        }
+            assertThrow(() -> chain.mergeIChainLists(chainListOf(true, "foo"), chainListOf(false, "bar")))
+                    .assertClass(IllegalArgumentException.class)
+                    .assertMessageIs("Different types of lists are passed for merging.\n" +
+                                     "Source list: indexed\n" +
+                                     "Target list: not indexed\n");
 
-        @Test
-        @DisplayName("merge lists if target list length equals source list length (indexed)")
-        public void test1646655610531() {
-            final IChain.Default chain = new IChain.Default(null);
-            final IChainList.Default target = new IChainList.Default(true);
-            target.add(null);
-            target.add("foo");
-            final IChainList.Default source = new IChainList.Default(true);
-            source.add("bar");
-            source.add(null);
-            final IChainList objects = chain.mergeIChainLists(source, target);
-            assertThat(objects.toString()).isEqualTo("[bar, foo]");
-        }
-
-        @Test
-        @DisplayName("append source list to target list (unindexed)")
-        public void test1646593062091() {
-            final IChain.Default chain = new IChain.Default(null);
-            final IChainList.Default target = new IChainList.Default(false);
-            target.add(null);
-            target.add("foo");
-            final IChainList.Default source = new IChainList.Default(false);
-            source.add("bar");
-            final IChainList objects = chain.mergeIChainLists(source, target);
-            assertThat(objects.toString()).isEqualTo("[null, foo, bar]");
-        }
-
-        @Test
-        @DisplayName("append source maps list to target maps list if maps keys is same (unindexed)")
-        public void test1646654789221() {
-            final IChain.Default chain = new IChain.Default(null);
-            final IChainList.Default target = new IChainList.Default(false);
-            target.add(mapOf("foo", "target_value"));
-            final IChainList.Default source = new IChainList.Default(false);
-            source.add(mapOf("foo", "source_value"));
-            final IChainList objects = chain.mergeIChainLists(source, target);
-            assertThat(objects.toString()).isEqualTo("[{foo=target_value}, {foo=source_value}]");
-        }
-
-        @Test
-        @DisplayName("straight lists if target list more than source list (indexed)")
-        public void test1646593238145() {
-            final IChain.Default chain = new IChain.Default(null);
-            final IChainList.Default target = new IChainList.Default(true);
-            target.add("foo");
-            final IChainList.Default source = new IChainList.Default(true);
-            source.add(null);
-            source.add("bar");
-            final IChainList objects = chain.mergeIChainLists(source, target);
-            assertThat(objects.toString()).isEqualTo("[foo, bar]");
-        }
-
-        @Test
-        @DisplayName("straight lists if target list more than source list (unindexed)")
-        public void test1646593247852() {
-            final IChain.Default chain = new IChain.Default(null);
-            final IChainList.Default target = new IChainList.Default(false);
-            target.add("foo");
-            final IChainList.Default source = new IChainList.Default(false);
-            source.add(null);
-            source.add("bar");
-            final IChainList objects = chain.mergeIChainLists(source, target);
-            assertThat(objects).hasSize(3);
-            assertThat(objects).containsExactly("foo", null, "bar");
-        }
-
-        @Test
-        @DisplayName("insert internal map (indexed list)")
-        public void test1646593443676() {
-            final IChain.Default chain = new IChain.Default(null);
-            final IChainList.Default target = new IChainList.Default(true);
-            target.add(mapOf("foo", "a"));
-            final IChainList.Default source = new IChainList.Default(true);
-            source.add(null);
-            source.add(mapOf("bar", "b"));
-            final IChainList objects = chain.mergeIChainLists(source, target);
-            assertThat(objects).hasSize(2);
-            assertThat(objects).containsExactly(mapOf("foo", "a"), mapOf("bar", "b"));
-        }
-
-        @Test
-        @DisplayName("merge internal map if source not filled (indexed list)")
-        public void test1646593706927() {
-            final IChain.Default chain = new IChain.Default(null);
-            final IChainList.Default target = new IChainList.Default(true);
-            target.add(mapOf("bar", "b"));
-            target.add(mapOf("foo1", "a"));
-            final IChainList.Default source = new IChainList.Default(true);
-            source.add(null);
-            source.add(mapOf("foo2", "c"));
-            final IChainList objects = chain.mergeIChainLists(source, target);
-            assertThat(objects).hasSize(2);
-            assertThat(objects).containsExactly(mapOf("bar", "b"), mapOf("foo1", "a", "foo2", "c"));
-        }
-
-        @Test
-        @DisplayName("merge internal map if source is filled (indexed list)")
-        public void test1646593979381() {
-            final IChain.Default chain = new IChain.Default(null);
-            final IChainList.Default target = new IChainList.Default(true);
-            target.add(mapOf("bar", "b"));
-            final IChainList.Default source = new IChainList.Default(true);
-            source.add(mapOf("foo2", "c"));
-            final IChainList objects = chain.mergeIChainLists(source, target);
-            assertThat(objects).hasSize(1);
-            assertThat(objects).containsExactly(mapOf("bar", "b", "foo2", "c"));
-        }
-
-        @Test
-        @DisplayName("merge internal map (unindexed list)")
-        public void test1646594061126() {
-            final IChain.Default chain = new IChain.Default(null);
-            final IChainList.Default target = new IChainList.Default(false);
-            target.add(mapOf("foo", "a"));
-            final IChainList.Default source = new IChainList.Default(false);
-            source.add(mapOf("bar", "b"));
-            final IChainList objects = chain.mergeIChainLists(source, target);
-            assertThat(objects).hasSize(1);
-            assertThat(objects).containsExactly(mapOf("foo", "a", "bar", "b"));
-        }
-
-        @Test
-        @DisplayName("merge nullable lists (indexed list)")
-        public void test1646594509714() {
-            final IChain.Default chain = new IChain.Default(null);
-            final IChainList.Default target = new IChainList.Default(true);
-            target.add(null);
-            final IChainList.Default source = new IChainList.Default(true);
-            source.add(null);
-            source.add(null);
-            final IChainList objects = chain.mergeIChainLists(source, target);
-            assertThat(objects).hasSize(2);
-            assertThat(objects).containsExactly(null, null);
-        }
-
-        @Test
-        @DisplayName("merge nullable lists (unindexed list)")
-        public void test1646594612101() {
-            final IChain.Default chain = new IChain.Default(null);
-            final IChainList.Default target = new IChainList.Default(false);
-            target.add(null);
-            final IChainList.Default source = new IChainList.Default(false);
-            source.add(null);
-            source.add(null);
-            final IChainList objects = chain.mergeIChainLists(source, target);
-            assertThat(objects).hasSize(3);
-            assertThat(objects).containsExactly(null, null, null);
         }
 
         @Test
@@ -723,17 +796,6 @@ public class IChainUnitTests extends BaseTest {
             final IChainList.Default target = new IChainList.Default(true);
             target.add("foo");
             final IChainList.Default source = new IChainList.Default(true);
-            final IChainList objects = chain.mergeIChainLists(source, target);
-            assertThat(objects).isEqualTo(target);
-        }
-
-        @Test
-        @DisplayName("return target list if source list is empty (unindexed)")
-        public void test1646656276678() {
-            final IChain.Default chain = new IChain.Default(null);
-            final IChainList.Default target = new IChainList.Default(false);
-            target.add("foo");
-            final IChainList.Default source = new IChainList.Default(false);
             final IChainList objects = chain.mergeIChainLists(source, target);
             assertThat(objects).isEqualTo(target);
         }
@@ -751,6 +813,17 @@ public class IChainUnitTests extends BaseTest {
 
         @Test
         @DisplayName("return target list if source list is empty (unindexed)")
+        public void test1646656276678() {
+            final IChain.Default chain = new IChain.Default(null);
+            final IChainList.Default target = new IChainList.Default(false);
+            target.add("foo");
+            final IChainList.Default source = new IChainList.Default(false);
+            final IChainList objects = chain.mergeIChainLists(source, target);
+            assertThat(objects).isEqualTo(target);
+        }
+
+        @Test
+        @DisplayName("return target list if source list is empty (unindexed)")
         public void test1646656311847() {
             final IChain.Default chain = new IChain.Default(null);
             final IChainList.Default target = new IChainList.Default(false);
@@ -761,36 +834,30 @@ public class IChainUnitTests extends BaseTest {
         }
 
         @Test
-        @DisplayName("merge empty target and source list (indexed)")
-        public void test1646594736999() {
-            final IChain.Default chain = new IChain.Default(null);
-            final IChainList.Default target = new IChainList.Default(true);
-            final IChainList.Default source = new IChainList.Default(true);
-            final IChainList objects = chain.mergeIChainLists(source, target);
-            assertThat(objects).isEqualTo(target);
-        }
-
-        @Test
-        @DisplayName("merge empty target and source list (unindexed)")
-        public void test1646656478924() {
+        @DisplayName("append source list to target list (unindexed)")
+        public void test1646663833683() {
             final IChain.Default chain = new IChain.Default(null);
             final IChainList.Default target = new IChainList.Default(false);
+            target.add(null);
+            target.add("foo");
             final IChainList.Default source = new IChainList.Default(false);
+            source.add("bar");
             final IChainList objects = chain.mergeIChainLists(source, target);
-            assertThat(objects).isEqualTo(target);
+            assertThat(objects.toString()).isEqualTo("[null, foo, bar]");
         }
 
         @Test
-        @DisplayName("overwrite value by same index (indexed)")
-        public void test1646656532750() {
-            // foo[0]=bar&foo[0]=car -> foo=[car]
+        @DisplayName("merge lists if target list length equals source list length (indexed)")
+        public void test1646663869647() {
             final IChain.Default chain = new IChain.Default(null);
             final IChainList.Default target = new IChainList.Default(true);
-            target.add("bar");
+            target.add(null);
+            target.add("foo");
             final IChainList.Default source = new IChainList.Default(true);
-            source.add("car");
+            source.add("bar");
+            source.add(null);
             final IChainList objects = chain.mergeIChainLists(source, target);
-            assertThat(objects.toString()).isEqualTo("[car]");
+            assertThat(objects.toString()).isEqualTo("[bar, foo]");
         }
 
     }

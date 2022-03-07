@@ -185,61 +185,24 @@ public interface IChain {
         }
 
         /**
-         * Method for {@link IChainList} merging
-         * For indexed form list
+         * Merge indexed {@link IChainList}
          * - Set by index - target null value is replaced by source value at the corresponding index
-         * - Merge by index - target value is merged by source value at the corresponding index
-         * For unindexed form list
-         * - If list of maps - merge maps and set to target collection by corresponding index
-         * - else appends all elements in the target collection
+         * - Replace simple obj by index - target non-null value is replaced by source value at the corresponding index
+         * - Merge complex obj by index - target value is merged by source value at the corresponding index
          *
-         * @param source source {@link IChainList} for merging
-         * @param target target {@link IChainList} for merging
-         * @return merged target {@link IChainList}
+         * @param source - indexed {@link IChainList} for merging
+         * @param target - indexed {@link IChainList} for merging
+         * @return merge result ({@link IChainList})
          * @throws NullPointerException     if source or target is null
          * @throws IllegalArgumentException incompatible types
          */
-        protected IChainList mergeIChainLists(final Object source, final Object target) {
+        @SuppressWarnings("java:S125")
+        protected IChainList mergeIndexedIChainLists(final IChainList source, final IChainList target) {
             FormUrlUtils.parameterRequireNonNull(source, CodecConstant.SOURCE_PARAMETER);
             FormUrlUtils.parameterRequireNonNull(target, CodecConstant.TARGET_PARAMETER);
-            if (!(source instanceof IChainList && target instanceof IChainList)) {
-                throw new IllegalArgumentException("Received incompatible types to merge\n" +
-                                                   "Expected type: " + IChainList.class + "\n" +
-                                                   "Actual source: " + source.getClass() + "\n" +
-                                                   "Actual target: " + target.getClass() + "\n");
-            }
-            final IChainList sourceList = (IChainList) source;
-            final IChainList targetList = (IChainList) target;
-            if (sourceList.isEmpty() || targetList.isEmpty()) {
-                return sourceList.isEmpty() ? targetList : sourceList;
-            }
-            if (sourceList.isNotIndexed() && targetList.isNotIndexed()) {
-                if (FormUrlUtils.isMapIChainList(sourceList)) {
-                    for (Object o : sourceList) {
-                        final int i = sourceList.indexOf(o);
-                        final Map<?, ?> sMap = (Map<?, ?>) sourceList.get(i);
-                        final Map<?, ?> tMap = (Map<?, ?>) targetList.get(i);
-                        // unreliable heuristic for non-indexed arrays
-                        if (sMap != null && tMap != null && !sMap.keySet().equals(tMap.keySet())) {
-                            // merge source maps list with target maps list if maps keys is different
-                            // merge [{foo=foo_val}] with [{bar=bar_val}]
-                            // result [{foo=foo_val, bar=bar_val}]
-                            targetList.set(i, mergeRawMap(sMap, tMap));
-                        } else {
-                            // append source maps list to target maps list if maps keys is same
-                            // append [{foo=source}] to [{foo=target}]
-                            // result [{foo=target}, {foo=source}]
-                            targetList.addAll(sourceList);
-                        }
-                    }
-                } else {
-                    targetList.addAll(sourceList);
-                }
-                return targetList;
-            }
-            boolean isReverse = sourceList.size() > targetList.size();
-            final IChainList longer = isReverse ? sourceList : targetList;
-            final IChainList shorter = isReverse ? targetList : sourceList;
+            boolean isReverse = source.size() > target.size();
+            final IChainList longer = isReverse ? source : target;
+            final IChainList shorter = isReverse ? target : source;
             if (longer.isNotFilled() || shorter.isNotFilled()) {
                 // For an indexed list, inserting the smaller into the larger is important.
                 // longer  [null, null, null, foo, null]
@@ -283,6 +246,79 @@ public interface IChain {
                 }
             }
             return longer;
+        }
+
+        /**
+         * Merge non-indexed {@link IChainList}
+         * For unindexed form list
+         * - If list of maps - merge maps and set to target collection by corresponding index
+         * - else appends all elements in the target collection
+         *
+         * @param source - non-indexed {@link IChainList} for merging
+         * @param target - non-indexed {@link IChainList} for merging
+         * @return merge result ({@link IChainList})
+         */
+        protected IChainList mergeNonIndexedIChainLists(final IChainList source, final IChainList target) {
+            FormUrlUtils.parameterRequireNonNull(source, CodecConstant.SOURCE_PARAMETER);
+            FormUrlUtils.parameterRequireNonNull(target, CodecConstant.TARGET_PARAMETER);
+            if (FormUrlUtils.isMapIChainList(source)) {
+                for (Object o : source) {
+                    final int i = source.indexOf(o);
+                    final Map<?, ?> sMap = (Map<?, ?>) source.get(i);
+                    final Map<?, ?> tMap = (Map<?, ?>) target.get(i);
+                    // unreliable heuristic for non-indexed arrays
+                    if (sMap != null && tMap != null && !sMap.keySet().equals(tMap.keySet())) {
+                        // merge source maps list with target maps list if maps keys is different
+                        // merge [{foo=foo_val}] with [{bar=bar_val}]
+                        // result [{foo=foo_val, bar=bar_val}]
+                        target.set(i, mergeRawMap(sMap, tMap));
+                    } else {
+                        // append source maps list to target maps list if maps keys is same
+                        // append [{foo=source}] to [{foo=target}]
+                        // result [{foo=target}, {foo=source}]
+                        target.addAll(source);
+                    }
+                }
+            } else {
+                target.addAll(source);
+            }
+            return target;
+        }
+
+        /**
+         * Method for {@link IChainList} merging
+         *
+         * @param source - {@link IChainList} for merging
+         * @param target - {@link IChainList} for merging
+         * @return merge result ({@link IChainList})
+         * @throws NullPointerException     if source or target is null
+         * @throws IllegalArgumentException incompatible types
+         * @throws IllegalArgumentException different IChainList types (indexed/unindexed)
+         */
+        protected IChainList mergeIChainLists(final Object source, final Object target) {
+            FormUrlUtils.parameterRequireNonNull(source, CodecConstant.SOURCE_PARAMETER);
+            FormUrlUtils.parameterRequireNonNull(target, CodecConstant.TARGET_PARAMETER);
+            if (!(source instanceof IChainList && target instanceof IChainList)) {
+                throw new IllegalArgumentException("Received incompatible types to merge\n" +
+                                                   "Expected type: " + IChainList.class + "\n" +
+                                                   "Actual source: " + source.getClass() + "\n" +
+                                                   "Actual target: " + target.getClass() + "\n");
+            }
+            final IChainList sourceList = (IChainList) source;
+            final IChainList targetList = (IChainList) target;
+            if (sourceList.isEmpty() || targetList.isEmpty()) {
+                return sourceList.isEmpty() ? targetList : sourceList;
+            }
+            final boolean sNotIndexed = sourceList.isNotIndexed();
+            final boolean tNotIndexed = targetList.isNotIndexed();
+            if ((sNotIndexed && !tNotIndexed) || (!sNotIndexed && tNotIndexed)) {
+                throw new IllegalArgumentException("Different types of lists are passed for merging.\n" +
+                                                   "Source list: " + (sNotIndexed ? "not indexed" : "indexed") + "\n" +
+                                                   "Target list: " + (tNotIndexed ? "not indexed" : "indexed") + "\n");
+            }
+            return sNotIndexed ?
+                    mergeNonIndexedIChainLists(sourceList, targetList) :
+                    mergeIndexedIChainLists(sourceList, targetList);
         }
 
         /**
