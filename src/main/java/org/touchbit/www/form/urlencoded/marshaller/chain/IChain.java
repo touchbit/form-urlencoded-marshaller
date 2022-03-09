@@ -244,7 +244,7 @@ public interface IChain {
                         .filter(i -> !insertIndexes.contains(i))
                         .forEach(i -> longer.set(i, shorter.get(i)));
             } else {
-                if (FormUrlUtils.isSimpleIChainList(longer) && FormUrlUtils.isSimpleIChainList(shorter)) {
+                if (FormUrlUtils.isCollectionOfSimpleObj(longer) && FormUrlUtils.isCollectionOfSimpleObj(shorter)) {
                     // overwrite simple values by same index
                     // Example: foo[0]=bar&foo[0]=car -> foo=[car]
                     shorter.forEach(e -> longer.set(shorter.indexOf(e), e));

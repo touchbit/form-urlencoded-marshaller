@@ -20,13 +20,13 @@ package org.touchbit.www.form.urlencoded.marshaller.util;
  * @author Oleg Shaburov (shaburov.o.a@gmail.com)
  * Created: 18.02.2022
  */
-public class FormUrlCodecException extends RuntimeException {
+public class MarshallerException extends RuntimeException {
 
-    public FormUrlCodecException(String message) {
+    public MarshallerException(String message) {
         super(message);
     }
 
-    public FormUrlCodecException(String message, Throwable t) {
+    public MarshallerException(String message, Throwable t) {
         super(message, t);
     }
 

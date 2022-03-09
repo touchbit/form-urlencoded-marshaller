@@ -16,9 +16,11 @@
 
 package org.touchbit.www.form.urlencoded.marshaller.util;
 
+import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.touchbit.www.form.urlencoded.marshaller.chain.IChainList;
 import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncoded;
+import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncodedAdditionalProperties;
 import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncodedField;
 
 import java.lang.reflect.Field;
@@ -53,18 +55,6 @@ public class FormUrlUtils {
      */
     public static void parameterRequireNonNull(Object parameter, String parameterName) {
         Objects.requireNonNull(parameter, "Parameter '" + parameterName + "' is required and cannot be null.");
-    }
-
-    public static List<Field> getFormUrlEncodedFields(final Object object) {
-        parameterRequireNonNull(object, OBJECT_PARAMETER);
-        return getFormUrlEncodedFields(object.getClass());
-    }
-
-    public static List<Field> getFormUrlEncodedFields(final Class<?> aClass) {
-        parameterRequireNonNull(aClass, A_CLASS_PARAMETER);
-        return FieldUtils.getFieldsListWithAnnotation(aClass, FormUrlEncodedField.class).stream()
-                .filter(f -> !Modifier.isStatic(f.getModifiers()))
-                .collect(Collectors.toList());
     }
 
     public static boolean isConstantField(final Field field) {
@@ -126,32 +116,28 @@ public class FormUrlUtils {
         return parameterizedType != null && parameterizedType.getRawType() == Map.class;
     }
 
-
     public static boolean isGenericCollection(final Field field) {
         FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
         final ParameterizedType type = getParameterizedType(field);
         return type != null && type.getRawType() == Collection.class;
     }
 
-
     public static boolean isGenericCollection(final Type type) {
         FormUrlUtils.parameterRequireNonNull(type, CodecConstant.TYPE_PARAMETER);
         final ParameterizedType parameterizedType = getParameterizedType(type);
-        return parameterizedType != null && parameterizedType.getRawType() == Collection.class;
+        return parameterizedType != null &&
+               parameterizedType.getRawType() instanceof Class &&
+               Collection.class.isAssignableFrom((Class<?>) parameterizedType.getRawType());
     }
 
 
     public static boolean isArray(final Field field) {
-        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
-        return field.getType().isArray();
+        return field != null && isArray(field.getType());
     }
-
 
     public static boolean isArray(final Type type) {
-        FormUrlUtils.parameterRequireNonNull(type, CodecConstant.TYPE_PARAMETER);
         return (type instanceof Class) && ((Class<?>) type).isArray();
     }
-
 
     public static ParameterizedType getParameterizedType(final Field field) {
         FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
@@ -171,7 +157,7 @@ public class FormUrlUtils {
     /**
      * @param value array || collection
      * @return {@link Collection}
-     * @throws FormUrlCodecException if value is not array or collection
+     * @throws MarshallerException if value is not array or collection
      */
     @SuppressWarnings({"java:S1452"})
     public static Collection<?> arrayToCollection(final Object value) {
@@ -192,6 +178,14 @@ public class FormUrlUtils {
      */
     public static boolean isCollection(Object object) {
         return object instanceof Collection;
+    }
+
+    /**
+     * @param type - nullable object type
+     * @return true if object instanceof {@link Collection}
+     */
+    public static boolean isCollection(Type type) {
+        return type instanceof Class && Collection.class.isAssignableFrom((Class<?>) type);
     }
 
     /**
@@ -220,11 +214,23 @@ public class FormUrlUtils {
     }
 
     /**
+     * @param field - nullable {@link Field}
+     * @return true if field type instanceof {@link Map}
+     */
+    public static boolean isMap(Field field) {
+        return field != null && isMap(field.getType());
+    }
+
+    /**
      * @param object - nullable object
      * @return true if object instanceof {@link Map}
      */
     public static boolean isMap(Object object) {
-        return object instanceof Map;
+        if (object != null) {
+            final Class<?> objClass = (object instanceof Class) ? (Class<?>) object : object.getClass();
+            return Map.class.isAssignableFrom(objClass);
+        }
+        return false;
     }
 
     /**
@@ -232,7 +238,45 @@ public class FormUrlUtils {
      * @return true if object class contains {@link FormUrlEncoded} annotation
      */
     public static boolean isPojo(Object object) {
-        return object != null && object.getClass().isAnnotationPresent(FormUrlEncoded.class);
+        final Class<?> objClass = (object instanceof Class) ? ((Class<?>) object) : object.getClass();
+        return objClass.isAnnotationPresent(FormUrlEncoded.class);
+    }
+
+    public static boolean hasAdditionalProperty(Object object) {
+        final Class<?> objClass = (object instanceof Class) ? ((Class<?>) object) : object.getClass();
+        return !FieldUtils.getFieldsListWithAnnotation(objClass, FormUrlEncodedAdditionalProperties.class).isEmpty();
+    }
+
+    public static List<Field> getFormUrlEncodedFields(final Object object) {
+        parameterRequireNonNull(object, OBJECT_PARAMETER);
+        return getFormUrlEncodedFields(object.getClass());
+    }
+
+    public static Map<String, Field> getFormUrlEncodedFieldsMap(final Object object) {
+        parameterRequireNonNull(object, OBJECT_PARAMETER);
+        return getFormUrlEncodedFieldsMap(object.getClass());
+    }
+
+    public static Map<String, Field> getFormUrlEncodedFieldsMap(final Class<?> aClass) {
+        parameterRequireNonNull(aClass, A_CLASS_PARAMETER);
+        return getFormUrlEncodedFields(aClass).stream()
+                .collect(Collectors.toMap(f -> f.getAnnotation(FormUrlEncodedField.class).value(), f -> f));
+    }
+
+    public static List<Field> getFormUrlEncodedFields(final Class<?> aClass) {
+        parameterRequireNonNull(aClass, A_CLASS_PARAMETER);
+        return FieldUtils.getFieldsListWithAnnotation(aClass, FormUrlEncodedField.class).stream()
+                .filter(f -> !f.getAnnotation(FormUrlEncodedField.class).value().trim().isEmpty())
+                .filter(f -> !Modifier.isStatic(f.getModifiers()))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * @param field - nullable {@link Field}
+     * @return true if field type instanceof simple java data type (String, Integer, etc.)
+     */
+    public static boolean isSimple(Field field) {
+        return field != null && isSimple(field.getType());
     }
 
     /**
@@ -252,11 +296,100 @@ public class FormUrlUtils {
     }
 
     /**
-     * @param list - nullable {@link IChainList}
+     * @param type - nullable object type
+     * @return true if object instanceof simple java data type (String, Integer, etc.)
+     */
+    public static boolean isSimple(Type type) {
+        if (type instanceof Class) {
+            final Class<?> aClass = (Class<?>) type;
+            return String.class.isAssignableFrom(aClass) ||
+                   Boolean.class.isAssignableFrom(aClass) ||
+                   Boolean.class.isAssignableFrom(aClass) ||
+                   Short.class.isAssignableFrom(aClass) ||
+                   Long.class.isAssignableFrom(aClass) ||
+                   Float.class.isAssignableFrom(aClass) ||
+                   Integer.class.isAssignableFrom(aClass) ||
+                   Double.class.isAssignableFrom(aClass) ||
+                   BigInteger.class.isAssignableFrom(aClass) ||
+                   BigDecimal.class.isAssignableFrom(aClass);
+        }
+        return false;
+    }
+
+    /**
+     * @param object - nullable {@link Field} or {@link ParameterizedType} or {@link Type} or {@link Class}
+     * @return true if the object or field type is a collection and contains simple types {@code ["foo", "bar"]}
+     */
+    public static boolean isCollectionOfSimpleObj(final Object object) {
+        if (object instanceof Field) {
+            Field field = (Field) object;
+            return isCollectionOfSimpleObj(field.getType());
+        }
+        if (object instanceof ParameterizedType) {
+            final ParameterizedType parameterizedType = (ParameterizedType) object;
+            final Type objectRawType = parameterizedType.getRawType();
+            final Type genericType = parameterizedType.getActualTypeArguments()[0];
+            return isCollectionOfSimpleObj(objectRawType) && isSimple(genericType);
+        }
+        if (object instanceof Class) {
+            return Collection.class.isAssignableFrom((Class<?>) object);
+        }
+        if (object instanceof Collection) {
+            return ((Collection<?>) object).stream().allMatch(FormUrlUtils::isSimple);
+        }
+        return false;
+    }
+
+    /**
+     * @param object - nullable {@link Field} or {@link Type} or {@link Class}
+     * @return true if the object or field type is a collection and contains nested collections {@code [[], []]}
+     */
+    public static boolean isCollectionOfArray(final Object object) {
+        if (object instanceof Field) {
+            Field field = (Field) object;
+            return isCollectionOfArray(field.getType());
+        }
+        if (object instanceof ParameterizedType) {
+            final ParameterizedType parameterizedType = (ParameterizedType) object;
+            final Type genericType = parameterizedType.getActualTypeArguments()[0];
+            return isArray(genericType);
+        }
+        if (object instanceof Class) {
+            return ((Class<?>) object).isArray();
+        }
+        return false;
+    }
+
+    /**
+     * @param object - nullable {@link Field} or {@link ParameterizedType} or {@link Type} or {@link Class}
+     * @return true if the object or field type is a collection and contains nested collections {@code [[], []]}
+     */
+    public static boolean isCollectionOfCollections(final Object object) {
+        if (object instanceof Field) {
+            Field field = (Field) object;
+            return isCollectionOfCollections(field.getGenericType());
+        }
+        if (object instanceof ParameterizedType) {
+            final ParameterizedType parameterizedType = (ParameterizedType) object;
+            final Type objectRawType = parameterizedType.getRawType();
+            final Type genericType = parameterizedType.getActualTypeArguments()[0];
+            return isCollectionOfCollections(objectRawType) && isGenericCollection(genericType);
+        }
+        if (object instanceof Class) {
+            return Collection.class.isAssignableFrom((Class<?>) object);
+        }
+        if (object instanceof Collection) {
+            return ((Collection<?>) object).stream().allMatch(FormUrlUtils::isCollection);
+        }
+        return false;
+    }
+
+    /**
+     * @param list - nullable list
      * @return true if list contains only object instanceof simple java data type (String, Integer, etc.)
      */
-    public static boolean isSimpleIChainList(IChainList list) {
-        return list != null && list.stream().allMatch(FormUrlUtils::isSimple);
+    public static boolean isCollectionOfMaps(final Collection<?> list) {
+        return list != null && list.stream().allMatch(FormUrlUtils::isMap);
     }
 
     /**
@@ -265,6 +398,16 @@ public class FormUrlUtils {
      */
     public static boolean isMapIChainList(IChainList list) {
         return list != null && list.stream().allMatch(FormUrlUtils::isMap);
+    }
+
+    public static <M> M invokeModelConstructor(Class<M> modelClass) {
+        try {
+            return ConstructorUtils.invokeConstructor(modelClass);
+        } catch (Exception e) {
+            throw new MarshallerException("Unable to instantiate model class\n" +
+                                          "    Model type: " + modelClass.getName() + "\n" +
+                                          "    Error cause: " + e.getMessage().trim() + "\n", e);
+        }
     }
 
 }

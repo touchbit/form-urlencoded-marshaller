@@ -36,7 +36,6 @@ public interface IFormUrlMarshaller {
 
     /**
      * Model to string conversion
-     * According to the 3W specification, it is strongly recommended to use UTF-8 charset for URL form data coding.
      *
      * @param model - FormUrlEncoded model
      * @return model string representation
@@ -45,7 +44,6 @@ public interface IFormUrlMarshaller {
 
     /**
      * String to model conversion
-     * According to the 3W specification, it is strongly recommended to use UTF-8 charset for URL form data coding.
      *
      * @param modelClass    - FormUrlEncoded model class
      * @param encodedString - String data to conversation
