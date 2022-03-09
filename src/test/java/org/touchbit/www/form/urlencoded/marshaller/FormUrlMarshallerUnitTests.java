@@ -502,6 +502,16 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         @DisplayName("Convert List<Map<?, ?>> to field generic type List<Map<?, ?>>")
         public void test1646786782505() {
             final Type genericType = POJO.PojoFields.LIST_MAP_STRING_INTEGER_FIELD.getType();
+            final List<Map<String, Object>> rawData = listOf(mapOf("foo", 1));
+            final List<Map<String, Object>> result =
+                    (List<Map<String, Object>>) marshaller().convertRawValueToTargetType(rawData, genericType);
+            assertThat(result.get(0).get("foo")).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("Convert List<Map<?, ?>> to List (raw type)")
+        public void test1646830967212() {
+            final Type genericType = POJO.PojoFields.LIST_RAW_FIELD.getType();
             final List<Map<String, Object>> rawData = listOf(mapOf("foo", "bar"));
             final List<Map<String, Object>> result =
                     (List<Map<String, Object>>) marshaller().convertRawValueToTargetType(rawData, genericType);
@@ -513,9 +523,9 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         public void test1646786885325() {
             final Type genericType = POJO.PojoFields.ARRAY_MAP_OBJECT_FIELD.getType();
             final List<Map<String, Object>> rawData = listOf(mapOf("foo", "bar"));
-            final List<Map<String, Object>> result =
-                    (List<Map<String, Object>>) marshaller().convertRawValueToTargetType(rawData, genericType);
-            assertThat(result.get(0).get("foo")).isEqualTo("bar");
+            final Map<String, Object>[] result =
+                    (Map<String, Object>[]) marshaller().convertRawValueToTargetType(rawData, genericType);
+            assertThat(result[0].get("foo")).isEqualTo("bar");
         }
 
         @Test
@@ -552,7 +562,16 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         public void test1646783865319() {
             final Type genericType = POJO.PojoFields.ARRAY_MAP_OBJECT_FIELD.getType();
             final Map<String, Object> rawData = mapOf("foo", "1");
-            // todo class sun.reflect.generics.reflectiveObjects.GenericArrayTypeImpl
+            final Map<String, Object>[] result =
+                    (Map<String, Object>[]) marshaller().convertRawValueToTargetType(rawData, genericType);
+            assertThat(result[0].get("foo")).isEqualTo("1");
+        }
+
+        @Test
+        @DisplayName("Convert Map<String, ?> to field generic type Map[] (hidden url encoded array)")
+        public void test1646828259346() {
+            final Type genericType = POJO.PojoFields.ARRAY_RAW_MAP_FIELD.getType();
+            final Map<String, Object> rawData = mapOf("foo", "1");
             final Map<String, Object>[] result =
                     (Map<String, Object>[]) marshaller().convertRawValueToTargetType(rawData, genericType);
             assertThat(result[0].get("foo")).isEqualTo("1");

@@ -23,10 +23,7 @@ import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncoded;
 import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncodedAdditionalProperties;
 import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncodedField;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
@@ -139,6 +136,10 @@ public class FormUrlUtils {
         return (type instanceof Class) && ((Class<?>) type).isArray();
     }
 
+    public static boolean isGenericArray(final Type type) {
+        return type instanceof GenericArrayType;
+    }
+
     public static ParameterizedType getParameterizedType(final Field field) {
         FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
         final Type genericType = field.getGenericType();
@@ -177,6 +178,9 @@ public class FormUrlUtils {
      * @return true if object instanceof {@link Collection}
      */
     public static boolean isCollection(Object object) {
+        if (object instanceof Type) {
+            return isCollection((Type) object);
+        }
         return object instanceof Collection;
     }
 
@@ -331,13 +335,10 @@ public class FormUrlUtils {
             final Type genericType = parameterizedType.getActualTypeArguments()[0];
             return isCollectionOfSimpleObj(objectRawType) && isSimple(genericType);
         }
-        if (object instanceof Class) {
-            return Collection.class.isAssignableFrom((Class<?>) object);
-        }
         if (object instanceof Collection) {
             return ((Collection<?>) object).stream().allMatch(FormUrlUtils::isSimple);
         }
-        return false;
+        return isCollection(object);
     }
 
     /**
@@ -375,13 +376,31 @@ public class FormUrlUtils {
             final Type genericType = parameterizedType.getActualTypeArguments()[0];
             return isCollectionOfCollections(objectRawType) && isGenericCollection(genericType);
         }
-        if (object instanceof Class) {
-            return Collection.class.isAssignableFrom((Class<?>) object);
-        }
         if (object instanceof Collection) {
             return ((Collection<?>) object).stream().allMatch(FormUrlUtils::isCollection);
         }
-        return false;
+        return isCollection(object);
+    }
+
+    /**
+     * @param object - nullable {@link Field} or {@link ParameterizedType} or {@link Type} or {@link Class}
+     * @return true if the object or field type is a collection and contains nested collections {@code [[], []]}
+     */
+    public static boolean isCollectionOfMap(final Object object) {
+        if (object instanceof Field) {
+            Field field = (Field) object;
+            return isCollectionOfMap(field.getGenericType());
+        }
+        if (object instanceof ParameterizedType) {
+            final ParameterizedType parameterizedType = (ParameterizedType) object;
+            final Type objectRawType = parameterizedType.getRawType();
+            final Type genericType = parameterizedType.getActualTypeArguments()[0];
+            return isCollectionOfMap(objectRawType) && isGenericMap(genericType);
+        }
+        if (object instanceof Collection) {
+            return ((Collection<?>) object).stream().allMatch(FormUrlUtils::isMap);
+        }
+        return isCollection(object);
     }
 
     /**

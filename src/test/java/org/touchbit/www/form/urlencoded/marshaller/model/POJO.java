@@ -49,6 +49,9 @@ public class POJO extends HashMap<String, Object> {
     @FormUrlEncodedField("arrayMapObjectField")
     private Map<String, Object>[] arrayMapObjectField;
 
+    @FormUrlEncodedField("arrayRawMapField")
+    private Map[] arrayRawMapField;
+
     @FormUrlEncodedField("listRawField")
     private List listRawField;
 
@@ -112,6 +115,7 @@ public class POJO extends HashMap<String, Object> {
         ARRAY_STRING_FIELD("arrayStringField"),
         ARRAY_INTEGER_FIELD("arrayIntegerField"),
         ARRAY_MAP_OBJECT_FIELD("arrayMapObjectField"),
+        ARRAY_RAW_MAP_FIELD("arrayRawMapField"),
         LIST_RAW_FIELD("listRawField"),
         LIST_STRING_FIELD("listStringField"),
         LIST_OBJECT_FIELD("listObjectField"),
