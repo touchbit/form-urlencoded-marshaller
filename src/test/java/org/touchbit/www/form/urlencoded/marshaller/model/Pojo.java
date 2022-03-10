@@ -2,6 +2,7 @@ package org.touchbit.www.form.urlencoded.marshaller.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncoded;
 import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncodedAdditionalProperties;
@@ -9,24 +10,24 @@ import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncodedField;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings("rawtypes")
 @Getter
 @Setter
+@ToString
 @Accessors(chain = true, fluent = true)
 @FormUrlEncoded
-public class POJO extends HashMap<String, Object> {
+public class Pojo {
 
-    public static final POJO CONSTANT = new POJO();
+    public static final Pojo CONSTANT = new Pojo();
 
     @FormUrlEncodedField("constant")
-    public static final POJO ANNOTATED_CONSTANT = new POJO();
+    public static final Pojo ANNOTATED_CONSTANT = new Pojo();
 
     @FormUrlEncodedField("nestedPojo")
-    private POJO nestedPojo;
+    private Pojo nestedPojo;
 
     @FormUrlEncodedField("missed")
     private String missed;
@@ -52,11 +53,17 @@ public class POJO extends HashMap<String, Object> {
     @FormUrlEncodedField("arrayRawMapField")
     private Map[] arrayRawMapField;
 
+    @FormUrlEncodedField("arrayPojoField")
+    private Pojo[] arrayPojoField;
+
     @FormUrlEncodedField("listRawField")
     private List listRawField;
 
     @FormUrlEncodedField("listStringField")
     private List<String> listStringField;
+
+    @FormUrlEncodedField("listPojoField")
+    private List<Pojo> listPojoField;
 
     @FormUrlEncodedField("listObjectField")
     private List<Object> listObjectField;
@@ -76,6 +83,9 @@ public class POJO extends HashMap<String, Object> {
     @FormUrlEncodedField("mapObjectField")
     private Map<String, Object> mapObjectField;
 
+    @FormUrlEncodedField("mapPojoField")
+    private Map<String, Pojo> mapPojoField;
+
     @FormUrlEncodedField("mapMapString")
     private Map<String, Map<String, String>> mapMapString;
 
@@ -85,25 +95,8 @@ public class POJO extends HashMap<String, Object> {
     @FormUrlEncodedAdditionalProperties()
     private Map<String, Object> additionalProperties;
 
-    @Override
-    public String toString() {
-        return "toString";
-    }
-
-    public Map<String, Object> toMap() {
-        final Map<String, Object> result = new HashMap<>();
-        if (nestedPojo != null) result.put("nestedPojo", nestedPojo);
-        if (missed != null) result.put("missed", missed);
-        if (stringField != null) result.put("stringField", stringField);
-        if (integerField != null) result.put("integerField", integerField);
-        if (objectField != null) result.put("objectField", objectField);
-        if (arrayStringField != null) result.put("arrayStringField", arrayStringField);
-        if (arrayIntegerField != null) result.put("arrayIntegerField", arrayIntegerField);
-        if (listStringField != null) result.put("listStringField", listStringField);
-        if (listObjectField != null) result.put("listObjectField", listObjectField);
-        if (listIntegerField != null) result.put("listIntegerField", listIntegerField);
-        if (mapObjectField != null) result.put("mapObjectField", mapObjectField);
-        return result;
+    public static String getTypeName() {
+        return Pojo.class.getTypeName();
     }
 
     public enum PojoFields {
@@ -116,7 +109,9 @@ public class POJO extends HashMap<String, Object> {
         ARRAY_INTEGER_FIELD("arrayIntegerField"),
         ARRAY_MAP_OBJECT_FIELD("arrayMapObjectField"),
         ARRAY_RAW_MAP_FIELD("arrayRawMapField"),
+        ARRAY_POJO_FIELD("arrayPojoField"),
         LIST_RAW_FIELD("listRawField"),
+        LIST_POJO_FIELD("listPojoField"),
         LIST_STRING_FIELD("listStringField"),
         LIST_OBJECT_FIELD("listObjectField"),
         LIST_INTEGER_FIELD("listIntegerField"),
@@ -124,6 +119,7 @@ public class POJO extends HashMap<String, Object> {
         LIST_ARRAY_INTEGER_FIELD("listArrayIntegerField"),
         LIST_MAP_STRING_INTEGER_FIELD("listMapStringIntegerField"),
         MAP_OBJECT_FIELD("mapObjectField"),
+        MAP_POJO_FIELD("mapPojoField"),
         MAP_MAP_STRING("mapMapString"),
         MAP_MAP_INTEGER("mapMapInteger"),
         ;
@@ -131,20 +127,27 @@ public class POJO extends HashMap<String, Object> {
         private final String fieldName;
 
         PojoFields(String fieldName) {
-
             this.fieldName = fieldName;
+        }
+
+        public String getFieldName() {
+            return fieldName;
         }
 
         public Field getDeclaredField() {
             try {
-                return POJO.class.getDeclaredField(this.fieldName);
+                return Pojo.class.getDeclaredField(this.fieldName);
             } catch (NoSuchFieldException e) {
                 throw new RuntimeException("Test corrupted", e);
             }
         }
 
-        public Type getType() {
+        public Type getGenericType() {
             return getDeclaredField().getGenericType();
+        }
+
+        public Type getType() {
+            return getDeclaredField().getType();
         }
 
     }

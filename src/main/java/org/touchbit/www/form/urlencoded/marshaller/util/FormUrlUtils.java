@@ -18,6 +18,7 @@ package org.touchbit.www.form.urlencoded.marshaller.util;
 
 import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.apache.commons.lang3.reflect.TypeUtils;
 import org.touchbit.www.form.urlencoded.marshaller.chain.IChainList;
 import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncoded;
 import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncodedAdditionalProperties;
@@ -242,8 +243,111 @@ public class FormUrlUtils {
      * @return true if object class contains {@link FormUrlEncoded} annotation
      */
     public static boolean isPojo(Object object) {
+        if (object instanceof ParameterizedType) {
+            final ParameterizedType parameterizedType = (ParameterizedType) object;
+            return isPojo(parameterizedType.getRawType());
+        }
         final Class<?> objClass = (object instanceof Class) ? ((Class<?>) object) : object.getClass();
         return objClass.isAnnotationPresent(FormUrlEncoded.class);
+    }
+
+    /**
+     * @param object - nullable object
+     * @return true if object class contains {@link FormUrlEncoded} annotation
+     */
+    public static boolean isSomePojo(Object object) {
+        return isPojo(object) || isPojoGenericCollection(object) || isPojoArray(object);
+    }
+
+    public static boolean isPojoArray(Object object) {
+        if (object != null) {
+            if (object instanceof Type) {
+                return isPojoArray((Type) object);
+            } else {
+                return isPojoArray(object.getClass());
+            }
+        }
+        return false;
+    }
+
+    public static boolean isPojoArray(Type type) {
+        if (isArray(type)) {
+            final Type arrayComponentType = TypeUtils.getArrayComponentType(type);
+            return isPojo(arrayComponentType);
+        }
+        return false;
+    }
+
+    public static Type getArrayComponentType(final Type type) {
+        final Type arrayComponentType = TypeUtils.getArrayComponentType(type);
+        if (arrayComponentType != null) {
+            return arrayComponentType;
+        }
+        throw MarshallerException.builder()
+                .errorMessage("Type is not an array.")
+                .actualType(type)
+                .expected("array type")
+                .build();
+    }
+
+    public static Class<?> getArrayComponentClass(final Type type) {
+        final Type arrayComponentType = getArrayComponentType(type);
+        return TypeUtils.getRawType(arrayComponentType, null);
+    }
+
+    public static boolean isPojoGenericCollection(Object object) {
+        if (object != null) {
+            if (object instanceof Type) {
+                return isPojoGenericCollection((Type) object);
+            } else {
+                return isPojoGenericCollection(object.getClass());
+            }
+        }
+        return false;
+    }
+
+    public static boolean isPojoGenericCollection(Type type) {
+        if (isGenericCollection(type)) {
+            final Type genericType = getGenericCollectionArgumentType(type);
+            return isPojo(genericType);
+        }
+        return false;
+    }
+
+    public static Object[] collectionToArray(final Collection<?> collection, final Class<?> componentType) {
+        return collection.toArray((Object[]) Array.newInstance(componentType, 0));
+    }
+
+    public static Object[] objectToArray(final Object object, final Class<?> componentType) {
+        return Collections.singletonList(object).toArray((Object[]) Array.newInstance(componentType, 0));
+    }
+
+    public static Class<?> getGenericCollectionArgumentRawType(Type type) {
+        final Type genericCollectionArgumentType = getGenericCollectionArgumentType(type);
+        return TypeUtils.getRawType(genericCollectionArgumentType, genericCollectionArgumentType);
+    }
+
+    public static Type getGenericCollectionArgumentType(Type type) {
+        if (type instanceof ParameterizedType) {
+            final ParameterizedType parameterizedType = (ParameterizedType) type;
+            final Map<TypeVariable<?>, Type> typeArguments = TypeUtils.getTypeArguments(parameterizedType);
+            final List<Type> typeArgumentsList = typeArguments.keySet().stream().map(typeArguments::get)
+                    .collect(Collectors.toList());
+            if (typeArgumentsList.size() == 1) {
+                return typeArgumentsList.get(0);
+            }
+            throw MarshallerException.builder()
+                    .errorMessage("An incorrect number of TypeArguments was received for a generic collection.")
+                    .expected(1)
+                    .actual(typeArgumentsList.size())
+                    .actualValue(typeArgumentsList)
+                    .build();
+        }
+        throw MarshallerException.builder()
+                .errorMessage("Received type is not a generic collection.")
+                .sourceType(type)
+                .expectedType(Collection.class)
+                .build();
     }
 
     public static boolean hasAdditionalProperty(Object object) {
@@ -419,7 +523,7 @@ public class FormUrlUtils {
         return list != null && list.stream().allMatch(FormUrlUtils::isMap);
     }
 
-    public static <M> M invokeModelConstructor(Class<M> modelClass) {
+    public static <M> M invokeConstructor(Class<M> modelClass) {
         try {
             return ConstructorUtils.invokeConstructor(modelClass);
         } catch (Exception e) {
@@ -428,5 +532,6 @@ public class FormUrlUtils {
                                           "    Error cause: " + e.getMessage().trim() + "\n", e);
         }
     }
+
 
 }

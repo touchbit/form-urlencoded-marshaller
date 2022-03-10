@@ -18,6 +18,7 @@ package org.touchbit.www.form.urlencoded.marshaller;
 
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.apache.commons.lang3.reflect.TypeUtils;
 import org.touchbit.www.form.urlencoded.marshaller.chain.IChain;
 import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncoded;
 import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncodedAdditionalProperties;
@@ -280,54 +281,133 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
      */
     @Override
     public <M> M unmarshal(final Class<M> modelClass, final String encodedString) {
+        final M model = FormUrlUtils.invokeConstructor(modelClass);
+        return unmarshal(model, encodedString);
+    }
+
+    /**
+     * String to model conversion
+     * According to the 3W specification, it is strongly recommended to use UTF-8 charset for URL form data coding.
+     *
+     * @param model         - FormUrlEncoded model object
+     * @param encodedString - URL encoded string to conversation
+     * @param <M>           - model generic type
+     * @return completed model
+     * @throws MarshallerException on class instantiation errors
+     */
+    public <M> M unmarshal(final M model, final String encodedString) {
+        FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
         final Map<String, Object> rawData = new IChain.Default(encodedString).getRawData();
-        final M model = FormUrlUtils.invokeModelConstructor(modelClass);
         if (FormUrlUtils.isMap(model) || FormUrlUtils.isPojo(model)) {
-            writeRawDataToPojo(model, rawData);
+            if (FormUrlUtils.isPojo(model)) {
+                writeRawDataToPojo(model, rawData);
+            }
+            if (FormUrlUtils.isMap(model)) {
+                final TypeVariable<? extends Class<?>>[] typeParameters = model.getClass().getTypeParameters();
+                final Type genericSuperclass = model.getClass().getGenericSuperclass();
+                if (genericSuperclass instanceof ParameterizedType) {
+                    final ParameterizedType parameterizedType = (ParameterizedType) genericSuperclass;
+                    final Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+                    final boolean isTypeVariable = Arrays.stream(actualTypeArguments)
+                            .allMatch(type -> type instanceof TypeVariable);
+                    if (isTypeVariable) {
+                        final Map mapModel = (Map) model;
+                        mapModel.putAll(rawData);
+                        rawData.clear();
+                        // TODO break
+                    }
+                    final Type[] genericArgumentTypes = parameterizedType.getActualTypeArguments();
+                    final Type genericKeyType = genericArgumentTypes[0];
+                    final Type genericValueType = genericArgumentTypes[1];
+                    if (String.class.equals(genericKeyType) && Object.class.equals(genericValueType)) {
+                        final Map<String, Object> mapModel = (Map<String, Object>) model;
+                        mapModel.putAll(rawData);
+                        rawData.clear();
+                        // TODO break
+                    }
+                    if (String.class.equals(genericKeyType) && String.class.equals(genericValueType)) {
+                        // if raw data does not contain complex types (not Map, List, Array, Pojo)
+                        if (rawData.entrySet().stream().allMatch(e -> FormUrlUtils.isSimple(e.getValue()))) {
+                            final Map<String, String> stringData = rawData.entrySet().stream()
+                                    .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString()));
+                            final Map<String, String> mapModel = (Map<String, String>) model;
+                            mapModel.putAll(stringData);
+                            rawData.clear();
+                            // TODO break
+                        } else {
+                            throw new MarshallerException("Incompatible generic types.\n" +
+                                                          "    Expected: Map<String, Object>\n" +
+                                                          "    Actual: " + genericSuperclass + "\n");
+                        }
+                    }
+                } else {
+                    // raw map class. For example: HashMap.class
+
+                }
+            }
+            if (!rawData.isEmpty()) {
+                throw new MarshallerException("URL encoded string contains ");
+            }
             return model;
         }
         throw new IllegalArgumentException(CONVERSION_UNSUPPORTED_TYPE_ERR_MSG + model.getClass());
     }
 
-    protected <M> void writeRawDataToPojo(final M model, final Map<String, Object> rawData) {
+    protected <M> void writeRawDataToPojo(final M model, final Map<?, ?> rawData) {
         FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
         FormUrlUtils.parameterRequireNonNull(rawData, RAW_DATA_PARAMETER);
-        final Map<String, Field> pojoFields = FormUrlUtils.getFormUrlEncodedFieldsMap(model);
-        for (String fieldName : pojoFields.keySet()) {
+        final Map<String, Field> pojoFieldsWithValues = FormUrlUtils.getFormUrlEncodedFieldsMap(model)
+                .entrySet().stream().filter(e -> rawData.get(e.getKey()) != null)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        for (String fieldName : pojoFieldsWithValues.keySet()) {
             final Object rawValue = rawData.get(fieldName);
-            if (rawValue != null) {
-                final Field pojoField = pojoFields.get(fieldName);
-                writeValueToField(model, pojoField, rawValue);
-                rawData.remove(fieldName);
+            final Field pojoField = pojoFieldsWithValues.get(fieldName);
+            final Type fieldType = pojoField.getGenericType();
+            if (FormUrlUtils.isSomePojo(fieldType)) {
+                if (FormUrlUtils.isMap(rawValue)) {
+                    if (FormUrlUtils.isPojo(fieldType)) {
+                        // raw value Map<String, Object> to target Pojo
+                        final Class<?> pojoClass = TypeUtils.getRawType(fieldType, null);
+                        final Object pojo = FormUrlUtils.invokeConstructor(pojoClass);
+                        writeRawDataToPojo(pojo, (Map<?, ?>) rawValue);
+                        writeFieldValue(model, pojoField, pojo);
+                    } else if (FormUrlUtils.isPojoGenericCollection(fieldType)) {
+                        // raw value Map<String, Object>  to target List<Pojo> (hidden url encoded array)
+                        final Class<?> pojoClass = FormUrlUtils.getGenericCollectionArgumentRawType(fieldType);
+                        final Object pojo = FormUrlUtils.invokeConstructor(pojoClass);
+                        writeRawDataToPojo(pojo, (Map<?, ?>) rawValue);
+                        writeFieldValue(model, pojoField, Collections.singletonList(pojo));
+                    } else if (FormUrlUtils.isPojoArray(fieldType)) {
+                        // raw value Map<String, Object>  to target Pojo[] (hidden url encoded array)
+                        final Class<?> arrayComponentClass = FormUrlUtils.getArrayComponentClass(fieldType);
+                        final Object pojo = FormUrlUtils.invokeConstructor(arrayComponentClass);
+                        writeRawDataToPojo(pojo, (Map<?, ?>) rawValue);
+                        writeFieldValue(model, pojoField, FormUrlUtils.objectToArray(pojo, arrayComponentClass));
+                    }
+                } else {
+                    throw MarshallerException.builder()
+                            .errorMessage(INCOMPATIBLE_TYPES_RECEIVED_FOR_CONVERSION)
+                            .source(rawData)
+                            .sourceField(fieldName)
+                            .sourceValue(rawValue)
+                            .sourceType(rawValue)
+                            .targetType(fieldType)
+                            .targetField(pojoFieldsWithValues.get(fieldName))
+                            .build();
+                }
+            } else {
+                final Object fieldValue = convertRawValueToTargetJavaType(rawValue, fieldType);
+                writeFieldValue(model, pojoField, fieldValue);
             }
+            rawData.remove(fieldName);
         }
         if (FormUrlUtils.hasAdditionalProperty(model) && !rawData.isEmpty()) {
             unmarshalAndWriteAdditionalProperties(model, rawData);
+            rawData.clear();
         }
     }
 
-    protected <M> void writeValueToField(final M model, final Field field, Object value) {
-        if (FormUrlUtils.isSimple(field)) {
-            final String decoded = decode(value);
-            final Object fieldValue = convertUrlDecodedStringValueToSimpleType(decoded, field.getType());
-            writeFieldValue(model, field, fieldValue);
-        } else if (FormUrlUtils.isCollection(field)) {
-            final Collection<?> rawCollection = (Collection<?>) value;
-            writeCollectionToField(model, field, rawCollection);
-        } else if (FormUrlUtils.isMap(field)) {
-            // todo
-        } else {
-            throw new MarshallerException("TODO unsupported value type");
-        }
-    }
-
-    protected <M> void writeCollectionToField(final M model, final Field field, Collection<?> value) {
-        final Type fieldType = field.getGenericType();
-        final Object fieldValue = convertRawValueToTargetType(value, fieldType);
-        writeFieldValue(model, field, fieldValue);
-    }
-
-    protected Object convertRawValueToTargetType(final Object rawValue, Type targetType) {
+    protected Object convertRawValueToTargetJavaType(final Object rawValue, Type targetType) {
         if (FormUrlUtils.isSimple(rawValue) && FormUrlUtils.isSimple(targetType)) {
             // raw value String to target type Integer
             final String decoded = decode(rawValue);
@@ -343,10 +423,10 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
         }
         if (FormUrlUtils.isSimple(rawValue) && FormUrlUtils.isArray(targetType)) {
             // raw value String to target type Integer[] (hidden url encoded array)
-            final Class<?> componentType = ((Class<?>) targetType).getComponentType();
+            final Class<?> componentType = FormUrlUtils.getArrayComponentClass(targetType);
             final String decoded = decode(rawValue);
-            return Collections.singletonList(convertUrlDecodedStringValueToSimpleType(decoded, componentType))
-                    .toArray((Object[]) Array.newInstance(componentType, 0));
+            final Object value = convertUrlDecodedStringValueToSimpleType(decoded, componentType);
+            return FormUrlUtils.objectToArray(value, componentType);
         }
         if (FormUrlUtils.isMap(rawValue) && FormUrlUtils.isGenericMap(targetType)) {
             final Map<?, ?> rawMap = (Map<?, ?>) rawValue;
@@ -356,11 +436,12 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
                 // Target type Map<String, Object>. No need for conversion.
                 return rawValue;
             }
+            // raw value Map<String, Object> to target type Map<String, ?>
             final List<String> keys = rawMap.keySet().stream().map(Object::toString).collect(Collectors.toList());
             final Map<String, Object> result = new HashMap<>();
             for (String key : keys) {
                 final Object rawMapValue = rawMap.get(key);
-                final Object resultValue = convertRawValueToTargetType(rawMapValue, targetGenericValueType);
+                final Object resultValue = convertRawValueToTargetJavaType(rawMapValue, targetGenericValueType);
                 result.put(key, resultValue);
             }
             return result;
@@ -369,106 +450,108 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
             // raw value Map<String, Object> to target type raw Map (raw map without generic)
             return rawValue;
         }
-        if (FormUrlUtils.isMap(rawValue) && FormUrlUtils.isArray(targetType)) {
-            // raw value Map<String, ?> to target type raw Map[] (hidden url encoded array)
-            final Class<?> targetClass = (Class<?>) targetType;
-            final Class<?> componentType = targetClass.getComponentType();
-            final Object value = convertRawValueToTargetType(rawValue, componentType);
-            return Collections.singletonList(value).toArray((Object[]) Array.newInstance(componentType, 0));
-        }
-        if (FormUrlUtils.isCollectionOfMap(rawValue) && FormUrlUtils.isGenericArray(targetType)) {
-            final Collection<?> rawCollection = (Collection<?>) rawValue;
-            final GenericArrayType genericArrayType = (GenericArrayType) targetType;
-            final Type genericComponentType = genericArrayType.getGenericComponentType();
-            final Class<?> genericClass;
-            if (genericComponentType instanceof ParameterizedType) {
-                final ParameterizedType parameterizedType = (ParameterizedType) genericComponentType;
-                genericClass = (Class<?>) parameterizedType.getRawType();
-            } else {
-                genericClass = (Class<?>) genericComponentType;
-            }
-            return rawCollection.stream()
-                    .map(i -> convertRawValueToTargetType(i, genericClass))
-                    .collect(Collectors.toList())
-                    .toArray((Object[]) Array.newInstance(genericClass, 0));
-        }
-        if (FormUrlUtils.isMap(rawValue) && FormUrlUtils.isGenericArray(targetType)) {
-            // raw value Map<String, ?> to target type Map<String, ?>[] (hidden url encoded array)
-            final GenericArrayType genericArrayType = (GenericArrayType) targetType;
-            final Type genericComponentType = genericArrayType.getGenericComponentType();
-            final Class<?> genericClass;
-            if (genericComponentType instanceof ParameterizedType) {
-                final ParameterizedType parameterizedType = (ParameterizedType) genericComponentType;
-                genericClass = (Class<?>) parameterizedType.getRawType();
-            } else {
-                genericClass = (Class<?>) genericComponentType;
-            }
-            final Object value = convertRawValueToTargetType(rawValue, genericComponentType);
-            return Collections.singletonList(value).toArray((Object[]) Array.newInstance(genericClass, 0));
-        }
-        if (FormUrlUtils.isMap(rawValue) && FormUrlUtils.isGenericCollection(targetType)) {
-            // raw value Map<String, Object> to target type List<Map<?, ?>> (hidden url encoded array)
-            final ParameterizedType parameterizedTargetType = (ParameterizedType) targetType;
-            final Type targetGenericType = parameterizedTargetType.getActualTypeArguments()[0];
-            final Object value = convertRawValueToTargetType(rawValue, targetGenericType);
-            return Collections.singletonList(value);
-        }
         if (FormUrlUtils.isCollection(rawValue) && FormUrlUtils.isArray(targetType)) {
             // raw value List<String> to target type Integer[]
             final Collection<?> rawCollection = (Collection<?>) rawValue;
-            final Class<?> componentType = ((Class<?>) targetType).getComponentType();
-            return rawCollection.stream()
+            final Class<?> componentType = FormUrlUtils.getArrayComponentClass(targetType);
+            ;
+            final List<Object> value = rawCollection.stream()
                     .map(this::decode)
                     .map(i -> convertUrlDecodedStringValueToSimpleType(i, componentType))
-                    .collect(Collectors.toList())
-                    .toArray((Object[]) Array.newInstance(componentType, 0));
-        }
-        // raw value List<Object> to target type List (raw generic list)
-        if (FormUrlUtils.isCollection(rawValue) && FormUrlUtils.isCollection(targetType)) {
-            return rawValue;
+                    .collect(Collectors.toList());
+            return FormUrlUtils.collectionToArray(value, componentType);
         }
         if (FormUrlUtils.isCollection(rawValue) && FormUrlUtils.isGenericCollection(targetType)) {
             final Collection<?> rawCollection = (Collection<?>) rawValue;
             final ParameterizedType parameterizedTargetType = (ParameterizedType) targetType;
             final Type targetGenericType = parameterizedTargetType.getActualTypeArguments()[0];
-            // raw value List<Map<?, ?>> to target type List<Map<?, ?>>
             if (FormUrlUtils.isCollectionOfMap(rawValue) && FormUrlUtils.isCollectionOfMap(targetType)) {
+                // raw value List<Map<?, ?>> to target type List<Map<?, ?>>
                 return rawCollection.stream()
-                        .map(i -> convertRawValueToTargetType(i, targetGenericType))
+                        .map(i -> convertRawValueToTargetJavaType(i, targetGenericType))
                         .collect(Collectors.toList());
             }
-            // raw value List<String> to target type List<Object>
             if (targetGenericType.equals(Object.class)) {
+                // raw value List<String> to target type List<Object>
                 return rawValue;
             }
-            // raw value List<List<String>> to target type List<List<Integer>>
             if (FormUrlUtils.isCollectionOfCollections(rawValue) && FormUrlUtils.isCollectionOfCollections(targetType)) {
+                // raw value List<List<String>> to target type List<List<Integer>>
                 return rawCollection.stream()
-                        .map(i -> convertRawValueToTargetType(i, targetGenericType))
+                        .map(i -> convertRawValueToTargetJavaType(i, targetGenericType))
                         .collect(Collectors.toList());
             }
-            // raw value List<List<String>> to target type List<Integer[]>
             if (FormUrlUtils.isCollectionOfCollections(rawValue) && FormUrlUtils.isCollectionOfArray(targetType)) {
+                // raw value List<List<String>> to target type List<Integer[]>
                 final ParameterizedType parameterizedType = (ParameterizedType) targetType;
                 final Class<?> genericClass = (Class<?>) parameterizedType.getActualTypeArguments()[0];
                 return rawCollection.stream()
-                        .map(i -> convertRawValueToTargetType(i, genericClass))
+                        .map(i -> convertRawValueToTargetJavaType(i, genericClass))
                         .collect(Collectors.toList());
             }
-            // raw value List<String> to target type List<Integer>
             if (FormUrlUtils.isCollectionOfSimpleObj(rawValue) && FormUrlUtils.isCollectionOfSimpleObj(targetType)) {
+                // raw value List<String> to target type List<Integer>
                 return rawCollection.stream()
                         .map(this::decode)
                         .map(i -> convertUrlDecodedStringValueToSimpleType(i, targetGenericType))
                         .collect(Collectors.toList());
             }
         }
-        final String sourceTypeName = (rawValue == null ? null : rawValue.getClass().getName());
-        final String targetTypeName = targetType.getTypeName();
-        throw new MarshallerException("Incompatible types received for conversion\n" +
-                                      "    Source value: " + rawValue + "\n" +
-                                      "    Source type: " + sourceTypeName + "\n" +
-                                      "    Target type: " + targetTypeName + "\n");
+        if (FormUrlUtils.isMap(rawValue) && FormUrlUtils.isGenericCollection(targetType)) {
+            // raw value Map<String, Object> to target type List<Map<?, ?>> (hidden url encoded array)
+            final ParameterizedType parameterizedTargetType = (ParameterizedType) targetType;
+            final Type targetGenericType = parameterizedTargetType.getActualTypeArguments()[0];
+            final Object value = convertRawValueToTargetJavaType(rawValue, targetGenericType);
+            return Collections.singletonList(value);
+        }
+        if (FormUrlUtils.isMap(rawValue) && FormUrlUtils.isArray(targetType)) {
+            // raw value Map<String, ?> to target type raw Map[] (hidden url encoded array)
+            final Class<?> componentType = FormUrlUtils.getArrayComponentClass(targetType);
+            ;
+            final Object value = convertRawValueToTargetJavaType(rawValue, componentType);
+            return FormUrlUtils.objectToArray(value, componentType);
+        }
+        if (FormUrlUtils.isCollection(rawValue) && FormUrlUtils.isCollection(targetType)) {
+            // raw value List<Object> to target type List (raw generic list)
+            return rawValue;
+        }
+        if (FormUrlUtils.isGenericArray(targetType)) {
+            final GenericArrayType genericArrayType = (GenericArrayType) targetType;
+            final Type genericComponentType = genericArrayType.getGenericComponentType();
+            if (FormUrlUtils.isCollectionOfMap(rawValue)) {
+                // raw value List<Map<String, ?>> to target type Map<String, ?>[]
+                final Collection<?> rawCollection = (Collection<?>) rawValue;
+                final Class<?> genericClass;
+                if (genericComponentType instanceof ParameterizedType) {
+                    final ParameterizedType parameterizedType = (ParameterizedType) genericComponentType;
+                    genericClass = (Class<?>) parameterizedType.getRawType();
+                } else {
+                    genericClass = (Class<?>) genericComponentType;
+                }
+                return rawCollection.stream()
+                        .map(i -> convertRawValueToTargetJavaType(i, genericClass))
+                        .collect(Collectors.toList())
+                        .toArray((Object[]) Array.newInstance(genericClass, 0));
+            }
+            if (FormUrlUtils.isMap(rawValue)) {
+                // raw value Map<String, ?> to target type Map<String, ?>[] (hidden url encoded array)
+                final Class<?> genericClass;
+                if (genericComponentType instanceof ParameterizedType) {
+                    final ParameterizedType parameterizedType = (ParameterizedType) genericComponentType;
+                    genericClass = (Class<?>) parameterizedType.getRawType();
+                } else {
+                    genericClass = (Class<?>) genericComponentType;
+                }
+                final Object value = convertRawValueToTargetJavaType(rawValue, genericComponentType);
+                return Collections.singletonList(value).toArray((Object[]) Array.newInstance(genericClass, 0));
+            }
+        }
+        throw MarshallerException.builder()
+                .errorMessage(INCOMPATIBLE_TYPES_RECEIVED_FOR_CONVERSION)
+                .sourceValue(rawValue)
+                .sourceType(rawValue)
+                .targetType(targetType)
+                .build();
     }
 
     /**
@@ -482,11 +565,11 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
      */
 
     protected <M> void unmarshalAndWriteAdditionalProperties(final M model,
-                                                             final Map<String, Object> rawData) {
+                                                             final Map<?, ?> rawData) {
         FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
         FormUrlUtils.parameterRequireNonNull(rawData, RAW_DATA_PARAMETER);
         final Field field = getAdditionalPropertiesField(model.getClass());
-        final Map<String, Object> additionalProperties = initAdditionalProperties(model, field);
+        final Map<Object, Object> additionalProperties = initAdditionalProperties(model, field);
         additionalProperties.putAll(rawData);
     }
 
@@ -497,7 +580,6 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
      * @throws MarshallerException  if additionalProperties fields more than one
      * @throws MarshallerException  if additionalProperties type != {@code Map<String, String>}
      */
-
     protected Field getAdditionalPropertiesField(final Class<?> modelClass) {
         FormUrlUtils.parameterRequireNonNull(modelClass, CodecConstant.MODEL_CLASS_PARAMETER);
         final List<Field> fields = Arrays.asList(modelClass.getDeclaredFields());
@@ -551,13 +633,13 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
      */
 
     @SuppressWarnings("unchecked")
-    protected Map<String, Object> initAdditionalProperties(final Object model, final Field field) {
+    protected Map<Object, Object> initAdditionalProperties(final Object model, final Field field) {
         FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
         FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
         final String fieldName = field.getName();
         try {
             if (Modifier.isFinal(field.getModifiers())) {
-                return (Map<String, Object>) FieldUtils.readDeclaredField(model, field.getName(), true);
+                return (Map<Object, Object>) FieldUtils.readDeclaredField(model, field.getName(), true);
             }
         } catch (Exception e) {
             throw new MarshallerException("Unable to read additional properties field.\n" +
@@ -567,7 +649,7 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
                                           ERROR_CAUSE_ERR_MSG + e.getMessage().trim() + "\n", e);
         }
         try {
-            final HashMap<String, Object> value = new HashMap<>();
+            final HashMap<Object, Object> value = new HashMap<>();
             FieldUtils.writeDeclaredField(model, fieldName, value, true);
             return value;
         } catch (Exception e) {
@@ -678,32 +760,6 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
                                           ERROR_CAUSE_ERR_MSG + e.getMessage().trim() + "\n", e);
         }
     }
-
-//    /**
-//     * @param value - any object
-//     * @return converted value (List || Map || String)
-//     * @throws IllegalArgumentException if value type is not supported
-//     */
-//    protected Object convertValueToRawData(final Object value) {
-//        if (value == null || FormUrlUtils.isSimple(value)) {
-//            return convertSimpleToRawData(value);
-//        } else if (FormUrlUtils.isPojo(value) || FormUrlUtils.isMap(value)) {
-//            final Map<String, Object> map = new HashMap<>();
-//            if (FormUrlUtils.isPojo(value)) {
-//                map.putAll(convertPojoToRawData(value));
-//            }
-//            if (FormUrlUtils.isMap(value)) {
-//                map.putAll(convertMapToRawData(value));
-//            }
-//            return map;
-//        } else if (FormUrlUtils.isCollection(value)) {
-//            return convertCollectionToRawData(value);
-//        } else if (FormUrlUtils.isArray(value)) {
-//            return convertArrayToRawData(value);
-//        } else {
-//            throw new IllegalArgumentException(CONVERSION_UNSUPPORTED_TYPE_ERR_MSG + value.getClass());
-//        }
-//    }
 
     /**
      * @param value - form URL decoded string

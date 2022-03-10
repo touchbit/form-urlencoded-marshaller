@@ -4,13 +4,17 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.touchbit.BaseTest;
-import org.touchbit.www.form.urlencoded.marshaller.model.POJO;
+import org.touchbit.www.form.urlencoded.marshaller.model.MapPojo;
+import org.touchbit.www.form.urlencoded.marshaller.model.Pojo;
 import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncoded;
+import org.touchbit.www.form.urlencoded.marshaller.util.MarshallerException;
 
-import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.*;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("FormUrlMarshaller.class unit tests")
@@ -32,51 +36,51 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         @Test
         @DisplayName("Convert pojo map to form url encoded string")
         public void test1646683248748() {
-            final POJO pojo = pojo().nestedPojo(pojo().stringField("string_value"));
-            pojo.put("foo", mapOf("bar", 1));
+            final MapPojo mapPojo = mapPojo().nestedMapPojo(mapPojo().stringField("string_value"));
+            mapPojo.put("foo", mapOf("bar", 1));
             final FormUrlMarshaller marshaller = marshaller();
             marshaller.getConfiguration().withPrettyPrint(false);
-            assertThat(marshaller.marshal(pojo)).isEqualTo("nestedPojo[stringField]=string_value&foo[bar]=1");
+            assertThat(marshaller.marshal(mapPojo)).isEqualTo("nestedMapPojo[stringField]=string_value&foo[bar]=1");
         }
 
         @Test
         @DisplayName("Convert pojo map to form url encoded pretty string")
         public void test1646683633833() {
-            final POJO pojo = pojo().nestedPojo(pojo().stringField("string_value"));
-            pojo.put("foo", mapOf("bar", 1));
+            final MapPojo mapPojo = mapPojo().nestedMapPojo(mapPojo().stringField("string_value"));
+            mapPojo.put("foo", mapOf("bar", 1));
             final FormUrlMarshaller marshaller = marshaller();
             marshaller.getConfiguration().withPrettyPrint(true);
-            assertThat(marshaller.marshal(pojo)).isEqualTo("nestedPojo[stringField]=string_value&\nfoo[bar]=1");
+            assertThat(marshaller.marshal(mapPojo)).isEqualTo("nestedMapPojo[stringField]=string_value&\nfoo[bar]=1");
         }
 
         @Test
         @DisplayName("Convert pojo to form url encoded string with implicit list")
         public void test1646683988015() {
-            final POJO pojo = pojo().nestedPojo(pojo().stringField("string_value"));
-            pojo.put("foo", mapOf("bar", arrayOf(1)));
+            final MapPojo mapPojo = mapPojo().nestedMapPojo(mapPojo().stringField("string_value"));
+            mapPojo.put("foo", mapOf("bar", arrayOf(1)));
             final FormUrlMarshaller marshaller = marshaller();
             marshaller.getConfiguration().enableHiddenList().withPrettyPrint(true);
-            assertThat(marshaller.marshal(pojo)).isEqualTo("nestedPojo[stringField]=string_value&\nfoo[bar]=1");
+            assertThat(marshaller.marshal(mapPojo)).isEqualTo("nestedMapPojo[stringField]=string_value&\nfoo[bar]=1");
         }
 
         @Test
         @DisplayName("Convert pojo to form url encoded string with implicit list")
         public void test1646683893206() {
-            final POJO pojo = pojo().nestedPojo(pojo().stringField("string_value"));
-            pojo.put("foo", mapOf("bar", arrayOf(1)));
+            final MapPojo mapPojo = mapPojo().nestedMapPojo(mapPojo().stringField("string_value"));
+            mapPojo.put("foo", mapOf("bar", arrayOf(1)));
             final FormUrlMarshaller marshaller = marshaller();
             marshaller.getConfiguration().enableImplicitList().withPrettyPrint(false);
-            assertThat(marshaller.marshal(pojo)).isEqualTo("nestedPojo[stringField]=string_value&foo[bar][]=1");
+            assertThat(marshaller.marshal(mapPojo)).isEqualTo("nestedMapPojo[stringField]=string_value&foo[bar][]=1");
         }
 
         @Test
         @DisplayName("Convert pojo to form url encoded string with explicit list")
         public void test1646683947701() {
-            final POJO pojo = pojo().nestedPojo(pojo().stringField("string_value"));
-            pojo.put("foo", mapOf("bar", arrayOf(1)));
+            final MapPojo mapPojo = mapPojo().nestedMapPojo(mapPojo().stringField("string_value"));
+            mapPojo.put("foo", mapOf("bar", arrayOf(1)));
             final FormUrlMarshaller marshaller = marshaller();
             marshaller.getConfiguration().enableExplicitList().withPrettyPrint(false);
-            assertThat(marshaller.marshal(pojo)).isEqualTo("nestedPojo[stringField]=string_value&foo[bar][0]=1");
+            assertThat(marshaller.marshal(mapPojo)).isEqualTo("nestedMapPojo[stringField]=string_value&foo[bar][0]=1");
         }
 
         @Test
@@ -116,23 +120,23 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         @Test
         @DisplayName("Convert POJO value to raw data MAP")
         public void test1646682581082() {
-            final POJO pojo = pojo().stringField("foo");
-            pojo.put("bar", pojo().mapObjectField(mapOf("map_key", null)));
-            final Object result = marshaller().convertValueToRawData(pojo);
+            final MapPojo mapPojo = mapPojo().stringField("foo");
+            mapPojo.put("bar", mapPojo().mapObjectField(mapOf("map_key", null)));
+            final Object result = marshaller().convertValueToRawData(mapPojo);
             assertThat(result.toString()).isEqualTo("{stringField=foo, bar={mapObjectField={map_key=}}}");
         }
 
         @Test
         @DisplayName("Convert List<POJO> value to raw data ArrayList")
         public void test1646682943678() {
-            final Object result = marshaller().convertValueToRawData(listOf(null, pojo()));
+            final Object result = marshaller().convertValueToRawData(listOf(null, mapPojo()));
             assertThat(result.toString()).isEqualTo("[, {}]");
         }
 
         @Test
         @DisplayName("Convert POJO[] value to raw data ArrayList")
         public void test1646682985063() {
-            final Object result = marshaller().convertValueToRawData(arrayOf(null, pojo()));
+            final Object result = marshaller().convertValueToRawData(arrayOf(null, mapPojo()));
             assertThat(result.toString()).isEqualTo("[, {}]");
         }
 
@@ -158,25 +162,25 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         @Test
         @DisplayName("Convert POJO to raw data Map with simple field")
         public void test1646681989639() {
-            final POJO pojo = pojo().stringField(DECODED);
-            final Map<String, Object> map = marshaller().convertPojoToRawData(pojo);
+            final MapPojo mapPojo = mapPojo().stringField(DECODED);
+            final Map<String, Object> map = marshaller().convertPojoToRawData(mapPojo);
             assertThat(map.toString()).isEqualTo("{stringField=" + ENCODED + "}");
         }
 
         @Test
         @DisplayName("Convert POJO to raw data Map with array field")
         public void test1646682111744() {
-            final POJO pojo = pojo().arrayStringField(arrayOf("foo"));
-            final Map<String, Object> map = marshaller().convertPojoToRawData(pojo);
+            final MapPojo mapPojo = mapPojo().arrayStringField(arrayOf("foo"));
+            final Map<String, Object> map = marshaller().convertPojoToRawData(mapPojo);
             assertThat(map.toString()).isEqualTo("{arrayStringField=[foo]}");
         }
 
         @Test
         @DisplayName("Convert POJO to raw data Map with nested POJO field")
         public void test1646682159512() {
-            final POJO pojo = pojo().nestedPojo(pojo().stringField("foo"));
-            final Map<String, Object> map = marshaller().convertPojoToRawData(pojo);
-            assertThat(map.toString()).isEqualTo("{nestedPojo={stringField=foo}}");
+            final MapPojo mapPojo = mapPojo().nestedMapPojo(mapPojo().stringField("foo"));
+            final Map<String, Object> map = marshaller().convertPojoToRawData(mapPojo);
+            assertThat(map.toString()).isEqualTo("{nestedMapPojo={stringField=foo}}");
         }
 
         @Test
@@ -220,7 +224,7 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         @Test
         @DisplayName("Convert Map<String, POJO> to raw data Map<String, Object>")
         public void test1646681466555() {
-            final Map<String, Object> map = mapOf("foo", pojo());
+            final Map<String, Object> map = mapOf("foo", mapPojo());
             final Map<String, Object> act = marshaller().convertMapToRawData(map);
             assertThat(act.toString()).isEqualTo("{foo={}}");
         }
@@ -279,7 +283,7 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         @Test
         @DisplayName("Convert List<POJO> to raw data ArrayList")
         public void test1646681152122() {
-            final List<POJO> strings = listOf(pojo());
+            final List<MapPojo> strings = listOf(mapPojo());
             final Object result = marshaller().convertCollectionToRawData(strings);
             assertThat(result).isInstanceOf(ArrayList.class);
             assertThat(result.toString()).isEqualTo("[{}]");
@@ -318,7 +322,7 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         @Test
         @DisplayName("Convert POJO[] to raw data ArrayList")
         public void test1646680692230() {
-            final POJO[] strings = arrayOf(pojo());
+            final MapPojo[] strings = arrayOf(mapPojo());
             final Object result = marshaller().convertArrayToRawData(strings);
             assertThat(result).isInstanceOf(ArrayList.class);
             assertThat(result.toString()).isEqualTo("[{}]");
@@ -410,14 +414,14 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         @DisplayName("Required parameters")
         public void test1646750228257() {
             assertNPE(() -> marshaller().writeRawDataToPojo(null, mapOf()), "model");
-            assertNPE(() -> marshaller().writeRawDataToPojo(pojo(), null), "rawData");
+            assertNPE(() -> marshaller().writeRawDataToPojo(mapPojo(), null), "rawData");
         }
 
         @Test
         @DisplayName("Write to POJO without AdditionalProperty")
         public void test1646750291689() {
-            final Map<String, Object> rawData = pojo().stringField("foo").toMap();
-            final POJO model = pojo();
+            final Map<String, Object> rawData = mapPojo().stringField("foo").toMap();
+            final MapPojo model = mapPojo();
             marshaller().writeRawDataToPojo(model, rawData);
             assertThat(model.stringField()).isEqualTo("foo");
             assertThat(model.additionalProperties()).isNull();
@@ -426,54 +430,107 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         @Test
         @DisplayName("Write to POJO with AdditionalProperty")
         public void test1646750770814() {
-            final Map<String, Object> rawData = pojo().stringField("foo").toMap();
+            final Map<String, Object> rawData = mapPojo().stringField("foo").toMap();
             rawData.put("bar", "test");
-            final POJO model = pojo();
+            final MapPojo model = mapPojo();
             marshaller().writeRawDataToPojo(model, rawData);
             assertThat(model.stringField()).isEqualTo("foo");
             assertThat(model.additionalProperties()).isNotNull();
             assertThat(model.additionalProperties().toString()).isEqualTo("{bar=test}");
         }
 
-    }
-
-    @Nested
-    @DisplayName("#writeCollectionToField() method tests")
-    public class WriteCollectionToFieldMethodTests {
+        @Test
+        @DisplayName("Write to POJO with nested POJO ({nestedPojo={integerField=123}:Pojo.class}:Pojo.class)")
+        public void test1646912537691() {
+            final String integerFieldName = Pojo.PojoFields.INTEGER_FIELD.getFieldName();
+            final String nestedPojoFieldName = Pojo.PojoFields.NESTED_POJO.getFieldName();
+            final Map<String, Object> rawData = mapOf(nestedPojoFieldName, mapOf(integerFieldName, "123"));
+            final Pojo pojo = pojo();
+            marshaller().writeRawDataToPojo(pojo, rawData);
+            assertThat(pojo.nestedPojo()).isNotNull();
+            assertThat(pojo.nestedPojo().integerField()).isEqualTo(123);
+        }
 
         @Test
-        @DisplayName("writeCollectionToField")
-        public void test1646753084803() throws Exception {
-            final POJO model = pojo();
-            final Field field = model.getClass().getDeclaredField("listListIntegerField");
-            final List<List<String>> rawData = listOf(listOf("1"), listOf("2"));
-            marshaller().writeCollectionToField(model, field, rawData);
-            assertThat(model.listListIntegerField()).isNotNull();
-            assertThat(model.listListIntegerField().toString()).isEqualTo("[[1], [2]]");
+        @DisplayName("Write Map<String, Object> to List<POJO>")
+        public void test1646915835416() {
+            final String integerFieldName = Pojo.PojoFields.INTEGER_FIELD.getFieldName();
+            final String listPojoFieldName = Pojo.PojoFields.LIST_POJO_FIELD.getFieldName();
+            final Map<String, Object> rawData = mapOf(listPojoFieldName, mapOf(integerFieldName, "123"));
+            final Pojo pojo = pojo();
+            marshaller().writeRawDataToPojo(pojo, rawData);
+            assertThat(pojo.listPojoField()).isNotEmpty();
+            assertThat(pojo.listPojoField().get(0).integerField()).isEqualTo(123);
+        }
+
+        @Test
+        @DisplayName("Write Map<String, Object> to POJO[]")
+        public void test1646922136573() {
+            final String integerFieldName = Pojo.PojoFields.INTEGER_FIELD.getFieldName();
+            final String arrayPojoFieldName = Pojo.PojoFields.ARRAY_POJO_FIELD.getFieldName();
+            final Map<String, Object> rawData = mapOf(arrayPojoFieldName, mapOf(integerFieldName, "123"));
+            final Pojo pojo = pojo();
+            marshaller().writeRawDataToPojo(pojo, rawData);
+            assertThat(pojo.arrayPojoField()).isNotEmpty();
+            assertThat(pojo.arrayPojoField()[0].integerField()).isEqualTo(123);
+        }
+
+        @Test
+        @DisplayName("MarshallerException: Incompatible types received for conversion.")
+        public void test1646924870841() {
+            final String arrayPojoFieldName = Pojo.PojoFields.NESTED_POJO.getFieldName();
+            final Map<String, Object> rawData = mapOf(arrayPojoFieldName, listOf("123"));
+            final Pojo pojo = pojo();
+            assertThrow(() -> marshaller().writeRawDataToPojo(pojo, rawData))
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("Incompatible types received for conversion.\n" +
+                                     "    Source: {nestedPojo=[123]}\n" +
+                                     "    Source field: nestedPojo\n" +
+                                     "    Source value: [123]\n" +
+                                     "    Source type: java.util.ArrayList\n" +
+                                     "    Target type: " + Pojo.class.getTypeName() + "\n" +
+                                     "    Target field: private Pojo nestedPojo;\n");
+        }
+
+        @Test
+        @DisplayName("MarshallerException: if raw data != Map (Incompatible types)")
+        public void test1646913108816() {
+            final String nestedPojoFieldName = Pojo.PojoFields.NESTED_POJO.getFieldName();
+            final Map<String, Object> rawData = mapOf(nestedPojoFieldName, UTF_8);
+            final Pojo pojo = pojo();
+            assertThrow(() -> marshaller().writeRawDataToPojo(pojo, rawData))
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("Incompatible types received for conversion.\n" +
+                                     "    Source: {nestedPojo=UTF-8}\n" +
+                                     "    Source field: nestedPojo\n" +
+                                     "    Source value: UTF-8\n" +
+                                     "    Source type: sun.nio.cs.UTF_8\n" +
+                                     "    Target type: " + Pojo.class.getTypeName() + "\n" +
+                                     "    Target field: private Pojo nestedPojo;\n");
         }
 
     }
 
     @SuppressWarnings("unchecked")
     @Nested
-    @DisplayName("#convertRawValueToTargetType() method tests")
-    public class ConvertRawValueToTargetTypeMethodTests {
+    @DisplayName("#convertRawValueToTargetJavaType() method tests")
+    public class ConvertRawValueToTargetJavaTypeMethodTests {
 
         @Test
         @DisplayName("Convert List<List<String>> to field generic type List<List<Integer>>")
         public void test1646766412735() {
-            final Type genericType = POJO.PojoFields.LIST_LIST_INTEGER_FIELD.getType();
+            final Type genericType = MapPojo.PojoFields.LIST_LIST_INTEGER_FIELD.getGenericType();
             final List<List<String>> rawData = listOf(listOf("1"), listOf("2"));
-            final Object result = marshaller().convertRawValueToTargetType(rawData, genericType);
+            final Object result = marshaller().convertRawValueToTargetJavaType(rawData, genericType);
             assertThat(result.toString()).isEqualTo("[[1], [2]]");
         }
 
         @Test
         @DisplayName("Convert List<List<String>> to field generic type List<Integer[]>")
         public void test1646766614821() {
-            final Type genericType = POJO.PojoFields.LIST_ARRAY_INTEGER_FIELD.getType();
+            final Type genericType = MapPojo.PojoFields.LIST_ARRAY_INTEGER_FIELD.getGenericType();
             final List<List<Object>> rawData = listOf(listOf("1", null, "2"), listOf("3"));
-            final Object result = marshaller().convertRawValueToTargetType(rawData, genericType);
+            final Object result = marshaller().convertRawValueToTargetJavaType(rawData, genericType);
             assertThat(result).isInstanceOf(List.class);
             final List<Integer[]> resultList = (List<Integer[]>) result;
             assertThat(resultList.get(0)).containsExactly(1, null, 2);
@@ -483,57 +540,57 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         @Test
         @DisplayName("Convert List<String> to field generic type List<Object>")
         public void test1646783643724() {
-            final Type genericType = POJO.PojoFields.LIST_OBJECT_FIELD.getType();
+            final Type genericType = MapPojo.PojoFields.LIST_OBJECT_FIELD.getGenericType();
             final List<String> rawData = listOf("1", "2");
-            final List<Object> result = (List<Object>) marshaller().convertRawValueToTargetType(rawData, genericType);
+            final List<Object> result = (List<Object>) marshaller().convertRawValueToTargetJavaType(rawData, genericType);
             assertThat(result).containsExactly("1", "2");
         }
 
         @Test
         @DisplayName("Convert List<String> to field generic type List (raw generic list)")
         public void test1646785738544() {
-            final Type genericType = POJO.PojoFields.LIST_RAW_FIELD.getType();
+            final Type genericType = MapPojo.PojoFields.LIST_RAW_FIELD.getGenericType();
             final List<String> rawData = listOf("1", "2");
-            final List<Object> result = (List<Object>) marshaller().convertRawValueToTargetType(rawData, genericType);
+            final List<Object> result = (List<Object>) marshaller().convertRawValueToTargetJavaType(rawData, genericType);
             assertThat(result).containsExactly("1", "2");
         }
 
         @Test
         @DisplayName("Convert List<Map<?, ?>> to field generic type List<Map<?, ?>>")
         public void test1646786782505() {
-            final Type genericType = POJO.PojoFields.LIST_MAP_STRING_INTEGER_FIELD.getType();
+            final Type genericType = MapPojo.PojoFields.LIST_MAP_STRING_INTEGER_FIELD.getGenericType();
             final List<Map<String, Object>> rawData = listOf(mapOf("foo", 1));
             final List<Map<String, Object>> result =
-                    (List<Map<String, Object>>) marshaller().convertRawValueToTargetType(rawData, genericType);
+                    (List<Map<String, Object>>) marshaller().convertRawValueToTargetJavaType(rawData, genericType);
             assertThat(result.get(0).get("foo")).isEqualTo(1);
         }
 
         @Test
         @DisplayName("Convert List<Map<?, ?>> to List (raw type)")
         public void test1646830967212() {
-            final Type genericType = POJO.PojoFields.LIST_RAW_FIELD.getType();
+            final Type genericType = MapPojo.PojoFields.LIST_RAW_FIELD.getGenericType();
             final List<Map<String, Object>> rawData = listOf(mapOf("foo", "bar"));
             final List<Map<String, Object>> result =
-                    (List<Map<String, Object>>) marshaller().convertRawValueToTargetType(rawData, genericType);
+                    (List<Map<String, Object>>) marshaller().convertRawValueToTargetJavaType(rawData, genericType);
             assertThat(result.get(0).get("foo")).isEqualTo("bar");
         }
 
         @Test
         @DisplayName("Convert List<Map<?, ?>> to field generic type Map<?, ?>[]")
         public void test1646786885325() {
-            final Type genericType = POJO.PojoFields.ARRAY_MAP_OBJECT_FIELD.getType();
+            final Type genericType = MapPojo.PojoFields.ARRAY_MAP_OBJECT_FIELD.getGenericType();
             final List<Map<String, Object>> rawData = listOf(mapOf("foo", "bar"));
             final Map<String, Object>[] result =
-                    (Map<String, Object>[]) marshaller().convertRawValueToTargetType(rawData, genericType);
+                    (Map<String, Object>[]) marshaller().convertRawValueToTargetJavaType(rawData, genericType);
             assertThat(result[0].get("foo")).isEqualTo("bar");
         }
 
         @Test
         @DisplayName("Convert String to field generic type Integer[] (hidden url encoded array)")
         public void test1646770464530() {
-            final Type genericType = POJO.PojoFields.ARRAY_INTEGER_FIELD.getType();
+            final Type genericType = MapPojo.PojoFields.ARRAY_INTEGER_FIELD.getGenericType();
             final String rawData = "1";
-            final Object result = marshaller().convertRawValueToTargetType(rawData, genericType);
+            final Object result = marshaller().convertRawValueToTargetJavaType(rawData, genericType);
             final Integer[] resultArray = (Integer[]) result;
             assertThat(resultArray).containsExactly(1);
         }
@@ -541,72 +598,129 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         @Test
         @DisplayName("Convert String to field generic type List<Integer> (hidden url encoded array)")
         public void test1646782895456() {
-            final Type genericType = POJO.PojoFields.LIST_INTEGER_FIELD.getType();
+            final Type genericType = MapPojo.PojoFields.LIST_INTEGER_FIELD.getGenericType();
             final String rawData = "1";
-            final List<Integer> result = (List<Integer>) marshaller().convertRawValueToTargetType(rawData, genericType);
+            final List<Integer> result = (List<Integer>) marshaller().convertRawValueToTargetJavaType(rawData, genericType);
             assertThat(result.get(0)).isEqualTo(1);
         }
 
         @Test
         @DisplayName("Convert Map<String, ?> to field generic type List<Map<String, ?>> (hidden url encoded array)")
         public void test1646782908308() {
-            final Type genericType = POJO.PojoFields.LIST_MAP_STRING_INTEGER_FIELD.getType();
+            final Type genericType = MapPojo.PojoFields.LIST_MAP_STRING_INTEGER_FIELD.getGenericType();
             final Map<String, Object> rawData = mapOf("foo", 1);
             final List<Map<String, Integer>> result =
-                    (List<Map<String, Integer>>) marshaller().convertRawValueToTargetType(rawData, genericType);
+                    (List<Map<String, Integer>>) marshaller().convertRawValueToTargetJavaType(rawData, genericType);
             assertThat(result.get(0).get("foo")).isEqualTo(1);
         }
 
         @Test
         @DisplayName("Convert Map<String, ?> to field generic type Map<String, ?>[] (hidden url encoded array)")
         public void test1646783865319() {
-            final Type genericType = POJO.PojoFields.ARRAY_MAP_OBJECT_FIELD.getType();
+            final Type genericType = MapPojo.PojoFields.ARRAY_MAP_OBJECT_FIELD.getGenericType();
             final Map<String, Object> rawData = mapOf("foo", "1");
             final Map<String, Object>[] result =
-                    (Map<String, Object>[]) marshaller().convertRawValueToTargetType(rawData, genericType);
+                    (Map<String, Object>[]) marshaller().convertRawValueToTargetJavaType(rawData, genericType);
             assertThat(result[0].get("foo")).isEqualTo("1");
         }
 
         @Test
         @DisplayName("Convert Map<String, ?> to field generic type Map[] (hidden url encoded array)")
         public void test1646828259346() {
-            final Type genericType = POJO.PojoFields.ARRAY_RAW_MAP_FIELD.getType();
+            final Type genericType = MapPojo.PojoFields.ARRAY_RAW_MAP_FIELD.getGenericType();
             final Map<String, Object> rawData = mapOf("foo", "1");
             final Map<String, Object>[] result =
-                    (Map<String, Object>[]) marshaller().convertRawValueToTargetType(rawData, genericType);
+                    (Map<String, Object>[]) marshaller().convertRawValueToTargetJavaType(rawData, genericType);
             assertThat(result[0].get("foo")).isEqualTo("1");
         }
 
         @Test
         @DisplayName("Convert Map<String, Map<String, String>> to field generic type Map<String, Map<String, Integer>>")
         public void test1646771360667() {
-            final Type genericType = POJO.PojoFields.MAP_MAP_INTEGER.getType();
+            final Type genericType = MapPojo.PojoFields.MAP_MAP_INTEGER.getGenericType();
             final Map<String, Object> rawData = mapOf("foo", mapOf("bar", 1));
             final Map<String, Map<String, Object>> result =
-                    (Map<String, Map<String, Object>>) marshaller().convertRawValueToTargetType(rawData, genericType);
+                    (Map<String, Map<String, Object>>) marshaller().convertRawValueToTargetJavaType(rawData, genericType);
             assertThat(result.get("foo").get("bar")).isEqualTo(1);
         }
 
         @Test
         @DisplayName("Convert Map<String, Map<String, Object>> to field generic type Map<String, Object>")
         public void test1646772270818() {
-            final Type genericType = POJO.PojoFields.MAP_OBJECT_FIELD.getType();
+            final Type genericType = MapPojo.PojoFields.MAP_OBJECT_FIELD.getGenericType();
             final Map<String, Object> rawData = mapOf("foo", mapOf("bar", true, "var", "str", "car", 222));
             final Map<String, Map<String, Object>> result =
-                    (Map<String, Map<String, Object>>) marshaller().convertRawValueToTargetType(rawData, genericType);
+                    (Map<String, Map<String, Object>>) marshaller().convertRawValueToTargetJavaType(rawData, genericType);
             assertThat(result.get("foo").get("bar")).isEqualTo(true);
             assertThat(result.get("foo").get("var")).isEqualTo("str");
             assertThat(result.get("foo").get("car")).isEqualTo(222);
         }
 
+        @Test
+        @DisplayName("Convert Map<String, Object> to field generic type POJO (extended from Map<String, Object>)")
+        public void test1646870688987() {
+            final String fieldName = MapPojo.PojoFields.INTEGER_FIELD.getFieldName();
+            final Type genericType = MapPojo.PojoFields.NESTED_MAP_POJO.getGenericType();
+            final Map<String, Object> rawData = mapOf(fieldName, "123", "foo", "123");
+            final Map<String, Object> pojo =
+                    (Map<String, Object>) marshaller().convertRawValueToTargetJavaType(rawData, genericType);
+            assertThat(pojo.get("foo")).isEqualTo("123");
+            assertThat(pojo.get(fieldName)).isEqualTo("123");
+        }
+
+        @Test
+        @DisplayName("MarshallerException: Incompatible types: Map<String, Object> to POJO")
+        public void test1646908301203() {
+            final String integerFieldName = Pojo.PojoFields.INTEGER_FIELD.getFieldName();
+            final String nestedPojoFieldName = Pojo.PojoFields.NESTED_POJO.getFieldName();
+            final Type genericType = Pojo.PojoFields.NESTED_POJO.getGenericType();
+            final Map<String, Object> rawData = mapOf(nestedPojoFieldName, mapOf(integerFieldName, "123"));
+            assertThrow(() -> marshaller().convertRawValueToTargetJavaType(rawData, genericType))
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("Incompatible types received for conversion.\n" +
+                                     "    Source value: {nestedPojo={integerField=123}}\n" +
+                                     "    Source type: java.util.HashMap\n" +
+                                     "    Target type: " + Pojo.class.getTypeName() + "\n");
+        }
+
     }
+
+    @Test
+    @DisplayName("MapPojo")
+    public void test1646872534663() {
+        Map<String, Object> aaaa = new HashMap<>();
+        Class<? extends Map> asdasdasd = aaaa.getClass();
+        System.out.println(" 1 >>>>>> " + asdasdasd.getGenericSuperclass());
+        System.out.println(" 1 >>>>>> " + Arrays.toString(asdasdasd.getTypeParameters()));
+        final ParameterizedType genericSuperclass111 = (ParameterizedType) asdasdasd.getGenericSuperclass();
+        final Type[] actualTypeArguments = genericSuperclass111.getActualTypeArguments();
+        for (Type actualTypeArgument : actualTypeArguments) {
+            TypeVariable typeVariable = (TypeVariable) actualTypeArgument;
+            System.out.println(" 20 >>>>>> " + Arrays.toString(typeVariable.getBounds()));
+            System.out.println(" 21 >>>>>> " + Arrays.toString(typeVariable.getAnnotatedBounds()));
+            System.out.println(" 22 >>>>>> " + typeVariable.getGenericDeclaration());
+        }
+        final Class<MapPojo> mapPojoClass = MapPojo.class;
+        System.out.println(" >>>>>> 3 " + mapPojoClass.getGenericSuperclass());
+        final ParameterizedType genericSuperclass = (ParameterizedType) mapPojoClass.getGenericSuperclass();
+        System.out.println(" >>>>>> 4 " + Arrays.toString(genericSuperclass.getActualTypeArguments()));
+        for (Type actualTypeArgument : genericSuperclass.getActualTypeArguments()) {
+            System.out.println(" >>>>>> 5 " + actualTypeArgument.getClass());
+            System.out.println(" >>>>>> 6 " + actualTypeArgument.getTypeName());
+        }
+    }
+
 
     private static FormUrlMarshaller marshaller() {
         return new FormUrlMarshaller();
     }
 
-    private static POJO pojo() {
-        return new POJO();
+    private static MapPojo mapPojo() {
+        return new MapPojo();
+    }
+
+    private static Pojo pojo() {
+        return new Pojo();
     }
 
 

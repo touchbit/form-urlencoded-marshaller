@@ -39,6 +39,8 @@ public class CodecConstant {
     public static final String SOURCE_PARAMETER = "source";
     public static final String CHAIN_PART_PARAMETER = "chainPart";
     public static final String LIST_PARAMETER = "list";
+    public static final String INCOMPATIBLE_TYPES_RECEIVED_FOR_CONVERSION = "Incompatible types received for conversion.";
+    public static final String RECEIVED_UNSUPPORTED_TYPE_FOR_CONVERSION = "Received unsupported type for conversion.";
 
     /**
      * Utility class. Forbidden instantiation.

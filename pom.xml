@@ -7,8 +7,9 @@
     <groupId>org.touchbit.web</groupId>
     <artifactId>form-urlencoded-marshaller</artifactId>
     <version>1.0.0</version>
-    <name>Marshaller for "x-www-form-urlencoded" data (pojo/string)</name>
-    <description>The marshaller allows you to convert a FormUrlEncoded string to a pojo object and vice versa. Supports
+    <name>Marshaller for "x-www-form-urlencoded" data (mapPojo/string)</name>
+    <description>The marshaller allows you to convert a FormUrlEncoded string to a mapPojo object and vice versa.
+        Supports
         nesting of objects and lists. Supports indexed and non-indexed lists.
     </description>
     <packaging>jar</packaging>

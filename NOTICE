@@ -1,6 +1,6 @@
 form-urlencoded-marshaller
 ----------------------------------------------------------------------
-Marshaller for "x-www-form-urlencoded" data (pojo/string)
+Marshaller for "x-www-form-urlencoded" data (mapPojo/string)
 Distributed under license 'Apache License Version 2.0'
 Copyright 2022 form-urlencoded-marshaller project authors/contributors
 ----------------------------------------------------------------------
