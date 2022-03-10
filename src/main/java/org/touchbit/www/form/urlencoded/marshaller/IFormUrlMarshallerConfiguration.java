@@ -19,6 +19,7 @@ package org.touchbit.www.form.urlencoded.marshaller;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
+@SuppressWarnings("UnusedReturnValue")
 public interface IFormUrlMarshallerConfiguration {
 
     /**
@@ -31,7 +32,7 @@ public interface IFormUrlMarshallerConfiguration {
     /**
      * According to the 3W specification, it is strongly recommended to use UTF-8 charset for URL form data coding.
      *
-     * @param codingCharset - URL form data coding charset
+     * @param codingCharset URL form data coding charset
      * @return this
      */
     IFormUrlMarshallerConfiguration withCodingCharset(final Charset codingCharset);
@@ -42,7 +43,7 @@ public interface IFormUrlMarshallerConfiguration {
     boolean isPrettyPrint();
 
     /**
-     * @param isPrettyPrint - form-urlencoded pretty print flag
+     * @param isPrettyPrint form-urlencoded pretty print flag
      * @return this
      */
     IFormUrlMarshallerConfiguration withPrettyPrint(final boolean isPrettyPrint);
@@ -161,7 +162,7 @@ public interface IFormUrlMarshallerConfiguration {
         /**
          * According to the 3W specification, it is strongly recommended to use UTF-8 charset for URL form data coding.
          *
-         * @param codingCharset - URL form data coding charset
+         * @param codingCharset URL form data coding charset
          * @return this
          */
         public Default withCodingCharset(final Charset codingCharset) {
@@ -178,7 +179,7 @@ public interface IFormUrlMarshallerConfiguration {
         }
 
         /**
-         * @param isPrettyPrint - form-urlencoded pretty print flag
+         * @param isPrettyPrint form-urlencoded pretty print flag
          * @return this
          */
         @Override

@@ -77,7 +77,7 @@ interface IChainKey {
         private final Type type;
 
         /**
-         * @param key - form parameter key (map key || array index || empty string for implicit array)
+         * @param key form parameter key (map key || array index || empty string for implicit array)
          * @throws NullPointerException if key is null
          */
         public Default(final String key) {

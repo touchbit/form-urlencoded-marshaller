@@ -195,10 +195,14 @@ public class MarshallerException extends RuntimeException {
             return this;
         }
 
+        public Builder errorCause(final Exception e) {
+            this.additionalInfo.add("    Error cause: " + e.getMessage().trim());
+            return this;
+        }
+
         public MarshallerException build() {
             return new MarshallerException(errorMessage + this.additionalInfo.add(""));
         }
-
     }
 
 

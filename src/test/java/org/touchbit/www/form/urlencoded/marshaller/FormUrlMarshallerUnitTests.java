@@ -7,21 +7,18 @@ import org.touchbit.BaseTest;
 import org.touchbit.www.form.urlencoded.marshaller.model.MapPojo;
 import org.touchbit.www.form.urlencoded.marshaller.model.Pojo;
 import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncoded;
+import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncodedAdditionalProperties;
 import org.touchbit.www.form.urlencoded.marshaller.util.MarshallerException;
 
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.util.*;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SuppressWarnings("unchecked")
 @DisplayName("FormUrlMarshaller.class unit tests")
 public class FormUrlMarshallerUnitTests extends BaseTest {
-
-    private static final String ENCODED = "%D1%82%D0%B5%D1%81%D1%82";
-    private static final String DECODED = "тест";
 
     @Nested
     @DisplayName("#marshal() method tests")
@@ -371,42 +368,6 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
     }
 
     @Nested
-    @DisplayName("#encode() method tests")
-    public class EncodeMethodTests {
-
-        @Test
-        @DisplayName("Required parameters")
-        public void test1646678004644() {
-            assertNPE(() -> marshaller().encode(null), "value");
-        }
-
-        @Test
-        @DisplayName("Encode decoded string")
-        public void test1646678016784() {
-            assertThat(marshaller().encode(DECODED)).isEqualTo(ENCODED);
-        }
-
-    }
-
-    @Nested
-    @DisplayName("#decode() method tests")
-    public class DecodeMethodTests {
-
-        @Test
-        @DisplayName("Decode encoded string")
-        public void test1646677890242() {
-            assertThat(marshaller().decode(ENCODED)).isEqualTo(DECODED);
-        }
-
-        @Test
-        @DisplayName("Decode null string")
-        public void test1646786100739() {
-            assertThat(marshaller().decode(null)).isEqualTo(null);
-        }
-
-    }
-
-    @Nested
     @DisplayName("#writeRawDataToPojo() method tests")
     public class WriteRawDataToPojoMethodTests {
 
@@ -685,31 +646,194 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
 
     }
 
-    @Test
-    @DisplayName("MapPojo")
-    public void test1646872534663() {
-        Map<String, Object> aaaa = new HashMap<>();
-        Class<? extends Map> asdasdasd = aaaa.getClass();
-        System.out.println(" 1 >>>>>> " + asdasdasd.getGenericSuperclass());
-        System.out.println(" 1 >>>>>> " + Arrays.toString(asdasdasd.getTypeParameters()));
-        final ParameterizedType genericSuperclass111 = (ParameterizedType) asdasdasd.getGenericSuperclass();
-        final Type[] actualTypeArguments = genericSuperclass111.getActualTypeArguments();
-        for (Type actualTypeArgument : actualTypeArguments) {
-            TypeVariable typeVariable = (TypeVariable) actualTypeArgument;
-            System.out.println(" 20 >>>>>> " + Arrays.toString(typeVariable.getBounds()));
-            System.out.println(" 21 >>>>>> " + Arrays.toString(typeVariable.getAnnotatedBounds()));
-            System.out.println(" 22 >>>>>> " + typeVariable.getGenericDeclaration());
+    @Nested
+    @DisplayName("#unmarshalTo method tests")
+    public class UnmarshalToMethodTests {
+
+        @Test
+        @DisplayName("Required parameters")
+        public void test1646935755648() {
+            assertNPE(() -> marshaller().unmarshalTo(null, ""), "model");
+            assertNPE(() -> marshaller().unmarshalTo(pojo(), null), "encodedString");
         }
-        final Class<MapPojo> mapPojoClass = MapPojo.class;
-        System.out.println(" >>>>>> 3 " + mapPojoClass.getGenericSuperclass());
-        final ParameterizedType genericSuperclass = (ParameterizedType) mapPojoClass.getGenericSuperclass();
-        System.out.println(" >>>>>> 4 " + Arrays.toString(genericSuperclass.getActualTypeArguments()));
-        for (Type actualTypeArgument : genericSuperclass.getActualTypeArguments()) {
-            System.out.println(" >>>>>> 5 " + actualTypeArgument.getClass());
-            System.out.println(" >>>>>> 6 " + actualTypeArgument.getTypeName());
+
+        @Test
+        @DisplayName("Unmarshal query string to Map")
+        public void test1646927546174() {
+            final HashMap<?, ?> map = new HashMap<>();
+            marshaller().unmarshalTo(map, "foo[bar]=123&foo[car][0]=V0&foo[car][2]=" + ENCODED);
+            assertThat(map).isNotEmpty();
+            assertThat(map.get("foo")).isInstanceOf(Map.class);
+            Map<String, Object> foo = (Map<String, Object>) map.get("foo");
+            assertThat(foo.get("bar")).isEqualTo("123");
+            assertThat(foo.get("car")).isInstanceOf(List.class);
+            List<String> car = (List<String>) foo.get("car");
+            assertThat(car.toString()).isEqualTo("[V0, null, " + DECODED + "]");
         }
+
+        @Test
+        @DisplayName("Unmarshal query string to Pojo")
+        public void test1646928144418() {
+            final Pojo pojo = pojo();
+            marshaller().unmarshalTo(pojo, "nestedPojo[stringField]=1111111&" +
+                                           "nestedPojo[integerField]=2222222&" +
+                                           "nestedPojo[listStringField][1]=33333333&" +
+                                           "arrayStringField=44444444&" +
+                                           "arrayStringField=55555555&" +
+                                           "aaaaaaaaaaaaaaaaaa=" + ENCODED);
+            assertThat(pojo.nestedPojo().stringField()).isEqualTo("1111111");
+            assertThat(pojo.nestedPojo().integerField()).isEqualTo(2222222);
+            assertThat(pojo.nestedPojo().listStringField().toString()).isEqualTo("[null, 33333333]");
+            assertThat(pojo.arrayStringField()[0]).isEqualTo("44444444");
+            assertThat(pojo.arrayStringField()[1]).isEqualTo("55555555");
+            assertThat(pojo.additionalProperties().toString()).isEqualTo("{aaaaaaaaaaaaaaaaaa=" + DECODED + "}");
+        }
+
+        @Test
+        @DisplayName("Unmarshal query string to MapPojo")
+        public void test1646932636257() {
+            final MapPojo pojo = mapPojo();
+            marshaller().unmarshalTo(pojo, "nestedMapPojo[stringField]=1111111&" +
+                                           "nestedMapPojo[integerField]=2222222&" +
+                                           "nestedMapPojo[listStringField][1]=33333333&" +
+                                           "arrayStringField=44444444&" +
+                                           "arrayStringField=55555555&" +
+                                           "aaaaaaaaaaaaaaaaaa=" + ENCODED);
+            assertThat(pojo.nestedMapPojo().stringField()).isEqualTo("1111111");
+            assertThat(pojo.nestedMapPojo().integerField()).isEqualTo(2222222);
+            assertThat(pojo.nestedMapPojo().listStringField().toString()).isEqualTo("[null, 33333333]");
+            assertThat(pojo.arrayStringField()[0]).isEqualTo("44444444");
+            assertThat(pojo.arrayStringField()[1]).isEqualTo("55555555");
+            assertThat(pojo.additionalProperties().toString()).isEqualTo("{aaaaaaaaaaaaaaaaaa=" + DECODED + "}");
+        }
+
+        @Test
+        @DisplayName("Unmarshal query string to EmptyPojo (prohibitAdditionalProperties=false (default))")
+        public void test1646932940356() {
+            EmptyPojo emptyPojo = new EmptyPojo();
+            marshaller().unmarshalTo(emptyPojo, "foo=bar");
+            assertThat(emptyPojo.foo).isNull();
+        }
+
+        @Test
+        @DisplayName("Unmarshal query string to Pojo (prohibitAdditionalProperties=true)")
+        public void test1646933107631() {
+            Pojo pojo = pojo();
+            assertThrow(() -> marshaller().prohibitAdditionalProperties(true).unmarshalTo(pojo, "foo=bar"))
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("URL encoded string contains unmapped additional properties.\n" +
+                                     "    Expected: There are no additional properties.\n" +
+                                     "    Actual: {foo=bar}\n");
+        }
+
+        @Test
+        @DisplayName("Unmarshal query string to Pojo (prohibitAdditionalProperties=true)")
+        public void test1646933378312() {
+            EmptyPojo pojo = new EmptyPojo();
+            assertThrow(() -> marshaller().prohibitAdditionalProperties(true).unmarshalTo(pojo, "foo=bar"))
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("URL encoded string contains unmapped additional properties.\n" +
+                                     "    Expected: There are no additional properties.\n" +
+                                     "    Actual: {foo=bar}\n");
+        }
+
+        @Test
+        @DisplayName("Unmarshal query string to MapPojo with AP (prohibitAdditionalProperties=true)")
+        public void test1646933419223() {
+            MapPojo pojo = mapPojo();
+            assertThrow(() -> marshaller().prohibitAdditionalProperties(true).unmarshalTo(pojo, "foo=bar"))
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("URL encoded string contains unmapped additional properties.\n" +
+                                     "    Expected: There are no additional properties.\n" +
+                                     "    Actual: {foo=bar}\n");
+        }
+
+        @Test
+        @DisplayName("Unmarshal query string to MapPojo without AP (prohibitAdditionalProperties=true (ignored))")
+        public void test1646933638931() {
+            MapPojoWithoutAdditionalProperties pojo = new MapPojoWithoutAdditionalProperties();
+            marshaller().prohibitAdditionalProperties(true).unmarshalTo(pojo, "foo=bar");
+            assertThat(pojo.get("foo")).isEqualTo("bar");
+        }
+
     }
 
+    @Nested
+    @DisplayName("#unmarshal() method tests")
+    public class UnmarshalMethodTests {
+
+        @Test
+        @DisplayName("Required parameters")
+        public void test1646935806232() {
+            assertNPE(() -> FormUrlMarshaller.INSTANCE.unmarshal(null, ""), "modelClass");
+            assertNPE(() -> FormUrlMarshaller.INSTANCE.unmarshal(pojo().getClass(), null), "encodedString");
+        }
+
+        @Test
+        @DisplayName("Unmarshal query string to Map")
+        public void test1646935832984() {
+            final HashMap<?, ?> map = marshaller().unmarshal(HashMap.class, "foo[bar]=123&" +
+                                                                            "foo[car][0]=V0&" +
+                                                                            "foo[car][2]=" + ENCODED);
+            assertThat(map).isNotEmpty();
+            assertThat(map.get("foo")).isInstanceOf(Map.class);
+            Map<String, Object> foo = (Map<String, Object>) map.get("foo");
+            assertThat(foo.get("bar")).isEqualTo("123");
+            assertThat(foo.get("car")).isInstanceOf(List.class);
+            List<String> car = (List<String>) foo.get("car");
+            assertThat(car.toString()).isEqualTo("[V0, null, " + DECODED + "]");
+        }
+
+        @Test
+        @DisplayName("Unmarshal query string to Pojo")
+        public void test1646935845200() {
+            final Pojo pojo = marshaller().unmarshal(Pojo.class, "nestedPojo[stringField]=1111111&" +
+                                                                 "nestedPojo[integerField]=2222222&" +
+                                                                 "nestedPojo[listStringField][1]=33333333&" +
+                                                                 "arrayStringField=44444444&" +
+                                                                 "arrayStringField=55555555&" +
+                                                                 "aaaaaaaaaaaaaaaaaa=" + ENCODED);
+            assertThat(pojo.nestedPojo().stringField()).isEqualTo("1111111");
+            assertThat(pojo.nestedPojo().integerField()).isEqualTo(2222222);
+            assertThat(pojo.nestedPojo().listStringField().toString()).isEqualTo("[null, 33333333]");
+            assertThat(pojo.arrayStringField()[0]).isEqualTo("44444444");
+            assertThat(pojo.arrayStringField()[1]).isEqualTo("55555555");
+            assertThat(pojo.additionalProperties().toString()).isEqualTo("{aaaaaaaaaaaaaaaaaa=" + DECODED + "}");
+        }
+
+        @Test
+        @DisplayName("MarshallerException: if model class is Map (interface)")
+        public void test1646936491761() {
+            assertThrow(() -> marshaller().unmarshal(Map.class, "foo=bar"))
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("Unable to instantiate model class.\n" +
+                                     "    Source type: java.util.Map\n" +
+                                     "    Error cause: No such accessible constructor on object: java.util.Map\n");
+        }
+
+        @Test
+        @DisplayName("MarshallerException: if private constructor")
+        public void test1646936771264() {
+            final String typeName = PrivatePojo.class.getTypeName();
+            assertThrow(() -> marshaller().unmarshal(PrivatePojo.class, "foo=bar"))
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("Unable to instantiate model class.\n" +
+                                     "    Source type: " + typeName + "\n" +
+                                     "    Error cause: No such accessible constructor on object: " + typeName + "\n");
+        }
+
+        @Test
+        @DisplayName("MarshallerException: if constructor with parameters")
+        public void test1646936951388() {
+            final String typeName = PojoWithConstructorParams.class.getTypeName();
+            assertThrow(() -> marshaller().unmarshal(PojoWithConstructorParams.class, "foo=bar"))
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("Unable to instantiate model class.\n" +
+                                     "    Source type: " + typeName + "\n" +
+                                     "    Error cause: No such accessible constructor on object: " + typeName + "\n");
+        }
+
+    }
 
     private static FormUrlMarshaller marshaller() {
         return new FormUrlMarshaller();
@@ -723,5 +847,97 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         return new Pojo();
     }
 
+    @FormUrlEncoded
+    private static class EmptyPojo {
+
+        public String foo;
+
+    }
+
+    @FormUrlEncoded
+    public static class PrivatePojo {
+
+        private PrivatePojo() {
+
+        }
+
+    }
+
+    @FormUrlEncoded
+    @SuppressWarnings("FieldCanBeLocal")
+    public static class PojoWithConstructorParams {
+
+        private final String foo;
+
+        public PojoWithConstructorParams(String foo) {
+            this.foo = foo;
+        }
+
+    }
+
+    @FormUrlEncoded
+    public static class MapPojoWithoutAdditionalProperties extends HashMap<String, String> {
+
+
+    }
+
+    @FormUrlEncoded
+    public static class AdditionalProperties {
+
+        @FormUrlEncodedAdditionalProperties()
+        private Map<String, Object> additionalProperties;
+
+    }
+
+    @FormUrlEncoded
+    private static class FinalAdditionalProperties {
+
+        @FormUrlEncodedAdditionalProperties()
+        private final Map<String, Object> additionalProperties = new HashMap<>();
+
+    }
+
+    @FormUrlEncoded
+    private static class AdditionalPropertiesWithoutAnnotation {
+
+        private Map<String, Object> additionalProperties;
+
+    }
+
+    @FormUrlEncoded
+    private static class AdditionalPropertiesInvalidType {
+
+        @FormUrlEncodedAdditionalProperties()
+        private Map<?, ?> additionalProperties;
+
+    }
+
+    @FormUrlEncoded
+    @SuppressWarnings({"rawtypes"})
+    private static class AdditionalPropertiesRawMap {
+
+        @FormUrlEncodedAdditionalProperties()
+        private Map additionalProperties;
+
+    }
+
+    @FormUrlEncoded
+    private static class AdditionalPropertiesList {
+
+        @FormUrlEncodedAdditionalProperties()
+        private List<String> additionalProperties;
+
+    }
+
+    @FormUrlEncoded
+    private static class AdditionalPropertiesFields {
+
+        @FormUrlEncodedAdditionalProperties()
+        private Map<String, Object> additionalProperties1;
+
+        @FormUrlEncodedAdditionalProperties()
+        private Map<String, Object> additionalProperties2;
+
+    }
 
 }

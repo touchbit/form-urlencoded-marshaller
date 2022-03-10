@@ -54,7 +54,7 @@ public interface IChainList extends List<Object> {
         private final boolean isIndexed;
 
         /**
-         * @param isIndexed - sign that form array is indexed
+         * @param isIndexed sign that form array is indexed
          */
         public Default(final boolean isIndexed) {
             this.isIndexed = isIndexed;

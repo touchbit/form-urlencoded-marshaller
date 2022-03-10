@@ -7,6 +7,7 @@ import org.touchbit.BaseTest;
 
 import java.util.*;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("IChain.class unit tests")
@@ -21,10 +22,10 @@ public class IChainUnitTests extends BaseTest {
         public void test1646498055251() {
             final IChain.Default aDefault = new IChain.Default("foo=%20");
             assertNotNull(aDefault.getRawData());
-            assertIs(aDefault.getRawData().get("foo"), "%20");
+            assertIs(aDefault.getRawData().get("foo"), " ");
             assertThat(aDefault.getChainParts()).isNotEmpty();
-            assertIs(aDefault.getChainParts().get(0).toString(), "foo=%20");
-            assertIs(aDefault.toString(), "foo=%20");
+            assertIs(aDefault.getChainParts().get(0).toString(), "foo= ");
+            assertIs(aDefault.toString(), "foo= ");
         }
 
         @Test
@@ -452,7 +453,7 @@ public class IChainUnitTests extends BaseTest {
         @DisplayName("return empty list if urlEncodedString = null")
         public void test1646591957105() {
             final IChain.Default chain = new IChain.Default(null);
-            final List<IChainPart> parts = chain.readUrlEncodedString(null);
+            final List<IChainPart> parts = chain.readUrlEncodedString(null, UTF_8);
             assertThat(parts).isEmpty();
         }
 
@@ -460,7 +461,7 @@ public class IChainUnitTests extends BaseTest {
         @DisplayName("return empty list if urlEncodedString = ''")
         public void test1646592015888() {
             final IChain.Default chain = new IChain.Default(null);
-            final List<IChainPart> parts = chain.readUrlEncodedString("");
+            final List<IChainPart> parts = chain.readUrlEncodedString("", UTF_8);
             assertThat(parts).isEmpty();
         }
 
@@ -468,7 +469,7 @@ public class IChainUnitTests extends BaseTest {
         @DisplayName("return empty list if urlEncodedString = '   \n    '")
         public void test1646592033216() {
             final IChain.Default chain = new IChain.Default(null);
-            final List<IChainPart> parts = chain.readUrlEncodedString("   \n    ");
+            final List<IChainPart> parts = chain.readUrlEncodedString("   \n    ", UTF_8);
             assertThat(parts).isEmpty();
         }
 
@@ -476,7 +477,7 @@ public class IChainUnitTests extends BaseTest {
         @DisplayName("return IChainPart list if urlEncodedString = 'foo[0]=val1&bar[1]='")
         public void test1646592054392() {
             final IChain.Default chain = new IChain.Default(null);
-            final List<IChainPart> parts = chain.readUrlEncodedString("foo[0]=val1&bar[1]=");
+            final List<IChainPart> parts = chain.readUrlEncodedString("foo[0]=val1&bar[1]=", UTF_8);
             assertThat(parts).hasSize(2);
             assertThat(parts.get(0).toString()).isEqualTo("foo[0]=val1");
             assertThat(parts.get(1).toString()).isEqualTo("bar[1]=");
@@ -486,7 +487,7 @@ public class IChainUnitTests extends BaseTest {
         @DisplayName("IllegalArgumentException key-value pair is not in URL form format (foo)")
         public void test1646592184246() {
             final IChain.Default chain = new IChain.Default(null);
-            assertThrow(() -> chain.readUrlEncodedString("foo"))
+            assertThrow(() -> chain.readUrlEncodedString("foo", UTF_8))
                     .assertClass(IllegalArgumentException.class)
                     .assertMessageIs("URL encoded key-value pair is not in URL format:\n" +
                                      "Pair: foo");
@@ -496,7 +497,7 @@ public class IChainUnitTests extends BaseTest {
         @DisplayName("IllegalArgumentException key-value pair is not in URL form format (foo=bar=val)")
         public void test1646592215480() {
             final IChain.Default chain = new IChain.Default(null);
-            assertThrow(() -> chain.readUrlEncodedString("foo=bar=val"))
+            assertThrow(() -> chain.readUrlEncodedString("foo=bar=val", UTF_8))
                     .assertClass(IllegalArgumentException.class)
                     .assertMessageIs("URL encoded key-value pair is not in URL format:\n" +
                                      "Pair: foo=bar=val");

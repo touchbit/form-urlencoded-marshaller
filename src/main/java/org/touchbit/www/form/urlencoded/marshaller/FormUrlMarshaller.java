@@ -27,12 +27,11 @@ import org.touchbit.www.form.urlencoded.marshaller.util.CodecConstant;
 import org.touchbit.www.form.urlencoded.marshaller.util.FormUrlUtils;
 import org.touchbit.www.form.urlencoded.marshaller.util.MarshallerException;
 
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -74,23 +73,18 @@ import static org.touchbit.www.form.urlencoded.marshaller.util.CodecConstant.*;
 public class FormUrlMarshaller implements IFormUrlMarshaller {
 
     public static final FormUrlMarshaller INSTANCE = new FormUrlMarshaller();
-    private static final String UNABLE_READ_FIELD_VALUE_ERR_MSG = "Unable to read value from model field.\n";
-    private static final String UNABLE_ENCODE_ERR_MSG = "Unable to encode string to FormUrlEncoded format.\n";
-    private static final String MODEL_TYPE_ERR_MSG = "    Model type: ";
     private static final String FIELD_NAME_ERR_MSG = "    Field name: ";
-    private static final String FORF_FIELD_NAME_ERR_MSG = "    URL form field name: ";
-    private static final String VALUE_TO_ENCODE_ERR_MSG = "    Value to encode: ";
-    private static final String ENCODE_CHARSET_ERR_MSG = "    Encode charset: ";
     private static final String ERROR_CAUSE_ERR_MSG = "    Error cause: ";
     private static final String FIELD_TYPE_ERR_MSG = "    Field type: ";
-    private static final String VALUE_FOR_CONVERT_ERR_MSG = "    Value for convert: ";
-    private static final String ANNOTATION_ERR_MSG = "    Annotation: ";
     private static final String MODEL_ERR_MSG = "    Model: ";
     private static final String FIELD_ERR_MSG = "    Field: ";
     private static final String ACT_TYPE_ERR_MSG = "    Actual type: ";
     private static final String EXP_TYPE_ERR_MSG = "    Expected type: ";
     private static final String CONVERSION_UNSUPPORTED_TYPE_ERR_MSG = "Received unsupported type for conversion: ";
     private final IFormUrlMarshallerConfiguration configuration;
+
+    private boolean prohibitAdditionalProperties = false;
+    private Charset codingCharset = StandardCharsets.UTF_8;
 
     public FormUrlMarshaller() {
         this(new IFormUrlMarshallerConfiguration.Default().enableHiddenList());
@@ -112,7 +106,7 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
      * Model to string conversion
      * According to the 3W specification, it is strongly recommended to use UTF-8 charset for URL form data coding.
      *
-     * @param model - {@code Map<String, Object>} or pojo object with {@link FormUrlEncoded} annotation
+     * @param model {@code Map<String, Object>} or pojo object with {@link FormUrlEncoded} annotation
      * @return form url encoded string
      * @throws NullPointerException     if model is null
      * @throws IllegalArgumentException if model type is not supported
@@ -132,7 +126,7 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
     }
 
     /**
-     * @param value - any object
+     * @param value any object
      * @return converted value (List || Map || String)
      * @throws IllegalArgumentException if value type is not supported
      */
@@ -158,7 +152,7 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
     }
 
     /**
-     * @param value - any object with {@link FormUrlEncoded} class annotation
+     * @param value any object with {@link FormUrlEncoded} class annotation
      * @return {@link HashMap} with converted values
      * @throws NullPointerException     if value is null
      * @throws IllegalArgumentException class does not contain a FormUrlEncodedField annotation
@@ -177,7 +171,9 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
                     continue;
                 }
                 if (FormUrlUtils.isSimple(fieldValue)) {
-                    resultValue = annotation.encoded() ? fieldValue : encode(String.valueOf(fieldValue));
+                    final String stringValue = String.valueOf(fieldValue);
+                    final String encoded = FormUrlUtils.encode(stringValue, codingCharset);
+                    resultValue = annotation.encoded() ? fieldValue : encoded;
                 } else {
                     resultValue = convertValueToRawData(fieldValue);
                 }
@@ -191,7 +187,7 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
     }
 
     /**
-     * @param value - any {@link Map}
+     * @param value any {@link Map}
      * @return {@link HashMap} with converted values
      * @throws NullPointerException     if value is null
      * @throws IllegalArgumentException if value is not {@link Map}
@@ -224,7 +220,7 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
     }
 
     /**
-     * @param value - any {@link Collection}
+     * @param value any {@link Collection}
      * @return {@link ArrayList} with converted array values
      * @throws NullPointerException     if value is null
      * @throws IllegalArgumentException if value is not {@link Collection}
@@ -243,7 +239,7 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
     }
 
     /**
-     * @param value - any array
+     * @param value any array
      * @return {@link ArrayList} with converted array values
      * @throws NullPointerException     if value is null
      * @throws IllegalArgumentException if value is not array
@@ -262,93 +258,62 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
     }
 
     /**
-     * @param value - simple value (String, Integer, Double, etc.)
+     * @param value simple value (String, Integer, Double, etc.)
      * @return encoded value or empty string if value is null
      */
     protected Object convertSimpleToRawData(final Object value) {
-        return encode(value == null ? "" : String.valueOf(value));
+        return FormUrlUtils.encode(value == null ? "" : String.valueOf(value), codingCharset);
     }
 
     /**
      * String to model conversion
      * According to the 3W specification, it is strongly recommended to use UTF-8 charset for URL form data coding.
      *
-     * @param modelClass    - FormUrlEncoded model class
-     * @param encodedString - URL encoded string to conversation
-     * @param <M>           - model generic type
+     * @param modelClass    FormUrlEncoded model class
+     * @param encodedString URL encoded string to conversation
+     * @param <M>           model generic type
      * @return completed model
      * @throws MarshallerException on class instantiation errors
      */
     @Override
     public <M> M unmarshal(final Class<M> modelClass, final String encodedString) {
+        FormUrlUtils.parameterRequireNonNull(modelClass, MODEL_CLASS_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(encodedString, ENCODED_STRING_PARAMETER);
         final M model = FormUrlUtils.invokeConstructor(modelClass);
-        return unmarshal(model, encodedString);
+        unmarshalTo(model, encodedString);
+        return model;
     }
 
     /**
      * String to model conversion
-     * According to the 3W specification, it is strongly recommended to use UTF-8 charset for URL form data coding.
      *
-     * @param model         - FormUrlEncoded model object
-     * @param encodedString - URL encoded string to conversation
-     * @param <M>           - model generic type
-     * @return completed model
+     * @param model         FormUrlEncoded model object
+     * @param encodedString URL encoded string to conversation
+     * @param <M>           model generic type
      * @throws MarshallerException on class instantiation errors
      */
-    public <M> M unmarshal(final M model, final String encodedString) {
+    @SuppressWarnings("unchecked")
+    public <M> void unmarshalTo(final M model, final String encodedString) {
         FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(encodedString, ENCODED_STRING_PARAMETER);
         final Map<String, Object> rawData = new IChain.Default(encodedString).getRawData();
         if (FormUrlUtils.isMap(model) || FormUrlUtils.isPojo(model)) {
             if (FormUrlUtils.isPojo(model)) {
                 writeRawDataToPojo(model, rawData);
             }
             if (FormUrlUtils.isMap(model)) {
-                final TypeVariable<? extends Class<?>>[] typeParameters = model.getClass().getTypeParameters();
-                final Type genericSuperclass = model.getClass().getGenericSuperclass();
-                if (genericSuperclass instanceof ParameterizedType) {
-                    final ParameterizedType parameterizedType = (ParameterizedType) genericSuperclass;
-                    final Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
-                    final boolean isTypeVariable = Arrays.stream(actualTypeArguments)
-                            .allMatch(type -> type instanceof TypeVariable);
-                    if (isTypeVariable) {
-                        final Map mapModel = (Map) model;
-                        mapModel.putAll(rawData);
-                        rawData.clear();
-                        // TODO break
-                    }
-                    final Type[] genericArgumentTypes = parameterizedType.getActualTypeArguments();
-                    final Type genericKeyType = genericArgumentTypes[0];
-                    final Type genericValueType = genericArgumentTypes[1];
-                    if (String.class.equals(genericKeyType) && Object.class.equals(genericValueType)) {
-                        final Map<String, Object> mapModel = (Map<String, Object>) model;
-                        mapModel.putAll(rawData);
-                        rawData.clear();
-                        // TODO break
-                    }
-                    if (String.class.equals(genericKeyType) && String.class.equals(genericValueType)) {
-                        // if raw data does not contain complex types (not Map, List, Array, Pojo)
-                        if (rawData.entrySet().stream().allMatch(e -> FormUrlUtils.isSimple(e.getValue()))) {
-                            final Map<String, String> stringData = rawData.entrySet().stream()
-                                    .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString()));
-                            final Map<String, String> mapModel = (Map<String, String>) model;
-                            mapModel.putAll(stringData);
-                            rawData.clear();
-                            // TODO break
-                        } else {
-                            throw new MarshallerException("Incompatible generic types.\n" +
-                                                          "    Expected: Map<String, Object>\n" +
-                                                          "    Actual: " + genericSuperclass + "\n");
-                        }
-                    }
-                } else {
-                    // raw map class. For example: HashMap.class
-
-                }
+                Map<String, Object> modelMap = (Map<String, Object>) model;
+                modelMap.putAll(rawData);
+                rawData.clear();
             }
-            if (!rawData.isEmpty()) {
-                throw new MarshallerException("URL encoded string contains ");
+            if (!rawData.isEmpty() && isProhibitAdditionalProperties()) {
+                throw MarshallerException.builder()
+                        .errorMessage("URL encoded string contains unmapped additional properties.")
+                        .expected("There are no additional properties.")
+                        .actual(rawData)
+                        .build();
             }
-            return model;
+            return;
         }
         throw new IllegalArgumentException(CONVERSION_UNSUPPORTED_TYPE_ERR_MSG + model.getClass());
     }
@@ -402,30 +367,35 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
             rawData.remove(fieldName);
         }
         if (FormUrlUtils.hasAdditionalProperty(model) && !rawData.isEmpty()) {
-            unmarshalAndWriteAdditionalProperties(model, rawData);
-            rawData.clear();
+            if (!isProhibitAdditionalProperties()) {
+                unmarshalAndWriteAdditionalProperties(model, rawData);
+                rawData.clear();
+            } else {
+                throw MarshallerException.builder()
+                        .errorMessage("URL encoded string contains unmapped additional properties.")
+                        .expected("There are no additional properties.")
+                        .actual(rawData)
+                        .build();
+            }
         }
     }
 
     protected Object convertRawValueToTargetJavaType(final Object rawValue, Type targetType) {
         if (FormUrlUtils.isSimple(rawValue) && FormUrlUtils.isSimple(targetType)) {
             // raw value String to target type Integer
-            final String decoded = decode(rawValue);
-            return convertUrlDecodedStringValueToSimpleType(decoded, targetType);
+            return convertUrlDecodedStringValueToSimpleType(String.valueOf(rawValue), targetType);
         }
         if (FormUrlUtils.isSimple(rawValue) && FormUrlUtils.isGenericCollection(targetType)) {
             // raw value String to target type List<Integer> (hidden url encoded array)
             final ParameterizedType parameterizedTargetType = (ParameterizedType) targetType;
             final Type targetGenericType = parameterizedTargetType.getActualTypeArguments()[0];
-            final String decoded = decode(rawValue);
-            final Object value = convertUrlDecodedStringValueToSimpleType(decoded, targetGenericType);
+            final Object value = convertUrlDecodedStringValueToSimpleType(String.valueOf(rawValue), targetGenericType);
             return Collections.singletonList(value);
         }
         if (FormUrlUtils.isSimple(rawValue) && FormUrlUtils.isArray(targetType)) {
             // raw value String to target type Integer[] (hidden url encoded array)
             final Class<?> componentType = FormUrlUtils.getArrayComponentClass(targetType);
-            final String decoded = decode(rawValue);
-            final Object value = convertUrlDecodedStringValueToSimpleType(decoded, componentType);
+            final Object value = convertUrlDecodedStringValueToSimpleType(String.valueOf(rawValue), componentType);
             return FormUrlUtils.objectToArray(value, componentType);
         }
         if (FormUrlUtils.isMap(rawValue) && FormUrlUtils.isGenericMap(targetType)) {
@@ -450,13 +420,13 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
             // raw value Map<String, Object> to target type raw Map (raw map without generic)
             return rawValue;
         }
+
         if (FormUrlUtils.isCollection(rawValue) && FormUrlUtils.isArray(targetType)) {
             // raw value List<String> to target type Integer[]
             final Collection<?> rawCollection = (Collection<?>) rawValue;
             final Class<?> componentType = FormUrlUtils.getArrayComponentClass(targetType);
-            ;
             final List<Object> value = rawCollection.stream()
-                    .map(this::decode)
+                    .map(i -> (i == null ? null : String.valueOf(i)))
                     .map(i -> convertUrlDecodedStringValueToSimpleType(i, componentType))
                     .collect(Collectors.toList());
             return FormUrlUtils.collectionToArray(value, componentType);
@@ -492,7 +462,7 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
             if (FormUrlUtils.isCollectionOfSimpleObj(rawValue) && FormUrlUtils.isCollectionOfSimpleObj(targetType)) {
                 // raw value List<String> to target type List<Integer>
                 return rawCollection.stream()
-                        .map(this::decode)
+                        .map(String::valueOf)
                         .map(i -> convertUrlDecodedStringValueToSimpleType(i, targetGenericType))
                         .collect(Collectors.toList());
             }
@@ -507,7 +477,6 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
         if (FormUrlUtils.isMap(rawValue) && FormUrlUtils.isArray(targetType)) {
             // raw value Map<String, ?> to target type raw Map[] (hidden url encoded array)
             final Class<?> componentType = FormUrlUtils.getArrayComponentClass(targetType);
-            ;
             final Object value = convertRawValueToTargetJavaType(rawValue, componentType);
             return FormUrlUtils.objectToArray(value, componentType);
         }
@@ -558,9 +527,9 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
      * Populates the field marked with the {@link FormUrlEncodedField} annotation
      * with the received data that is not in the model.
      *
-     * @param model   - FormUrlEncoded model
-     * @param rawData - TODO
-     * @param <M>     - model generic type
+     * @param model   FormUrlEncoded model
+     * @param rawData unhandled data ({@code Map<String, Object>} by default)
+     * @param <M>     model generic type
      * @throws MarshallerException if unable to initialize additionalProperties field
      */
 
@@ -574,7 +543,7 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
     }
 
     /**
-     * @param modelClass - FormUrlEncoded model class
+     * @param modelClass FormUrlEncoded model class
      * @return field annotated with FormUrlEncodedAdditionalProperties or null
      * @throws NullPointerException if modelClass parameter is null
      * @throws MarshallerException  if additionalProperties fields more than one
@@ -625,7 +594,7 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
      * If a field marked with the {@link FormUrlEncodedAdditionalProperties} annotation is present and not initialized,
      * then a new HashMap instance will be written to the field value.
      *
-     * @param model - FormUrlEncoded model
+     * @param model FormUrlEncoded model
      * @return additionalProperty field value (Map) or null if field not present
      * @throws NullPointerException if model parameter is null
      * @throws MarshallerException  if unable to initialize additionalProperties field
@@ -675,8 +644,8 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
      * - {@link BigInteger}
      * - {@link BigDecimal}
      *
-     * @param value      - String value to convert
-     * @param targetType - Java type to which the string is converted
+     * @param value      String value to convert
+     * @param targetType Java type to which the string is converted
      * @return converted value
      * @throws IllegalArgumentException if targetType is primitive
      * @throws IllegalArgumentException if targetType not supported
@@ -730,9 +699,9 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
     }
 
     /**
-     * @param model - FormUrlEncoded model
-     * @param field - model field
-     * @param value - String value to convert
+     * @param model FormUrlEncoded model
+     * @param field model field
+     * @param value String value to convert
      * @param <M>   model generic type
      * @throws MarshallerException if the value cannot be written to the model field
      */
@@ -762,33 +731,37 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
     }
 
     /**
-     * @param value - form URL decoded string
-     * @return form URL encoded string
-     * @throws NullPointerException  if value is null
-     * @throws IllegalStateException cannot be thrown since the configuration operates on an {@link java.nio.charset.Charset} class.
+     * @param prohibitAdditionalProperties true - prohibit additional properties for POJO
+     * @return this
      */
-    protected String encode(String value) {
-        FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
-        try {
-            return URLEncoder.encode(value, getConfiguration().getCodingCharset().name());
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("Unexpected error", e);
-        }
+    public FormUrlMarshaller prohibitAdditionalProperties(boolean prohibitAdditionalProperties) {
+        this.prohibitAdditionalProperties = prohibitAdditionalProperties;
+        return this;
     }
 
     /**
-     * @param value - form URL encoded string
-     * @return form URL decoded string
-     * @throws NullPointerException  if value is null
-     * @throws IllegalStateException cannot be thrown since the configuration operates on an {@link java.nio.charset.Charset} class.
+     * @return true - prohibit additional properties for POJO
      */
-    protected String decode(Object value) {
-        try {
-            return value == null ? null :
-                    URLDecoder.decode(value.toString(), getConfiguration().getCodingCharset().name());
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("Unexpected error", e);
-        }
+    public boolean isProhibitAdditionalProperties() {
+        return prohibitAdditionalProperties;
+    }
+
+    /**
+     * According to the 3W specification, it is strongly recommended to use UTF-8 charset for URL form data coding.
+     *
+     * @param codingCharset URL form data coding charset
+     * @return this
+     */
+    public FormUrlMarshaller setFormUrlCodingCharset(Charset codingCharset) {
+        this.codingCharset = codingCharset;
+        return this;
+    }
+
+    /**
+     * @return URL form data coding charset
+     */
+    public Charset getCodingCharset() {
+        return codingCharset;
     }
 
 }

@@ -40,13 +40,13 @@ public interface IChainPart {
     Map<String, Object> getRawDataValue();
 
     /**
-     * @param part - append key part to the current key (nested key element)
+     * @param part append key part to the current key (nested key element)
      * @return this {@link IChainPart}
      */
     IChainPart appendPart(String part);
 
     /**
-     * @param index - append array part to the current key (nested array element)
+     * @param index append array part to the current key (nested array element)
      * @return this {@link IChainPart}
      */
     IChainPart appendIndex(int index);
@@ -72,7 +72,7 @@ public interface IChainPart {
     String getValue();
 
     /**
-     * @param value - form parameter value
+     * @param value form parameter value
      * @return this {@link IChainPart}
      */
     IChainPart setValue(final String value);
@@ -107,19 +107,19 @@ public interface IChainPart {
         private String value;
 
         /**
-         * @param keyChain     - from url encoded parameter string key
-         * @param implicitList - key contains an implicit array (unindexed) - {@code foo[bar][]=value}
-         * @param explicitList - key contains an explicit array (indexed) - {@code foo[bar][0]=value}
+         * @param keyChain     from url encoded parameter string key
+         * @param implicitList key contains an implicit array (unindexed) {@code foo[bar][]=value}
+         * @param explicitList key contains an explicit array (indexed) {@code foo[bar][0]=value}
          */
         public Default(String keyChain, final boolean implicitList, final boolean explicitList) {
             this(keyChain, null, implicitList, explicitList);
         }
 
         /**
-         * @param keyChain     - from url encoded parameter string key
-         * @param value        - from url encoded parameter string value
-         * @param implicitList - key contains an implicit array (unindexed) - {@code foo[bar][]=value}
-         * @param explicitList - key contains an explicit array (indexed) - {@code foo[bar][0]=value}
+         * @param keyChain     from url encoded parameter string key
+         * @param value        from url encoded parameter string value
+         * @param implicitList key contains an implicit array (unindexed) {@code foo[bar][]=value}
+         * @param explicitList key contains an explicit array (indexed) {@code foo[bar][0]=value}
          */
         public Default(String keyChain, String value, final boolean implicitList, final boolean explicitList) {
             this.implicitList = implicitList;
@@ -194,7 +194,7 @@ public interface IChainPart {
         }
 
         /**
-         * @param part - append key part to the {@link Default#key} (nested key element)
+         * @param part append key part to the {@link Default#key} (nested key element)
          * @return this {@link Default}
          * @throws IllegalArgumentException if value already set (unmodifiable key)
          */
@@ -211,7 +211,7 @@ public interface IChainPart {
         }
 
         /**
-         * @param index - append array part to the {@link Default#key} (nested array element)
+         * @param index append array part to the {@link Default#key} (nested array element)
          * @return this {@link Default}
          * @throws IllegalArgumentException if index is negative
          */
@@ -253,7 +253,7 @@ public interface IChainPart {
         }
 
         /**
-         * @param value - {@link Default#value}
+         * @param value {@link Default#value}
          * @return this {@link Default}
          */
         @Override
@@ -287,8 +287,8 @@ public interface IChainPart {
         }
 
         /**
-         * @param isIndexed - sign that form array is indexed
-         * @param values    - list values
+         * @param isIndexed sign that form array is indexed
+         * @param values    list values
          * @return new instance of {@link IChainList}
          */
         protected IChainList getNewIChainList(final boolean isIndexed, final Object... values) {

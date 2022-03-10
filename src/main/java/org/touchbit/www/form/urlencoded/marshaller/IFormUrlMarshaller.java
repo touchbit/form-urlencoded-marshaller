@@ -37,7 +37,7 @@ public interface IFormUrlMarshaller {
     /**
      * Model to string conversion
      *
-     * @param model - FormUrlEncoded model
+     * @param model FormUrlEncoded model
      * @return model string representation
      */
     String marshal(Object model);
@@ -45,9 +45,9 @@ public interface IFormUrlMarshaller {
     /**
      * String to model conversion
      *
-     * @param modelClass    - FormUrlEncoded model class
-     * @param encodedString - String data to conversation
-     * @param <M>           - FormUrlEncoded model type
+     * @param modelClass    FormUrlEncoded model class
+     * @param encodedString String data to conversation
+     * @param <M>           FormUrlEncoded model type
      * @return completed model
      */
     <M> M unmarshal(Class<M> modelClass, String encodedString);

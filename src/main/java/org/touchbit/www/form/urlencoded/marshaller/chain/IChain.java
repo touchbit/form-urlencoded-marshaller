@@ -21,6 +21,8 @@ import org.touchbit.www.form.urlencoded.marshaller.IFormUrlMarshallerConfigurati
 import org.touchbit.www.form.urlencoded.marshaller.util.CodecConstant;
 import org.touchbit.www.form.urlencoded.marshaller.util.FormUrlUtils;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -63,8 +65,8 @@ public interface IChain {
         /**
          * Chaining from raw data
          *
-         * @param rawData       - from url encoded parameters raw representation
-         * @param configuration - mapper configuration
+         * @param rawData       from url encoded parameters raw representation
+         * @param configuration mapper configuration
          * @throws NullPointerException - rawData is null
          */
         public Default(final Map<String, Object> rawData,
@@ -75,9 +77,9 @@ public interface IChain {
         /**
          * Chaining from raw data
          *
-         * @param rawData      - from url encoded parameters raw representation
-         * @param implicitList - key contains an implicit array (unindexed) - {@code foo[bar][]=value}
-         * @param explicitList - key contains an explicit array (indexed) - {@code foo[bar][0]=value}
+         * @param rawData      from url encoded parameters raw representation
+         * @param implicitList key contains an implicit array (unindexed) {@code foo[bar][]=value}
+         * @param explicitList key contains an explicit array (indexed) {@code foo[bar][0]=value}
          * @throws NullPointerException - rawData is null
          */
         public Default(final Map<String, Object> rawData,
@@ -96,14 +98,27 @@ public interface IChain {
          * Chaining from FormUrlEncoded string data
          * For example: {@code foo[bar][0]=value1&foo[bar][1]=value2}
          *
-         * @param urlEncodedString - from url encoded parameters ({@code foo[bar][0]=value1&foo[bar][1]=value2})
+         * @param urlEncodedString from url encoded parameters ({@code foo[bar][0]=value1&foo[bar][1]=value2})
          */
         public Default(final String urlEncodedString) {
+            this(urlEncodedString, StandardCharsets.UTF_8);
+        }
+
+        /**
+         * Chaining from FormUrlEncoded string data
+         * For example: {@code foo[bar][0]=value1&foo[bar][1]=value2}
+         *
+         * @param urlEncodedString from url encoded parameters ({@code foo[bar][0]=value1&foo[bar][1]=value2})
+         * @param codingCharset    URL form data coding charset
+         *                         According to the 3W specification, it is strongly recommended to use
+         *                         UTF-8 charset for URL form data coding.
+         */
+        public Default(final String urlEncodedString, final Charset codingCharset) {
             if (urlEncodedString == null || urlEncodedString.trim().length() == 0) {
                 this.chainParts = new ArrayList<>();
                 this.rawData = new HashMap<>();
             } else {
-                this.chainParts = readUrlEncodedString(urlEncodedString);
+                this.chainParts = readUrlEncodedString(urlEncodedString, codingCharset);
                 this.rawData = chainPartsToRawData(this.chainParts);
             }
         }
@@ -112,7 +127,7 @@ public interface IChain {
          * The method converts the {@link IChainPart} list into
          * a raw representation ({@link Map}) with nesting and values
          *
-         * @param list - form data chain parts list
+         * @param list form data chain parts list
          * @return filled raw data
          */
         protected Map<String, Object> chainPartsToRawData(final List<IChainPart> list) {
@@ -129,8 +144,8 @@ public interface IChain {
          * If the source and the target have the same keys,
          * then the internal objects will be merged
          *
-         * @param source - source {@link Map} for merging
-         * @param target - target {@link Map} for merging
+         * @param source source {@link Map} for merging
+         * @param target target {@link Map} for merging
          * @return - merged target {@link Map}
          * @throws NullPointerException if source or target is null
          */
@@ -154,8 +169,8 @@ public interface IChain {
         /**
          * Method for merging Map or List or Simple values
          *
-         * @param source - source value for merging
-         * @param target - target value for merging
+         * @param source source value for merging
+         * @param target target value for merging
          * @return merge result (Map or List)
          * @throws NullPointerException     if source or target is null
          * @throws IllegalArgumentException incompatible types
@@ -186,8 +201,8 @@ public interface IChain {
         }
 
         /**
-         * @param isIndexed - sign that form array is indexed
-         * @param values    - list values
+         * @param isIndexed sign that form array is indexed
+         * @param values    list values
          * @return new instance of {@link IChainList} with values
          */
         @SuppressWarnings("SameParameterValue")
@@ -203,8 +218,8 @@ public interface IChain {
          * - Replace simple obj by index - target non-null value is replaced by source value at the corresponding index
          * - Merge complex obj by index - target value is merged by source value at the corresponding index
          *
-         * @param source - indexed {@link IChainList} for merging
-         * @param target - indexed {@link IChainList} for merging
+         * @param source indexed {@link IChainList} for merging
+         * @param target indexed {@link IChainList} for merging
          * @return merge result ({@link IChainList})
          * @throws NullPointerException     if source or target is null
          * @throws IllegalArgumentException incompatible types
@@ -267,8 +282,8 @@ public interface IChain {
          * - If list of maps - merge maps and set to target collection by corresponding index
          * - else appends all elements in the target collection
          *
-         * @param source - non-indexed {@link IChainList} for merging
-         * @param target - non-indexed {@link IChainList} for merging
+         * @param source non-indexed {@link IChainList} for merging
+         * @param target non-indexed {@link IChainList} for merging
          * @return merge result ({@link IChainList})
          */
         protected IChainList mergeNonIndexedIChainLists(final IChainList source, final IChainList target) {
@@ -301,8 +316,8 @@ public interface IChain {
         /**
          * Method for {@link IChainList} merging
          *
-         * @param source - {@link IChainList} for merging
-         * @param target - {@link IChainList} for merging
+         * @param source {@link IChainList} for merging
+         * @param target {@link IChainList} for merging
          * @return merge result ({@link IChainList})
          * @throws NullPointerException     if source or target is null
          * @throws IllegalArgumentException incompatible types
@@ -337,11 +352,11 @@ public interface IChain {
         /**
          * Transforms from url encoded parameters string to list of separated {@link IChainPart} (key/value pairs)
          *
-         * @param urlEncodedString - from url encoded parameters ({@code foo[bar][0]=value1&foo[bar][1]=value2})
+         * @param urlEncodedString from url encoded parameters ({@code foo[bar][0]=value1&foo[bar][1]=value2})
          * @return form data {@link IChainPart} where part contains one key/value pair ({@code foo[bar][0]=value1})
          * @throws IllegalArgumentException key-value pair is not in URL form format
          */
-        protected List<IChainPart> readUrlEncodedString(final String urlEncodedString) {
+        protected List<IChainPart> readUrlEncodedString(final String urlEncodedString, final Charset codingCharset) {
             if (urlEncodedString == null || urlEncodedString.trim().isEmpty()) {
                 return new ArrayList<>();
             }
@@ -360,7 +375,8 @@ public interface IChain {
                 final boolean explicitList = Arrays.stream(rawKey.split("\\["))
                         .map(p -> p.replace("]", ""))
                         .anyMatch(NumberUtils::isDigits);
-                result.add(new IChainPart.Default(rawKey, rawValue, implicitList, explicitList));
+                final String value = FormUrlUtils.decode(rawValue, codingCharset);
+                result.add(new IChainPart.Default(rawKey, value, implicitList, explicitList));
             }
             return result;
         }
@@ -416,9 +432,9 @@ public interface IChain {
         }
 
         /**
-         * @param rawData      - from url encoded parameters raw representation
-         * @param implicitList - key contains an implicit array (unindexed) - {@code foo[bar][]=value}
-         * @param explicitList - key contains an explicit array (indexed) - {@code foo[bar][0]=value}
+         * @param rawData      from url encoded parameters raw representation
+         * @param implicitList key contains an implicit array (unindexed) {@code foo[bar][]=value}
+         * @param explicitList key contains an explicit array (indexed) {@code foo[bar][0]=value}
          * @return list of {@link IChainPart} formed from the received raw data
          */
         protected List<IChainPart> readModel(final Map<String, Object> rawData,
@@ -442,8 +458,8 @@ public interface IChain {
          * value is a Map object = {@code {bar=value}} (nested)
          * the method will return a list with one IChainPart - {@code foo[bar]=value}
          *
-         * @param chainPart - parent {@link IChainPart}
-         * @param value     - object to convert to {@link IChainPart} list
+         * @param chainPart parent {@link IChainPart}
+         * @param value     object to convert to {@link IChainPart} list
          * @return child {@link IChainPart} list
          * @throws NullPointerException     - chainPart or value is null
          * @throws IllegalArgumentException - unsupported value type
@@ -473,8 +489,8 @@ public interface IChain {
          * value is a Map object = {@code {bar=value}} (nested)
          * the method will return a list with one IChainPart - {@code foo[bar]=value}
          *
-         * @param chainPart - parent {@link IChainPart}
-         * @param value     - map to convert to {@link IChainPart} list
+         * @param chainPart parent {@link IChainPart}
+         * @param value     map to convert to {@link IChainPart} list
          * @return child {@link IChainPart} list
          * @throws NullPointerException - chainPart or value is null
          */
@@ -499,8 +515,8 @@ public interface IChain {
          * value is a String = 'value'
          * the method will return an IChainPart - {@code foo=value}
          *
-         * @param chainPart - parent {@link IChainPart}
-         * @param value     - value for chainPart
+         * @param chainPart parent {@link IChainPart}
+         * @param value     value for chainPart
          * @return chainPart ({@link IChainPart})
          * @throws NullPointerException - chainPart or value is null
          */
@@ -517,8 +533,8 @@ public interface IChain {
          * value is a List object = {@code [value]} (nested)
          * the method will return a list with one IChainPart - {@code foo[0]=value}
          *
-         * @param chainPart - parent {@link IChainPart}
-         * @param value     - list to convert to {@link IChainPart} list
+         * @param chainPart parent {@link IChainPart}
+         * @param value     list to convert to {@link IChainPart} list
          * @return child {@link IChainPart} list
          * @throws NullPointerException - chainPart or value is null
          */
@@ -567,7 +583,7 @@ public interface IChain {
         }
 
         /**
-         * @param prettyPrint - {@code prettyPrint ? "&\n" : "&"}
+         * @param prettyPrint {@code prettyPrint ? "&\n" : "&"}
          * @return pretty printed URL form data (without value encoding/decoding)
          */
         public String toString(boolean prettyPrint) {
