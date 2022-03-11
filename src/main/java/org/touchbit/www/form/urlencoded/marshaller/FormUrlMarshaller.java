@@ -706,7 +706,7 @@ public class FormUrlMarshaller {
             throw MarshallerException.builder()
                     .errorMessage("Forbidden to use primitive types")
                     .actualType(targetType)
-                    .expected(ERR_SIMPLE_COMPLEX_REFERENCE_TYPE_ARRAY)
+                    .expected(ERR_SIMPLE_REFERENCE_TYPES)
                     .build();
         }
         if (value == null) {

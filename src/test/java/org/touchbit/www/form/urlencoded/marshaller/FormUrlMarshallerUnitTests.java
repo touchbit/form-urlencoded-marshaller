@@ -1,17 +1,16 @@
 package org.touchbit.www.form.urlencoded.marshaller;
 
-import model.MapPojo;
-import model.Pojo;
-import org.junit.jupiter.api.Disabled;
+import model.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.touchbit.BaseTest;
-import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncoded;
-import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncodedAdditionalProperties;
 import org.touchbit.www.form.urlencoded.marshaller.util.MarshallerException;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -650,9 +649,8 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
 
         @Test
         @DisplayName("Required parameters")
-        @Disabled
         public void test1646935755648() {
-            assertRequired(() -> marshaller().unmarshalTo(null, ""), "model");
+            assertRequired(() -> marshaller().unmarshalTo(null, ""), "object");
             assertRequired(() -> marshaller().unmarshalTo(pojo(), null), "encodedString");
         }
 
@@ -832,6 +830,299 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
                                      "    Error cause: No such accessible constructor on object: " + typeName + "\n");
         }
 
+        @Test
+        @DisplayName("MarshallerException: if constructor with parameters")
+        public void test1647027713832() {
+            assertThrow(() -> marshaller().unmarshal(ArrayList.class, "foo=bar"))
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("\n  Received unsupported type for conversion.\n" +
+                                     "    Actual type: java.util.ArrayList\n" +
+                                     "    Expected: POJO classes with @FormUrlEncoded annotation\n" +
+                                     "    Expected: heirs of java.util.Map\n");
+        }
+
+    }
+
+    @Nested
+    @DisplayName("#convertUrlDecodedStringValueToSimpleType() method tests")
+    public class ConvertUrlDecodedStringValueToSimpleTypeMethodTests {
+
+        @Test
+        @DisplayName("Required parameters")
+        public void test1645376480179() {
+            assertRequired(() -> marshaller().convertUrlDecodedStringValueToSimpleType("", null), "targetType");
+        }
+
+        @Test
+        @DisplayName("Successfully conversion string value to String type")
+        public void test1645376586652() {
+            final Object result = marshaller().convertUrlDecodedStringValueToSimpleType("test", String.class);
+            assertIs(result, "test");
+        }
+
+        @Test
+        @DisplayName("Successfully conversion string value to Object type")
+        public void test1645377510696() {
+            final Object result = marshaller().convertUrlDecodedStringValueToSimpleType("test", Object.class);
+            assertIs(result, "test");
+        }
+
+        @Test
+        @DisplayName("Successfully conversion integer string value to Integer type")
+        public void test1645376667247() {
+            final Object result = marshaller().convertUrlDecodedStringValueToSimpleType("1", Integer.class);
+            assertIs(result, 1);
+        }
+
+        @Test
+        @DisplayName("Successfully conversion integer string value to BigInteger type")
+        public void test1645376817230() {
+            final Object result = marshaller().convertUrlDecodedStringValueToSimpleType("1", BigInteger.class);
+            assertIs(result, BigInteger.valueOf(1L));
+        }
+
+        @Test
+        @DisplayName("Successfully conversion long string value to Long type")
+        public void test1645376695492() {
+            final Object result = marshaller().convertUrlDecodedStringValueToSimpleType("1", Long.class);
+            assertIs(result, 1L);
+        }
+
+        @Test
+        @DisplayName("Successfully conversion short string value to Short type")
+        public void test1645376718177() {
+            final Object result = marshaller().convertUrlDecodedStringValueToSimpleType("1", Short.class);
+            assertIs(result, Short.valueOf("1"));
+        }
+
+        @Test
+        @DisplayName("Successfully conversion float string value to Float type")
+        public void test1645376750074() {
+            final Object result = marshaller().convertUrlDecodedStringValueToSimpleType("0.1", Float.class);
+            assertIs(result, 0.1F);
+        }
+
+        @Test
+        @DisplayName("Successfully conversion double string value to Double type")
+        public void test1645376788850() {
+            final Object result = marshaller().convertUrlDecodedStringValueToSimpleType("0.1", Double.class);
+            assertIs(result, 0.1);
+        }
+
+        @Test
+        @DisplayName("Successfully conversion integer string value to BigDecimal type")
+        public void test1645376867326() {
+            final Object result = marshaller().convertUrlDecodedStringValueToSimpleType("0.1", BigDecimal.class);
+            assertIs(result, BigDecimal.valueOf(0.1));
+        }
+
+        @Test
+        @DisplayName("Successfully conversion 'true' string value to Boolean type")
+        public void test1645376909313() {
+            final Object result = marshaller().convertUrlDecodedStringValueToSimpleType("true", Boolean.class);
+            assertIs(result, true);
+        }
+
+        @Test
+        @DisplayName("Successfully conversion 'false' string value to Boolean type")
+        public void test1645376924701() {
+            final Object result = marshaller().convertUrlDecodedStringValueToSimpleType("false", Boolean.class);
+            assertIs(result, false);
+        }
+
+        @Test
+        @DisplayName("Successfully conversion null value to null")
+        public void test1647026260894() {
+            final Object result = marshaller().convertUrlDecodedStringValueToSimpleType(null, Boolean.class);
+            assertIs(result, null);
+        }
+
+        @Test
+        @DisplayName("MarshallerException -> conversion 'FooBar' string value to Boolean type")
+        public void test1645377271047() {
+            assertThrow(() -> marshaller().convertUrlDecodedStringValueToSimpleType("FooBar", Boolean.class))
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("\n  Received non-convertible value\n" +
+                                     "    Source type: java.lang.String\n" +
+                                     "    Source value: FooBar\n" +
+                                     "    Target type: java.lang.Boolean\n" +
+                                     "    Expected value: true || false\n");
+        }
+
+        @Test
+        @DisplayName("MarshallerException -> field type is primitive")
+        public void test1645377119906() {
+            assertThrow(() -> marshaller().convertUrlDecodedStringValueToSimpleType("false", Boolean.TYPE))
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("\n  Forbidden to use primitive types\n" +
+                                     "    Actual type: boolean\n" +
+                                     "    Expected: simple reference types (String, Integer, Boolean, etc.)\n");
+        }
+
+        @Test
+        @DisplayName("MarshallerException -> unsupported field type")
+        public void test1645377473744() {
+            assertThrow(() -> marshaller().convertUrlDecodedStringValueToSimpleType("false", Map.class))
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("\n  Received unsupported type for conversion.\n" +
+                                     "    Actual type: java.util.Map\n" +
+                                     "    Expected: simple reference types (String, Integer, Boolean, etc.)\n");
+        }
+
+    }
+
+    @Nested
+    @DisplayName("#initAdditionalProperties() method tests")
+    public class InitAdditionalPropertiesMethodTests {
+
+        @Test
+        @DisplayName("Required parameters")
+        public void test1645292235482() throws NoSuchFieldException {
+            final Pojo model = pojo();
+            final Field field = Pojo.class.getDeclaredField("additionalProperties");
+            assertRequired(() -> marshaller().initAdditionalProperties(null, field), "model");
+            assertRequired(() -> marshaller().initAdditionalProperties(model, null), "field");
+        }
+
+        @Test
+        @DisplayName("Successfully getting additionalProperties map if field initiated")
+        public void test1645292268987() throws NoSuchFieldException {
+            final AdditionalProperties model = new AdditionalProperties();
+            model.additionalProperties = new HashMap<>();
+            model.additionalProperties.put("1", "2");
+            final Field field = AdditionalProperties.class.getDeclaredField("additionalProperties");
+            final Map<Object, Object> result = marshaller().initAdditionalProperties(model, field);
+            assertIs(result, model.additionalProperties);
+        }
+
+        @Test
+        @DisplayName("Successfully getting additionalProperties map if field not initiated")
+        public void test1645292357593() throws NoSuchFieldException {
+            final Field field = AdditionalProperties.class.getDeclaredField("additionalProperties");
+            final Map<Object, Object> result = marshaller().initAdditionalProperties(new AdditionalProperties(), field);
+            assertIs(result, new HashMap<>());
+        }
+
+        @Test
+        @DisplayName("Successfully getting additionalProperties map if field initiated (final)")
+        public void test1645292517696() throws NoSuchFieldException {
+            final AdditionalPropertiesFinal model = new AdditionalPropertiesFinal();
+            model.additionalProperties.put("1", "2");
+            final Field field = AdditionalPropertiesFinal.class.getDeclaredField("additionalProperties");
+            final Map<Object, Object> result = marshaller().initAdditionalProperties(model, field);
+            assertIs(result, model.additionalProperties);
+        }
+
+        @Test
+        @DisplayName("MarshallerException if unable to initialize additionalProperties field")
+        public void test1645292405815() throws NoSuchFieldException {
+            final Field field = AdditionalProperties.class.getDeclaredField("additionalProperties");
+            assertThrow(() -> marshaller().initAdditionalProperties(new EmptyPojo(), field))
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("\n  Unable to write value to object field.\n" +
+                                     "    Model: model.EmptyPojo\n" +
+                                     "    Field: public Map additionalProperties;\n" +
+                                     "    Value: {}\n" +
+                                     "    Value type: java.util.HashMap\n" +
+                                     "    Error cause: Cannot locate declared field model.EmptyPojo.additionalProperties\n");
+        }
+
+        @Test
+        @DisplayName("MarshallerException if additionalProperty field not readable")
+        public void test1645458156865() throws NoSuchFieldException {
+            final Field field = AdditionalPropertiesFinal.class.getDeclaredField("additionalProperties");
+            assertThrow(() -> marshaller().initAdditionalProperties(new EmptyPojo(), field))
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("\n  Unable to raed value from object field.\n" +
+                                     "    Model: model.EmptyPojo\n" +
+                                     "    Field: public final Map additionalProperties;\n" +
+                                     "    Error cause: Cannot locate field additionalProperties on class model.EmptyPojo\n");
+        }
+
+    }
+
+    @Nested
+    @DisplayName("#getAdditionalPropertiesField() method tests")
+    public class GetAdditionalPropertiesFieldMethodTests {
+
+        @Test
+        @DisplayName("Required parameters")
+        public void test1645279093093() {
+            assertRequired(() -> marshaller().getAdditionalPropertiesField(null), "modelClass");
+        }
+
+        @Test
+        @DisplayName("Successfully getting additionalProperties field from a class (contains annotation)")
+        public void test1645281367804() {
+            final Field additionalProperties = marshaller().getAdditionalPropertiesField(AdditionalProperties.class);
+            assertNotNull(additionalProperties);
+        }
+
+        @Test
+        @DisplayName("Successfully getting additionalProperties field (null) from a class (without annotation)")
+        public void test1645281802803() {
+            final Field additionalProperties = marshaller().getAdditionalPropertiesField(AdditionalPropertiesWithoutAnnotation.class);
+            assertIsNull(additionalProperties);
+        }
+
+        @Test
+        @DisplayName("Successfully getting additionalProperties field (null) from a class (empty class)")
+        public void test1645281893559() {
+            final Field additionalProperties = marshaller().getAdditionalPropertiesField(EmptyPojo.class);
+            assertIsNull(additionalProperties);
+        }
+
+        @Test
+        @DisplayName("FormUrlEncodedMapperException throws if additionalProperties type != Map<String, String>")
+        public void test1645282054759() {
+            assertThrow(() -> marshaller().getAdditionalPropertiesField(AdditionalPropertiesInvalidType.class))
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("\n  Invalid additional properties field type\n" +
+                                     "    Model: model.AdditionalPropertiesInvalidType\n" +
+                                     "    Field: public Map additionalProperties;\n" +
+                                     "    Actual type: java.util.Map<?, ?>\n" +
+                                     "    Expected: java.util.Map<java.lang.String, java.lang.Object>\n");
+        }
+
+        @Test
+        @DisplayName("FormUrlEncodedMapperException throws if additionalProperties type == Map (raw type)")
+        public void test1645282252989() {
+            assertThrow(() -> marshaller().getAdditionalPropertiesField(AdditionalPropertiesRawMap.class))
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("\n  Invalid additional properties field type\n" +
+                                     "    Model: model.AdditionalPropertiesRawMap\n" +
+                                     "    Field: private Map additionalProperties;\n" +
+                                     "    Actual type: java.util.Map\n" +
+                                     "    Expected: java.util.Map<java.lang.String, java.lang.Object>\n");
+        }
+
+        @Test
+        @DisplayName("FormUrlEncodedMapperException throws if additionalProperties type == List<String>")
+        public void test1645282363009() {
+            assertThrow(() -> marshaller().getAdditionalPropertiesField(AdditionalPropertiesList.class))
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("\n  Invalid additional properties field type\n" +
+                                     "    Model: model.AdditionalPropertiesList\n" +
+                                     "    Field: private List additionalProperties;\n" +
+                                     "    Actual type: java.util.List<java.lang.String>\n" +
+                                     "    Expected: java.util.Map<java.lang.String, java.lang.Object>\n");
+        }
+
+        @Test
+        @DisplayName("FormUrlEncodedMapperException throws if several additionalProperties fields")
+        public void test1645282588975() {
+            assertThrow(() -> marshaller().getAdditionalPropertiesField(AdditionalPropertiesSeveralFields.class))
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("\n  POJO contains more than one annotated fields.\n" +
+                                     "    Model: model.AdditionalPropertiesSeveralFields\n" +
+                                     "    Annotation: @FormUrlEncodedAdditionalProperties\n" +
+                                     "    Annotation type: org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncodedAdditionalProperties\n" +
+                                     "    Fields:\n" +
+                                     "     - private Map additionalProperties1;\n" +
+                                     "     - private Map additionalProperties2;\n" +
+                                     "    Expected: one annotated field\n");
+        }
+
     }
 
     private static FormUrlMarshaller marshaller() {
@@ -844,99 +1135,6 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
 
     private static Pojo pojo() {
         return new Pojo();
-    }
-
-    @FormUrlEncoded
-    private static class EmptyPojo {
-
-        public String foo;
-
-    }
-
-    @FormUrlEncoded
-    public static class PrivatePojo {
-
-        private PrivatePojo() {
-
-        }
-
-    }
-
-    @FormUrlEncoded
-    @SuppressWarnings("FieldCanBeLocal")
-    public static class PojoWithConstructorParams {
-
-        private final String foo;
-
-        public PojoWithConstructorParams(String foo) {
-            this.foo = foo;
-        }
-
-    }
-
-    @FormUrlEncoded
-    public static class MapPojoWithoutAdditionalProperties extends HashMap<String, String> {
-
-
-    }
-
-    @FormUrlEncoded
-    public static class AdditionalProperties {
-
-        @FormUrlEncodedAdditionalProperties()
-        private Map<String, Object> additionalProperties;
-
-    }
-
-    @FormUrlEncoded
-    private static class FinalAdditionalProperties {
-
-        @FormUrlEncodedAdditionalProperties()
-        private final Map<String, Object> additionalProperties = new HashMap<>();
-
-    }
-
-    @FormUrlEncoded
-    private static class AdditionalPropertiesWithoutAnnotation {
-
-        private Map<String, Object> additionalProperties;
-
-    }
-
-    @FormUrlEncoded
-    private static class AdditionalPropertiesInvalidType {
-
-        @FormUrlEncodedAdditionalProperties()
-        private Map<?, ?> additionalProperties;
-
-    }
-
-    @FormUrlEncoded
-    @SuppressWarnings({"rawtypes"})
-    private static class AdditionalPropertiesRawMap {
-
-        @FormUrlEncodedAdditionalProperties()
-        private Map additionalProperties;
-
-    }
-
-    @FormUrlEncoded
-    private static class AdditionalPropertiesList {
-
-        @FormUrlEncodedAdditionalProperties()
-        private List<String> additionalProperties;
-
-    }
-
-    @FormUrlEncoded
-    private static class AdditionalPropertiesFields {
-
-        @FormUrlEncodedAdditionalProperties()
-        private Map<String, Object> additionalProperties1;
-
-        @FormUrlEncodedAdditionalProperties()
-        private Map<String, Object> additionalProperties2;
-
     }
 
 }
