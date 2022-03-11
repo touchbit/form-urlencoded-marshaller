@@ -170,7 +170,7 @@ public interface IChain {
             FormUrlUtils.parameterRequireNonNull(target, CodecConstant.TARGET_PARAMETER);
             if (FormUrlUtils.isChainList(target) && FormUrlUtils.isChainList(source)) {
                 return mergeIChainLists(source, target);
-            } else if (FormUrlUtils.isMap(target) && FormUrlUtils.isMap(source)) {
+            } else if (FormUrlUtils.isMapAssignableFrom(target) && FormUrlUtils.isMapAssignableFrom(source)) {
                 return mergeRawMap(source, target);
             } else if (FormUrlUtils.isSimple(target) && FormUrlUtils.isSimple(source)) {
                 // Fires when map keys match and points to a hidden list
@@ -463,7 +463,7 @@ public interface IChain {
             } else if (FormUrlUtils.isCollection(value)) {
                 final List<IChainPart> collectionChainParts = collectionToChainPart(chainPart, (Collection<?>) value);
                 result.addAll(collectionChainParts);
-            } else if (FormUrlUtils.isMap(value)) {
+            } else if (FormUrlUtils.isMapAssignableFrom(value)) {
                 final List<IChainPart> mapChainParts = mapToChainPart(chainPart, (Map<?, ?>) value);
                 result.addAll(mapChainParts);
             } else {

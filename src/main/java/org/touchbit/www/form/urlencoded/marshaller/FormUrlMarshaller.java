@@ -154,7 +154,7 @@ public class FormUrlMarshaller {
      */
     protected String marshalObjectToUrlEncodedString(final Object model) {
         FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
-        if (FormUrlUtils.isMap(model) || FormUrlUtils.isPojo(model)) {
+        if (FormUrlUtils.isMapAssignableFrom(model) || FormUrlUtils.isPojo(model)) {
             //noinspection unchecked
             final Map<String, Object> rawData = new HashMap<>((Map<String, Object>) convertValueToRawData(model));
             final IChain chain = new IChain.Default(rawData, isImplicitList(), isExplicitList());
@@ -201,11 +201,11 @@ public class FormUrlMarshaller {
         FormUrlUtils.parameterRequireNonNull(object, OBJECT_PARAMETER);
         FormUrlUtils.parameterRequireNonNull(encodedString, ENCODED_STRING_PARAMETER);
         final Map<String, Object> rawData = new IChain.Default(encodedString).getRawData();
-        if (FormUrlUtils.isMap(object) || FormUrlUtils.isPojo(object)) {
+        if (FormUrlUtils.isMapAssignableFrom(object) || FormUrlUtils.isPojo(object)) {
             if (FormUrlUtils.isPojo(object)) {
                 writeRawDataToPojo(object, rawData);
             }
-            if (FormUrlUtils.isMap(object)) {
+            if (FormUrlUtils.isMapAssignableFrom(object)) {
                 Map<String, Object> modelMap = (Map<String, Object>) object;
                 modelMap.putAll(rawData);
                 rawData.clear();
@@ -235,12 +235,12 @@ public class FormUrlMarshaller {
     protected Object convertValueToRawData(final Object value) {
         if (value == null || FormUrlUtils.isSimple(value)) {
             return convertSimpleToRawData(value);
-        } else if (FormUrlUtils.isPojo(value) || FormUrlUtils.isMap(value)) {
+        } else if (FormUrlUtils.isPojo(value) || FormUrlUtils.isMapAssignableFrom(value)) {
             final Map<String, Object> map = new HashMap<>();
             if (FormUrlUtils.isPojo(value)) {
                 map.putAll(convertPojoToRawData(value));
             }
-            if (FormUrlUtils.isMap(value)) {
+            if (FormUrlUtils.isMapAssignableFrom(value)) {
                 map.putAll(convertMapToRawData(value));
             }
             return map;
@@ -403,7 +403,7 @@ public class FormUrlMarshaller {
                         FormUrlUtils.writeDeclaredField(model, pojoField, fieldValue);
                         rawData.remove(urlEncodedFieldName);
                     } else {
-                        if (!FormUrlUtils.isMap(rawDataValue)) {
+                        if (!FormUrlUtils.isMapAssignableFrom(rawDataValue)) {
                             throw MarshallerException.builder()
                                     .errorMessage(ERR_INCOMPATIBLE_TYPES_RECEIVED_FOR_CONVERSION)
                                     .source(rawData)
@@ -473,7 +473,7 @@ public class FormUrlMarshaller {
             final Object value = convertUrlDecodedStringValueToSimpleType(String.valueOf(rawValue), componentType);
             return FormUrlUtils.objectToArray(value, componentType);
         }
-        if (FormUrlUtils.isMap(rawValue) && FormUrlUtils.isGenericMap(targetType)) {
+        if (FormUrlUtils.isMapAssignableFrom(rawValue) && FormUrlUtils.isGenericMap(targetType)) {
             final Map<?, ?> rawMap = (Map<?, ?>) rawValue;
             final ParameterizedType parameterizedTargetType = (ParameterizedType) targetType;
             final Type targetGenericValueType = parameterizedTargetType.getActualTypeArguments()[1];
@@ -491,7 +491,7 @@ public class FormUrlMarshaller {
             }
             return result;
         }
-        if (FormUrlUtils.isMap(rawValue) && FormUrlUtils.isMap(targetType)) {
+        if (FormUrlUtils.isMapAssignableFrom(rawValue) && FormUrlUtils.isMapAssignableFrom(targetType)) {
             // raw value Map<String, Object> to target type raw Map (raw map without generic)
             return rawValue;
         }
@@ -542,14 +542,14 @@ public class FormUrlMarshaller {
                         .collect(Collectors.toList());
             }
         }
-        if (FormUrlUtils.isMap(rawValue) && FormUrlUtils.isGenericCollection(targetType)) {
+        if (FormUrlUtils.isMapAssignableFrom(rawValue) && FormUrlUtils.isGenericCollection(targetType)) {
             // raw value Map<String, Object> to target type List<Map<?, ?>> (hidden url encoded array)
             final ParameterizedType parameterizedTargetType = (ParameterizedType) targetType;
             final Type targetGenericType = parameterizedTargetType.getActualTypeArguments()[0];
             final Object value = convertRawValueToTargetJavaType(rawValue, targetGenericType);
             return Collections.singletonList(value);
         }
-        if (FormUrlUtils.isMap(rawValue) && FormUrlUtils.isArray(targetType)) {
+        if (FormUrlUtils.isMapAssignableFrom(rawValue) && FormUrlUtils.isArray(targetType)) {
             // raw value Map<String, ?> to target type raw Map[] (hidden url encoded array)
             final Class<?> componentType = FormUrlUtils.getArrayComponentClass(targetType);
             final Object value = convertRawValueToTargetJavaType(rawValue, componentType);
@@ -569,7 +569,7 @@ public class FormUrlMarshaller {
                         .collect(Collectors.toList())
                         .toArray((Object[]) Array.newInstance(targetArrayComponentClass, 0));
             }
-            if (FormUrlUtils.isMap(rawValue)) {
+            if (FormUrlUtils.isMapAssignableFrom(rawValue)) {
                 // raw value Map<String, ?> to target type Map<String, ?>[] (hidden url encoded array)
                 final Object value = convertRawValueToTargetJavaType(rawValue, targetArrayComponentClass);
                 return FormUrlUtils.objectToArray(value, targetArrayComponentClass);

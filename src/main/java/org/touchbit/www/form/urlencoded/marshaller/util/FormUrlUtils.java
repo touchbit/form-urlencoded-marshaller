@@ -53,15 +53,15 @@ public class FormUrlUtils {
      * @param parameterName checked parameter name
      * @throws NullPointerException if parameter is null
      */
-    public static void parameterRequireNonNull(Object parameter, String parameterName) {
+    public static void parameterRequireNonNull(final Object parameter, final String parameterName) {
         if (parameter == null) {
             throw new MarshallerException("Parameter '" + parameterName + "' is required and cannot be null.", null);
         }
     }
 
     public static Object readField(final Object object, final Field field) {
-        FormUrlUtils.parameterRequireNonNull(object, "object");
-        FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(object, OBJECT_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
         try {
             return FieldUtils.readField(object, field.getName(), true);
         } catch (Exception e) {
@@ -99,24 +99,28 @@ public class FormUrlUtils {
     }
 
     public static boolean isGenericMap(final Type type) {
-        FormUrlUtils.parameterRequireNonNull(type, CodecConstant.TYPE_PARAMETER);
         final ParameterizedType parameterizedType = getParameterizedType(type);
-        return parameterizedType != null && parameterizedType.getRawType() == Map.class;
+        if (parameterizedType != null) {
+            final Class<?> rawType = TypeUtils.getRawType(parameterizedType, null);
+            return Map.class.isAssignableFrom(rawType);
+        }
+        return false;
     }
 
     public static boolean isGenericCollection(final Type type) {
-        FormUrlUtils.parameterRequireNonNull(type, CodecConstant.TYPE_PARAMETER);
         final ParameterizedType parameterizedType = getParameterizedType(type);
-        return parameterizedType != null &&
-               parameterizedType.getRawType() instanceof Class &&
-               Collection.class.isAssignableFrom((Class<?>) parameterizedType.getRawType());
+        if (parameterizedType != null) {
+            final Class<?> rawType = TypeUtils.getRawType(parameterizedType, null);
+            return Collection.class.isAssignableFrom(rawType);
+        }
+        return false;
     }
 
     /**
      * @param object nullable object
      * @return true if object is array
      */
-    public static boolean isArray(Object object) {
+    public static boolean isArray(final Object object) {
         return object != null && isArray(object.getClass());
     }
 
@@ -129,7 +133,6 @@ public class FormUrlUtils {
     }
 
     public static ParameterizedType getParameterizedType(final Type type) {
-        FormUrlUtils.parameterRequireNonNull(type, CodecConstant.TYPE_PARAMETER);
         if (type instanceof ParameterizedType) {
             return (ParameterizedType) type;
         }
@@ -140,7 +143,7 @@ public class FormUrlUtils {
      * @param object nullable object
      * @return true if object instanceof {@link Collection}
      */
-    public static boolean isCollection(Object object) {
+    public static boolean isCollection(final Object object) {
         if (object instanceof Type) {
             return isCollection((Type) object);
         }
@@ -151,15 +154,19 @@ public class FormUrlUtils {
      * @param type nullable object type
      * @return true if object instanceof {@link Collection}
      */
-    public static boolean isCollection(Type type) {
-        return type instanceof Class && Collection.class.isAssignableFrom((Class<?>) type);
+    public static boolean isCollection(final Type type) {
+        if (type != null) {
+            final Class<?> rawType = TypeUtils.getRawType(type, null);
+            return Collection.class.isAssignableFrom(rawType);
+        }
+        return false;
     }
 
     /**
      * @param object nullable object
      * @return true if object instanceof {@link IChainList}
      */
-    public static boolean isChainList(Object object) {
+    public static boolean isChainList(final Object object) {
         return object instanceof IChainList;
     }
 
@@ -167,7 +174,7 @@ public class FormUrlUtils {
      * @param object nullable object
      * @return true if object instanceof {@link Map}
      */
-    public static boolean isMap(Object object) {
+    public static boolean isMapAssignableFrom(final Object object) {
         if (object != null) {
             final Class<?> objClass = (object instanceof Class) ? (Class<?>) object : object.getClass();
             return Map.class.isAssignableFrom(objClass);
@@ -179,27 +186,35 @@ public class FormUrlUtils {
      * @param object nullable object
      * @return true if object class contains {@link FormUrlEncoded} annotation
      */
-    public static boolean isPojo(Object object) {
-        if (object instanceof ParameterizedType) {
-            final ParameterizedType parameterizedType = (ParameterizedType) object;
-            return isPojo(parameterizedType.getRawType());
+    public static boolean isPojo(final Object object) {
+        if (object != null) {
+            if (object instanceof ParameterizedType) {
+                final ParameterizedType parameterizedType = (ParameterizedType) object;
+                return isPojo(parameterizedType.getRawType());
+            }
+            final Class<?> objClass = (object instanceof Class) ? ((Class<?>) object) : object.getClass();
+            return objClass.isAnnotationPresent(FormUrlEncoded.class);
         }
-        final Class<?> objClass = (object instanceof Class) ? ((Class<?>) object) : object.getClass();
-        return objClass.isAnnotationPresent(FormUrlEncoded.class);
+        return false;
     }
 
     /**
      * @param object nullable object
      * @return true if object class contains {@link FormUrlEncoded} annotation
      */
-    public static boolean isSomePojo(Object object) {
+    public static boolean isSomePojo(final Object object) {
         return isPojo(object) || isPojoGenericCollection(object) || isPojoArray(object);
     }
 
-    public static boolean isPojoArray(Object object) {
+    public static boolean isPojoArray(final Object object) {
         if (object != null) {
             if (object instanceof Type) {
-                return isPojoArray((Type) object);
+                final Type type = (Type) object;
+                if (isArray(type)) {
+                    final Type arrayComponentType = TypeUtils.getArrayComponentType(type);
+                    return isPojo(arrayComponentType);
+                }
+                return false;
             } else {
                 return isPojoArray(object.getClass());
             }
@@ -207,10 +222,18 @@ public class FormUrlUtils {
         return false;
     }
 
-    public static boolean isPojoArray(Type type) {
-        if (isArray(type)) {
-            final Type arrayComponentType = TypeUtils.getArrayComponentType(type);
-            return isPojo(arrayComponentType);
+    public static boolean isPojoGenericCollection(final Object object) {
+        if (object != null) {
+            if (object instanceof Type) {
+                final Type type = (Type) object;
+                if (isGenericCollection(type)) {
+                    final Type genericType = getGenericCollectionArgumentType(type);
+                    return isPojo(genericType);
+                }
+                return false;
+            } else {
+                return isPojoGenericCollection(object.getClass());
+            }
         }
         return false;
     }
@@ -232,25 +255,6 @@ public class FormUrlUtils {
         return TypeUtils.getRawType(arrayComponentType, null);
     }
 
-    public static boolean isPojoGenericCollection(Object object) {
-        if (object != null) {
-            if (object instanceof Type) {
-                return isPojoGenericCollection((Type) object);
-            } else {
-                return isPojoGenericCollection(object.getClass());
-            }
-        }
-        return false;
-    }
-
-    public static boolean isPojoGenericCollection(Type type) {
-        if (isGenericCollection(type)) {
-            final Type genericType = getGenericCollectionArgumentType(type);
-            return isPojo(genericType);
-        }
-        return false;
-    }
-
     public static Object[] collectionToArray(final Collection<?> collection, final Class<?> componentType) {
         return collection.toArray((Object[]) Array.newInstance(componentType, 0));
     }
@@ -259,12 +263,12 @@ public class FormUrlUtils {
         return Collections.singletonList(object).toArray((Object[]) Array.newInstance(componentType, 0));
     }
 
-    public static Class<?> getGenericCollectionArgumentRawType(Type type) {
+    public static Class<?> getGenericCollectionArgumentRawType(final Type type) {
         final Type genericCollectionArgumentType = getGenericCollectionArgumentType(type);
         return TypeUtils.getRawType(genericCollectionArgumentType, genericCollectionArgumentType);
     }
 
-    public static Type getGenericCollectionArgumentType(Type type) {
+    public static Type getGenericCollectionArgumentType(final Type type) {
         if (type instanceof ParameterizedType) {
             final ParameterizedType parameterizedType = (ParameterizedType) type;
             final Map<TypeVariable<?>, Type> typeArguments = TypeUtils.getTypeArguments(parameterizedType);
@@ -287,7 +291,7 @@ public class FormUrlUtils {
                 .build();
     }
 
-    public static boolean hasAdditionalProperty(Object object) {
+    public static boolean hasAdditionalProperty(final Object object) {
         final Class<?> objClass = (object instanceof Class) ? ((Class<?>) object) : object.getClass();
         return !FieldUtils.getFieldsListWithAnnotation(objClass, FormUrlEncodedAdditionalProperties.class).isEmpty();
     }
@@ -321,7 +325,7 @@ public class FormUrlUtils {
      * @param object nullable object
      * @return true if object instanceof simple java data type (String, Integer, etc.)
      */
-    public static boolean isSimple(Object object) {
+    public static boolean isSimple(final Object object) {
         return object instanceof String ||
                object instanceof Boolean ||
                object instanceof Short ||
@@ -337,7 +341,7 @@ public class FormUrlUtils {
      * @param type nullable object type
      * @return true if object instanceof simple java data type (String, Integer, etc.)
      */
-    public static boolean isSimple(Type type) {
+    public static boolean isSimple(final Type type) {
         if (type instanceof Class) {
             final Class<?> aClass = (Class<?>) type;
             return String.class.isAssignableFrom(aClass) ||
@@ -431,7 +435,7 @@ public class FormUrlUtils {
             return isCollectionOfMap(objectRawType) && isGenericMap(genericType);
         }
         if (object instanceof Collection) {
-            return ((Collection<?>) object).stream().allMatch(FormUrlUtils::isMap);
+            return ((Collection<?>) object).stream().allMatch(FormUrlUtils::isMapAssignableFrom);
         }
         return isCollection(object);
     }
@@ -440,11 +444,11 @@ public class FormUrlUtils {
      * @param list nullable {@link IChainList}
      * @return true if list contains only object instanceof simple java data type (String, Integer, etc.)
      */
-    public static boolean isMapIChainList(IChainList list) {
-        return list != null && list.stream().allMatch(FormUrlUtils::isMap);
+    public static boolean isMapIChainList(final IChainList list) {
+        return list != null && list.stream().allMatch(FormUrlUtils::isMapAssignableFrom);
     }
 
-    public static <M> M invokeConstructor(Class<M> modelClass) {
+    public static <M> M invokeConstructor(final Class<M> modelClass) {
         try {
             return ConstructorUtils.invokeConstructor(modelClass);
         } catch (Exception e) {
@@ -462,7 +466,7 @@ public class FormUrlUtils {
      * @throws NullPointerException  if value is null
      * @throws IllegalStateException cannot be thrown since the configuration operates on an {@link java.nio.charset.Charset} class.
      */
-    public static String encode(String value, final Charset codingCharset) {
+    public static String encode(final String value, final Charset codingCharset) {
         FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
         FormUrlUtils.parameterRequireNonNull(codingCharset, CODING_CHARSET_PARAMETER);
         try {
@@ -478,7 +482,7 @@ public class FormUrlUtils {
      * @throws NullPointerException  if value is null
      * @throws IllegalStateException cannot be thrown since the configuration operates on an {@link java.nio.charset.Charset} class.
      */
-    public static String decode(Object value, final Charset codingCharset) {
+    public static String decode(final Object value, final Charset codingCharset) {
         FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
         FormUrlUtils.parameterRequireNonNull(codingCharset, CODING_CHARSET_PARAMETER);
         try {

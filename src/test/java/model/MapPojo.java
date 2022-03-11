@@ -22,65 +22,117 @@ public class MapPojo extends HashMap<String, Object> {
 
     public static final MapPojo CONSTANT = new MapPojo();
 
-    @FormUrlEncodedField("constant")
+    private static final String CONSTANT_C = "constant";
+    @FormUrlEncodedField(CONSTANT_C)
     public static final MapPojo ANNOTATED_CONSTANT = new MapPojo();
 
-    @FormUrlEncodedField("nestedMapPojo")
+    private static final String NESTED_MAP_POJO_C = "nestedMapPojo";
+    @FormUrlEncodedField(NESTED_MAP_POJO_C)
     private MapPojo nestedMapPojo;
 
-    @FormUrlEncodedField("missed")
+    private static final String MISSED_C = "missed";
+    @FormUrlEncodedField(MISSED_C)
     private String missed;
 
-    @FormUrlEncodedField("stringField")
-    private String stringField;
+    private static final String STRING_C = "string";
+    @FormUrlEncodedField(STRING_C)
+    private String string;
 
-    @FormUrlEncodedField("integerField")
-    private Integer integerField;
+    private static final String INTEGER_C = "integer";
+    @FormUrlEncodedField(INTEGER_C)
+    private Integer integer;
 
-    @FormUrlEncodedField("objectField")
-    private Object objectField;
+    private static final String OBJECT_C = "object";
+    @FormUrlEncodedField(OBJECT_C)
+    private Object object;
 
-    @FormUrlEncodedField("arrayStringField")
-    private String[] arrayStringField;
+    private static final String ARRAY_STRING_C = "arrayString";
+    @FormUrlEncodedField(ARRAY_STRING_C)
+    private String[] arrayString;
 
-    @FormUrlEncodedField("arrayIntegerField")
-    private Integer[] arrayIntegerField;
+    private static final String ARRAY_INTEGER_C = "arrayInteger";
+    @FormUrlEncodedField(ARRAY_INTEGER_C)
+    private Integer[] arrayInteger;
 
-    @FormUrlEncodedField("arrayMapObjectField")
-    private Map<String, Object>[] arrayMapObjectField;
+    private static final String ARRAY_MAP_OBJECT_C = "arrayMapObject";
+    @FormUrlEncodedField(ARRAY_MAP_OBJECT_C)
+    private Map<String, Object>[] arrayMapObject;
 
-    @FormUrlEncodedField("arrayRawMapField")
-    private Map[] arrayRawMapField;
+    private static final String ARRAY_LIST_OBJECT_C = "arrayListObject";
+    @FormUrlEncodedField(ARRAY_LIST_OBJECT_C)
+    private List<Object>[] arrayListObject;
 
-    @FormUrlEncodedField("listRawField")
-    private List listRawField;
+    private static final String ARRAY_RAW_MAP_C = "arrayRawMap";
+    @FormUrlEncodedField(ARRAY_RAW_MAP_C)
+    private Map[] arrayRawMap;
 
-    @FormUrlEncodedField("listStringField")
-    private List<String> listStringField;
+    private static final String ARRAY_POJO_C = "arrayPojo";
+    @FormUrlEncodedField(ARRAY_POJO_C)
+    private Pojo[] arrayPojo;
 
-    @FormUrlEncodedField("listObjectField")
-    private List<Object> listObjectField;
+    private static final String LIST_RAW_C = "listRaw";
+    @FormUrlEncodedField(LIST_RAW_C)
+    private List listRaw;
 
-    @FormUrlEncodedField("listIntegerField")
-    private List<Integer> listIntegerField;
+    private static final String LIST_RAW_GENERIC_C = "listRawGeneric";
+    @FormUrlEncodedField(LIST_RAW_GENERIC_C)
+    private List<?> listRawGeneric;
 
-    @FormUrlEncodedField("listListIntegerField")
-    private List<List<Integer>> listListIntegerField;
+    private static final String LIST_STRING_C = "listString";
+    @FormUrlEncodedField(LIST_STRING_C)
+    private List<String> listString;
 
-    @FormUrlEncodedField("listArrayIntegerField")
-    private List<Integer[]> listArrayIntegerField;
+    private static final String LIST_LIST_STRING_C = "listListString";
+    @FormUrlEncodedField(LIST_LIST_STRING_C)
+    private List<List<String>> listListString;
 
-    @FormUrlEncodedField("listMapStringIntegerField")
-    private List<Map<String, Integer>> listMapStringIntegerField;
+    private static final String LIST_POJO_C = "listPojo";
+    @FormUrlEncodedField(LIST_POJO_C)
+    private List<Pojo> listPojo;
 
-    @FormUrlEncodedField("mapObjectField")
-    private Map<String, Object> mapObjectField;
+    private static final String LIST_OBJECT_C = "listObject";
+    @FormUrlEncodedField(LIST_OBJECT_C)
+    private List<Object> listObject;
 
-    @FormUrlEncodedField("mapMapString")
+    private static final String LIST_INTEGER_C = "listInteger";
+    @FormUrlEncodedField(LIST_INTEGER_C)
+    private List<Integer> listInteger;
+
+    private static final String LIST_LIST_INTEGER_C = "listListInteger";
+    @FormUrlEncodedField(LIST_LIST_INTEGER_C)
+    private List<List<Integer>> listListInteger;
+
+    private static final String LIST_ARRAY_INTEGER_C = "listArrayInteger";
+    @FormUrlEncodedField(LIST_ARRAY_INTEGER_C)
+    private List<Integer[]> listArrayInteger;
+
+    private static final String LIST_MAP_STRING_INTEGER_C = "listMapStringInteger";
+    @FormUrlEncodedField(LIST_MAP_STRING_INTEGER_C)
+    private List<Map<String, Integer>> listMapStringInteger;
+
+    private static final String MAP_OBJECT_C = "mapObject";
+    @FormUrlEncodedField(MAP_OBJECT_C)
+    private Map<String, Object> mapObject;
+
+    private static final String MAP_POJO_C = "mapPojo";
+    @FormUrlEncodedField(MAP_POJO_C)
+    private Map<String, Pojo> mapPojo;
+
+    private static final String MAP_MAP_STRING_C = "mapMapString";
+    @FormUrlEncodedField(MAP_MAP_STRING_C)
     private Map<String, Map<String, String>> mapMapString;
 
-    @FormUrlEncodedField("mapMapInteger")
+    private static final String MAP_MAP_INTEGER_C = "mapMapInteger";
+    @FormUrlEncodedField(MAP_MAP_INTEGER_C)
     private Map<String, Map<String, Integer>> mapMapInteger;
+
+    private static final String MAP_RAW_GENERIC_C = "mapRawGeneric";
+    @FormUrlEncodedField(MAP_RAW_GENERIC_C)
+    private Map<?, ?> mapRawGeneric;
+
+    private static final String MAP_RAW_C = "mapRaw";
+    @FormUrlEncodedField(MAP_RAW_C)
+    private Map mapRaw;
 
     @FormUrlEncodedAdditionalProperties()
     private Map<String, Object> additionalProperties;
@@ -94,38 +146,47 @@ public class MapPojo extends HashMap<String, Object> {
         final Map<String, Object> result = new HashMap<>();
         if (nestedMapPojo != null) result.put("nestedMapPojo", nestedMapPojo);
         if (missed != null) result.put("missed", missed);
-        if (stringField != null) result.put("stringField", stringField);
-        if (integerField != null) result.put("integerField", integerField);
-        if (objectField != null) result.put("objectField", objectField);
-        if (arrayStringField != null) result.put("arrayStringField", arrayStringField);
-        if (arrayIntegerField != null) result.put("arrayIntegerField", arrayIntegerField);
-        if (listStringField != null) result.put("listStringField", listStringField);
-        if (listObjectField != null) result.put("listObjectField", listObjectField);
-        if (listIntegerField != null) result.put("listIntegerField", listIntegerField);
-        if (mapObjectField != null) result.put("mapObjectField", mapObjectField);
+        if (string != null) result.put("string", string);
+        if (integer != null) result.put("integer", integer);
+        if (object != null) result.put("object", object);
+        if (arrayString != null) result.put("arrayString", arrayString);
+        if (arrayInteger != null) result.put("arrayInteger", arrayInteger);
+        if (listString != null) result.put("listString", listString);
+        if (listObject != null) result.put("listObject", listObject);
+        if (listInteger != null) result.put("listInteger", listInteger);
+        if (mapObject != null) result.put("mapObject", mapObject);
         return result;
     }
 
     public enum PojoFields {
-        NESTED_MAP_POJO("nestedMapPojo"),
-        MISSED("missed"),
-        STRING_FIELD("stringField"),
-        INTEGER_FIELD("integerField"),
-        OBJECT_FIELD("objectField"),
-        ARRAY_STRING_FIELD("arrayStringField"),
-        ARRAY_INTEGER_FIELD("arrayIntegerField"),
-        ARRAY_MAP_OBJECT_FIELD("arrayMapObjectField"),
-        ARRAY_RAW_MAP_FIELD("arrayRawMapField"),
-        LIST_RAW_FIELD("listRawField"),
-        LIST_STRING_FIELD("listStringField"),
-        LIST_OBJECT_FIELD("listObjectField"),
-        LIST_INTEGER_FIELD("listIntegerField"),
-        LIST_LIST_INTEGER_FIELD("listListIntegerField"),
-        LIST_ARRAY_INTEGER_FIELD("listArrayIntegerField"),
-        LIST_MAP_STRING_INTEGER_FIELD("listMapStringIntegerField"),
-        MAP_OBJECT_FIELD("mapObjectField"),
-        MAP_MAP_STRING("mapMapString"),
-        MAP_MAP_INTEGER("mapMapInteger"),
+        CONSTANT(CONSTANT_C),
+        NESTED_MAP_POJO(NESTED_MAP_POJO_C),
+        MISSED(MISSED_C),
+        STRING(STRING_C),
+        INTEGER(INTEGER_C),
+        OBJECT(OBJECT_C),
+        ARRAY_STRING(ARRAY_STRING_C),
+        ARRAY_INTEGER(ARRAY_INTEGER_C),
+        ARRAY_MAP_OBJECT(ARRAY_MAP_OBJECT_C),
+        ARRAY_LIST_OBJECT(ARRAY_LIST_OBJECT_C),
+        ARRAY_RAW_MAP(ARRAY_RAW_MAP_C),
+        ARRAY_POJO(ARRAY_POJO_C),
+        LIST_RAW(LIST_RAW_C),
+        LIST_RAW_GENERIC(LIST_RAW_GENERIC_C),
+        LIST_STRING(LIST_STRING_C),
+        LIST_LIST_STRING(LIST_LIST_STRING_C),
+        LIST_POJO(LIST_POJO_C),
+        LIST_OBJECT(LIST_OBJECT_C),
+        LIST_INTEGER(LIST_INTEGER_C),
+        LIST_LIST_INTEGER(LIST_LIST_INTEGER_C),
+        LIST_ARRAY_INTEGER(LIST_ARRAY_INTEGER_C),
+        LIST_MAP_STRING_INTEGER(LIST_MAP_STRING_INTEGER_C),
+        MAP_OBJECT(MAP_OBJECT_C),
+        MAP_POJO(MAP_POJO_C),
+        MAP_MAP_STRING(MAP_MAP_STRING_C),
+        MAP_MAP_INTEGER(MAP_MAP_INTEGER_C),
+        MAP_RAW_GENERIC(MAP_RAW_GENERIC_C),
+        MAP_RAW(MAP_RAW_C),
         ;
 
         private final String fieldName;

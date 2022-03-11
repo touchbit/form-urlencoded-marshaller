@@ -1,5 +1,6 @@
 package org.touchbit;
 
+import model.MapPojo;
 import model.Pojo;
 import org.touchbit.www.form.urlencoded.marshaller.chain.IChainList;
 import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncoded;
@@ -100,6 +101,14 @@ public class BaseTest {
         map.put(k2, v2);
         map.put(k3, v3);
         return map;
+    }
+
+    protected static MapPojo mapPojo() {
+        return new MapPojo();
+    }
+
+    protected static Pojo pojo() {
+        return new Pojo();
     }
 
 }
