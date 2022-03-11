@@ -17,7 +17,7 @@
 package org.touchbit.www.form.urlencoded.marshaller.chain;
 
 import org.apache.commons.lang3.math.NumberUtils;
-import org.touchbit.www.form.urlencoded.marshaller.IFormUrlMarshallerConfiguration;
+import org.touchbit.www.form.urlencoded.marshaller.util.ChainException;
 import org.touchbit.www.form.urlencoded.marshaller.util.CodecConstant;
 import org.touchbit.www.form.urlencoded.marshaller.util.FormUrlUtils;
 
@@ -25,6 +25,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.touchbit.www.form.urlencoded.marshaller.util.CodecConstant.ERR_SIMPLE_REFERENCE_TYPES;
 
 /**
  * Interface for storing a chain of from url encoded parameters
@@ -61,18 +63,6 @@ public interface IChain {
          * chain data represents by {@link IChainPart} list
          */
         private final List<IChainPart> chainParts;
-
-        /**
-         * Chaining from raw data
-         *
-         * @param rawData       from url encoded parameters raw representation
-         * @param configuration mapper configuration
-         * @throws NullPointerException - rawData is null
-         */
-        public Default(final Map<String, Object> rawData,
-                       final IFormUrlMarshallerConfiguration configuration) {
-            this(rawData, configuration.isImplicitList(), configuration.isExplicitList());
-        }
 
         /**
          * Chaining from raw data
@@ -462,7 +452,7 @@ public interface IChain {
          * @param value     object to convert to {@link IChainPart} list
          * @return child {@link IChainPart} list
          * @throws NullPointerException     - chainPart or value is null
-         * @throws IllegalArgumentException - unsupported value type
+         * @throws ChainException - unsupported value type
          */
         protected List<IChainPart> valueObjectToChainParts(final IChainPart chainPart, Object value) {
             FormUrlUtils.parameterRequireNonNull(chainPart, CodecConstant.CHAIN_PART_PARAMETER);
@@ -477,7 +467,14 @@ public interface IChain {
                 final List<IChainPart> mapChainParts = mapToChainPart(chainPart, (Map<?, ?>) value);
                 result.addAll(mapChainParts);
             } else {
-                throw new IllegalArgumentException("Unsupported value type: " + value.getClass().getName());
+                throw ChainException.builder()
+                        .errorMessage("Unsupported type for conversion.")
+                        .actualType(value)
+                        .actualValue(value)
+                        .expected(ERR_SIMPLE_REFERENCE_TYPES)
+                        .expectedHeirsOf(Map.class)
+                        .expectedHeirsOf(Collection.class)
+                        .build();
             }
             return result;
         }

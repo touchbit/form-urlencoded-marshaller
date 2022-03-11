@@ -22,14 +22,32 @@ package org.touchbit.www.form.urlencoded.marshaller.util;
  */
 public class ChainException extends MarshallerException {
 
+    /**
+     * Constructs a new runtime exception with the specified detail message.
+     * The cause is not initialized, and may subsequently be initialized by a call to initCause.
+     *
+     * @param message the detail message. The detail message is saved for later retrieval by the getMessage() method.
+     */
     public ChainException(String message) {
         super(message);
     }
 
+    /**
+     * Constructs a new runtime exception with the specified detail message and cause.
+     * Note that the detail message associated with cause is not automatically
+     * incorporated in this runtime exception's detail message.
+     *
+     * @param message the detail message (which is saved for later retrieval by the getMessage() method).
+     * @param t       the cause (which is saved for later retrieval by the getCause() method).
+     *                (A null value is permitted, and indicates that the cause is nonexistent or unknown.)
+     */
     public ChainException(String message, Throwable t) {
         super(message, t);
     }
 
+    /**
+     * @return instance of {@link ExceptionBuilder}
+     */
     @SuppressWarnings("java:S1452") // Generic wildcard does not affect anything
     public static ExceptionBuilder<?> builder() {
         return new ExceptionBuilder<ChainException>() {

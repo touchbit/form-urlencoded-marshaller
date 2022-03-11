@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.touchbit.BaseTest;
+import org.touchbit.www.form.urlencoded.marshaller.util.ChainException;
 
 import java.util.*;
 
@@ -289,9 +290,14 @@ public class IChainUnitTests extends BaseTest {
         public void test1646584333520() {
             final IChain.Default chain = new IChain.Default(null);
             final IChainPart.Default bar = new IChainPart.Default("test", true, true);
-            assertThrow(() -> chain.valueObjectToChainParts(bar, mapOf("foo", new Object())))
-                    .assertClass(IllegalArgumentException.class)
-                    .assertMessageIs("Unsupported value type: java.lang.Object");
+            assertThrow(() -> chain.valueObjectToChainParts(bar, mapOf("foo", UTF_8)))
+                    .assertClass(ChainException.class)
+                    .assertMessageIs("\n  Unsupported type for conversion.\n" +
+                                     "    Source type: sun.nio.cs.UTF_8\n" +
+                                     "    Actual value: UTF-8\n" +
+                                     "    Expected: simple reference types (String, Integer, Boolean, etc.)\n" +
+                                     "    Expected: heirs of java.util.Map\n" +
+                                     "    Expected: heirs of java.util.Collection\n");
         }
     }
 

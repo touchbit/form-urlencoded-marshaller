@@ -69,29 +69,14 @@ import static org.touchbit.www.form.urlencoded.marshaller.util.CodecConstant.*;
  * @see FormUrlEncodedField
  * @see FormUrlEncodedAdditionalProperties
  */
-public class FormUrlMarshaller implements IFormUrlMarshaller {
+public class FormUrlMarshaller {
 
     public static final FormUrlMarshaller INSTANCE = new FormUrlMarshaller();
-    private final IFormUrlMarshallerConfiguration configuration;
 
     private boolean prohibitAdditionalProperties = false;
     private Charset codingCharset = StandardCharsets.UTF_8;
-
-    public FormUrlMarshaller() {
-        this(new IFormUrlMarshallerConfiguration.Default().enableHiddenList());
-    }
-
-    public FormUrlMarshaller(final IFormUrlMarshallerConfiguration configuration) {
-        this.configuration = configuration;
-    }
-
-    /**
-     * @return current marshaller configuration
-     */
-    @Override
-    public IFormUrlMarshallerConfiguration getConfiguration() {
-        return configuration;
-    }
+    private boolean isImplicitList = false;
+    private boolean isExplicitList = false;
 
     /**
      * Model to string conversion
@@ -102,14 +87,13 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
      * @throws NullPointerException if model is null
      * @throws MarshallerException  if model type is not supported
      */
-    @Override
     public String marshal(final Object model) {
         FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
         if (FormUrlUtils.isMap(model) || FormUrlUtils.isPojo(model)) {
             //noinspection unchecked
             final Map<String, Object> rawData = new HashMap<>((Map<String, Object>) convertValueToRawData(model));
-            final IChain chain = new IChain.Default(rawData, getConfiguration());
-            final StringJoiner sj = new StringJoiner(getConfiguration().isPrettyPrint() ? "&\n" : "&");
+            final IChain chain = new IChain.Default(rawData, isImplicitList(), isExplicitList());
+            final StringJoiner sj = new StringJoiner("&");
             chain.getChainParts().forEach(e -> sj.add(e.getKey() + "=" + ((e.getValue() == null) ? "" : e.getValue())));
             return sj.toString();
         }
@@ -118,6 +102,86 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
                 .actualType(model)
                 .expectedHeirsOf(Map.class)
                 .expected(ERR_POJO_CLASSES_WITH_FORM_URLENCODED_ANNOTATION)
+                .build();
+    }
+
+    /**
+     * String to model conversion
+     * According to the 3W specification, it is strongly recommended to use UTF-8 charset for URL form data coding.
+     *
+     * @param modelClass    FormUrlEncoded model class
+     * @param encodedString URL encoded string to conversation
+     * @param <M>           model generic type
+     * @return completed model
+     * @throws MarshallerException on class instantiation errors
+     */
+    public <M> M unmarshal(final Class<M> modelClass, final String encodedString) {
+        FormUrlUtils.parameterRequireNonNull(modelClass, MODEL_CLASS_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(encodedString, ENCODED_STRING_PARAMETER);
+        final M model = FormUrlUtils.invokeConstructor(modelClass);
+        unmarshalTo(model, encodedString);
+        return model;
+    }
+
+    /**
+     * String to model conversion
+     *
+     * @param model         FormUrlEncoded model object
+     * @param encodedString URL encoded string to conversation
+     * @param <M>           model generic type
+     * @throws MarshallerException on class instantiation errors
+     */
+    public <M> void unmarshalTo(final M model, final String encodedString) {
+        try {
+            _unmarshalTo(model, encodedString);
+        } catch (RuntimeException e) {
+            if (e instanceof MarshallerException) {
+                throw e;
+            }
+            throw MarshallerException.builder()
+                    .errorMessage("Unexpected unmarshalling error")
+                    .errorCause(e)
+                    .build();
+        }
+
+    }
+
+    /**
+     * String to model conversion
+     *
+     * @param model         FormUrlEncoded model object
+     * @param encodedString URL encoded string to conversation
+     * @param <M>           model generic type
+     * @throws MarshallerException on class instantiation errors
+     */
+    @SuppressWarnings("unchecked")
+    protected <M> void _unmarshalTo(final M model, final String encodedString) {
+        FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(encodedString, ENCODED_STRING_PARAMETER);
+        final Map<String, Object> rawData = new IChain.Default(encodedString).getRawData();
+        if (FormUrlUtils.isMap(model) || FormUrlUtils.isPojo(model)) {
+            if (FormUrlUtils.isPojo(model)) {
+                writeRawDataToPojo(model, rawData);
+            }
+            if (FormUrlUtils.isMap(model)) {
+                Map<String, Object> modelMap = (Map<String, Object>) model;
+                modelMap.putAll(rawData);
+                rawData.clear();
+            }
+            if (!rawData.isEmpty() && isProhibitAdditionalProperties()) {
+                throw MarshallerException.builder()
+                        .errorMessage(ERR_UNMAPPED_ADDITIONAL_PROPERTIES)
+                        .actual(rawData)
+                        .expected(THERE_ARE_NO_ADDITIONAL_PROPERTIES)
+                        .build();
+            }
+            return;
+        }
+        throw MarshallerException.builder()
+                .errorMessage(ERR_RECEIVED_UNSUPPORTED_TYPE_FOR_CONVERSION)
+                .actualType(model)
+                .expected(ERR_POJO_CLASSES_WITH_FORM_URLENCODED_ANNOTATION)
+                .expectedHeirsOf(Map.class)
                 .build();
     }
 
@@ -280,64 +344,6 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
      */
     protected Object convertSimpleToRawData(final Object value) {
         return FormUrlUtils.encode(value == null ? "" : String.valueOf(value), codingCharset);
-    }
-
-    /**
-     * String to model conversion
-     * According to the 3W specification, it is strongly recommended to use UTF-8 charset for URL form data coding.
-     *
-     * @param modelClass    FormUrlEncoded model class
-     * @param encodedString URL encoded string to conversation
-     * @param <M>           model generic type
-     * @return completed model
-     * @throws MarshallerException on class instantiation errors
-     */
-    @Override
-    public <M> M unmarshal(final Class<M> modelClass, final String encodedString) {
-        FormUrlUtils.parameterRequireNonNull(modelClass, MODEL_CLASS_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(encodedString, ENCODED_STRING_PARAMETER);
-        final M model = FormUrlUtils.invokeConstructor(modelClass);
-        unmarshalTo(model, encodedString);
-        return model;
-    }
-
-    /**
-     * String to model conversion
-     *
-     * @param model         FormUrlEncoded model object
-     * @param encodedString URL encoded string to conversation
-     * @param <M>           model generic type
-     * @throws MarshallerException on class instantiation errors
-     */
-    @SuppressWarnings("unchecked")
-    public <M> void unmarshalTo(final M model, final String encodedString) {
-        FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(encodedString, ENCODED_STRING_PARAMETER);
-        final Map<String, Object> rawData = new IChain.Default(encodedString).getRawData();
-        if (FormUrlUtils.isMap(model) || FormUrlUtils.isPojo(model)) {
-            if (FormUrlUtils.isPojo(model)) {
-                writeRawDataToPojo(model, rawData);
-            }
-            if (FormUrlUtils.isMap(model)) {
-                Map<String, Object> modelMap = (Map<String, Object>) model;
-                modelMap.putAll(rawData);
-                rawData.clear();
-            }
-            if (!rawData.isEmpty() && isProhibitAdditionalProperties()) {
-                throw MarshallerException.builder()
-                        .errorMessage(ERR_UNMAPPED_ADDITIONAL_PROPERTIES)
-                        .actual(rawData)
-                        .expected(THERE_ARE_NO_ADDITIONAL_PROPERTIES)
-                        .build();
-            }
-            return;
-        }
-        throw MarshallerException.builder()
-                .errorMessage(ERR_RECEIVED_UNSUPPORTED_TYPE_FOR_CONVERSION)
-                .actualType(model)
-                .expected(ERR_POJO_CLASSES_WITH_FORM_URLENCODED_ANNOTATION)
-                .expectedHeirsOf(Map.class)
-                .build();
     }
 
     @SuppressWarnings("java:S3776") // does not require decomposition
@@ -742,6 +748,60 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
      */
     public Charset getCodingCharset() {
         return codingCharset;
+    }
+
+    /**
+     * Enable hidden array format: {@code foo=100&foo=200...&foo=100500}
+     *
+     * @return this
+     */
+    public FormUrlMarshaller enableHiddenList() {
+        this.isImplicitList = false;
+        this.isExplicitList = false;
+        return this;
+    }
+
+    /**
+     * Enable non-indexed array format: {@code foo[]=100&foo[]=200...&foo[]=100500}
+     *
+     * @return this
+     */
+    public FormUrlMarshaller enableImplicitList() {
+        this.isImplicitList = true;
+        this.isExplicitList = false;
+        return this;
+    }
+
+    /**
+     * Enable indexed array format: {@code foo[0]=100&foo[1]=200...&foo[n]=100500}
+     *
+     * @return this
+     */
+    public FormUrlMarshaller enableExplicitList() {
+        this.isImplicitList = false;
+        this.isExplicitList = true;
+        return this;
+    }
+
+    /**
+     * @return true if non-indexed array format enabled: {@code foo[]=100&foo[]=200...&foo[]=100500}
+     */
+    public boolean isImplicitList() {
+        return isImplicitList;
+    }
+
+    /**
+     * @return true if indexed array format enabled: {@code foo[0]=100&foo[1]=200...&foo[n]=100500}
+     */
+    public boolean isExplicitList() {
+        return isExplicitList;
+    }
+
+    /**
+     * @return true if hidden array format enabled: {@code foo=100&foo=200...&foo=100500}
+     */
+    public boolean isHiddenList() {
+        return !isImplicitList() && !isExplicitList();
     }
 
 }
