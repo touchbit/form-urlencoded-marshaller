@@ -19,6 +19,7 @@ package org.touchbit.www.form.urlencoded.marshaller.util;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
@@ -87,6 +88,10 @@ public abstract class ExceptionBuilder<E extends RuntimeException> {
         return this;
     }
 
+    public ExceptionBuilder<E> model(Object type) {
+        return model(value(Object::getClass, type));
+    }
+
     public ExceptionBuilder<E> model(Type type) {
         this.additionalInfo.add("    Model: " + value(Type::getTypeName, type));
         return this;
@@ -111,6 +116,20 @@ public abstract class ExceptionBuilder<E extends RuntimeException> {
 
     public ExceptionBuilder<E> field(Field field) {
         this.additionalInfo.add("    Field: " + value(this::getFieldInfo, field));
+        return this;
+    }
+
+    public ExceptionBuilder<E> value(Object value) {
+        this.additionalInfo.add("    Value: " + value(String::valueOf, value));
+        return this;
+    }
+
+    public ExceptionBuilder<E> valueType(Object object) {
+        return valueType(value(Object::getClass, object));
+    }
+
+    public ExceptionBuilder<E> valueType(Type type) {
+        this.additionalInfo.add("    Value type: " + value(Type::getTypeName, type));
         return this;
     }
 
@@ -144,9 +163,31 @@ public abstract class ExceptionBuilder<E extends RuntimeException> {
     }
 
     public ExceptionBuilder<E> errorCause(final Exception e) {
-        this.additionalInfo.add("    Error cause: " + e.getMessage().trim());
+        final List<Throwable> causes = getNestedCauses(e);
+        final String message;
+        if (causes.isEmpty()) {
+            message = "none";
+        } else if (causes.size() == 1) {
+            message = causes.get(0).getMessage();
+        } else {
+            final StringJoiner stringJoiner = new StringJoiner(L_DELIMITER, L_DELIMITER, "");
+            causes.forEach(cause -> stringJoiner.add(value(Throwable::getMessage, cause)));
+            message = stringJoiner.toString();
+        }
+        this.additionalInfo.add("    Error cause: " + message);
         this.cause = e;
         return this;
+    }
+
+    protected List<Throwable> getNestedCauses(Throwable e) {
+        final List<Throwable> result = new ArrayList<>();
+        if (e != null) {
+            result.add(e);
+            if (e.getCause() != null) {
+                result.addAll(getNestedCauses(e.getCause()));
+            }
+        }
+        return result;
     }
 
     public String getMessage() {

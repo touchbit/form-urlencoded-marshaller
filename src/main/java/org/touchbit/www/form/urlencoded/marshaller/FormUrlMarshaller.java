@@ -117,7 +117,7 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
                 .errorMessage(ERR_RECEIVED_UNSUPPORTED_TYPE_FOR_CONVERSION)
                 .actualType(model)
                 .expectedHeirsOf(Map.class)
-                .expected("POJO classes with @" + FormUrlEncoded.class.getSimpleName() + " annotation")
+                .expected(ERR_POJO_CLASSES_WITH_FORM_URLENCODED_ANNOTATION)
                 .build();
     }
 
@@ -147,7 +147,7 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
                     .errorMessage(ERR_RECEIVED_UNSUPPORTED_TYPE_FOR_CONVERSION)
                     .actualType(value)
                     .expected(ERR_SIMPLE_REFERENCE_TYPES)
-                    .expected("POJO classes with @" + FormUrlEncoded.class.getSimpleName() + " annotation")
+                    .expected(ERR_POJO_CLASSES_WITH_FORM_URLENCODED_ANNOTATION)
                     .expectedHeirsOf(Map.class)
                     .expectedHeirsOf(Collection.class)
                     .expected(ERR_SIMPLE_COMPLEX_REFERENCE_TYPE_ARRAY)
@@ -335,7 +335,7 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
         throw MarshallerException.builder()
                 .errorMessage(ERR_RECEIVED_UNSUPPORTED_TYPE_FOR_CONVERSION)
                 .actualType(model)
-                .expected("POJO classes with @" + FormUrlEncoded.class.getSimpleName() + " annotation")
+                .expected(ERR_POJO_CLASSES_WITH_FORM_URLENCODED_ANNOTATION)
                 .expectedHeirsOf(Map.class)
                 .build();
     }

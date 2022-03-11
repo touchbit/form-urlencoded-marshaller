@@ -30,6 +30,7 @@ public class MarshallerException extends RuntimeException {
         super(message, t);
     }
 
+    @SuppressWarnings("java:S1452") // Generic wildcard does not affect anything
     public static ExceptionBuilder<?> builder() {
         return new ExceptionBuilder<MarshallerException>() {
             @Override

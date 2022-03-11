@@ -61,15 +61,15 @@ public class FormUrlUtils {
     public static Object readField(final Object object, final Field field) {
         FormUrlUtils.parameterRequireNonNull(object, "object");
         FormUrlUtils.parameterRequireNonNull(field, CodecConstant.FIELD_PARAMETER);
-        return readField(object, field.getName());
-    }
-
-    public static Object readField(final Object object, final String fieldName) {
         try {
-            return FieldUtils.readField(object, fieldName, true);
+            return FieldUtils.readField(object, field.getName(), true);
         } catch (Exception e) {
-            // TODO
-            throw new RuntimeException("Unable to get value from field: " + fieldName, e);
+            throw MarshallerException.builder()
+                    .errorMessage("Unable to raed value from object field.")
+                    .model(object)
+                    .field(field)
+                    .errorCause(e)
+                    .build();
         }
     }
 
@@ -86,21 +86,14 @@ public class FormUrlUtils {
         try {
             FieldUtils.writeDeclaredField(object, field.getName(), value, true);
         } catch (Exception e) {
-            final String fieldTypeName = field.getType().getSimpleName();
-            final String fieldValue;
-            if (value.getClass().isArray()) {
-                fieldValue = Arrays.toString((Object[]) value);
-            } else {
-                fieldValue = String.valueOf(value);
-            }
-            // TODO
-            throw new MarshallerException("Unable to write value to model field.\n" +
-                                          "    Model: " + object.getClass().getName() + "\n" +
-                                          "    Field name: " + field.getName() + "\n" +
-                                          "    Field type: " + fieldTypeName + "\n" +
-                                          "    Value type: " + value.getClass().getSimpleName() + "\n" +
-                                          "    Value: " + fieldValue + "\n" +
-                                          "    Error cause: " + e.getMessage().trim() + "\n", e);
+            throw MarshallerException.builder()
+                    .errorMessage("Unable to write value to object field.")
+                    .model(object)
+                    .field(field)
+                    .value(value)
+                    .valueType(value)
+                    .errorCause(e)
+                    .build();
         }
     }
 
@@ -116,6 +109,14 @@ public class FormUrlUtils {
         return parameterizedType != null &&
                parameterizedType.getRawType() instanceof Class &&
                Collection.class.isAssignableFrom((Class<?>) parameterizedType.getRawType());
+    }
+
+    /**
+     * @param object nullable object
+     * @return true if object is array
+     */
+    public static boolean isArray(Object object) {
+        return object != null && isArray(object.getClass());
     }
 
     public static boolean isArray(final Type type) {
@@ -159,14 +160,6 @@ public class FormUrlUtils {
      */
     public static boolean isChainList(Object object) {
         return object instanceof IChainList;
-    }
-
-    /**
-     * @param object nullable object
-     * @return true if object is array
-     */
-    public static boolean isArray(Object object) {
-        return object != null && object.getClass().isArray();
     }
 
     /**

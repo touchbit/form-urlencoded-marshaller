@@ -16,6 +16,8 @@
 
 package org.touchbit.www.form.urlencoded.marshaller.util;
 
+import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncoded;
+
 /**
  * @author Oleg Shaburov (shaburov.o.a@gmail.com)
  * Created: 11.03.2022
@@ -39,6 +41,7 @@ public class CodecConstant {
     public static final String LIST_PARAMETER = "list";
     public static final String KEY_PARAMETER = "key";
 
+    public static final String ERR_POJO_CLASSES_WITH_FORM_URLENCODED_ANNOTATION = "POJO classes with @" + FormUrlEncoded.class.getSimpleName() + " annotation";
     public static final String ERR_SIMPLE_COMPLEX_REFERENCE_TYPE_ARRAY = "simple/complex reference type array (String[], POJO[], etc.)";
     public static final String ERR_UNMAPPED_ADDITIONAL_PROPERTIES = "URL encoded string contains unmapped additional properties.";
     public static final String ERR_INCOMPATIBLE_TYPES_RECEIVED_FOR_CONVERSION = "Incompatible types received for conversion.";
