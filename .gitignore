@@ -18,6 +18,7 @@ tmp-*.yml
 # Intellig idea
 # Default ignored files
 /.idea/shelf/
+/.idea/libraries/
 /.idea/workspace.xml
 # Editor-based HTTP Client requests
 /.idea/httpRequests/
