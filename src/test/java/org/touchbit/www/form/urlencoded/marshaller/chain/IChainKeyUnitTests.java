@@ -57,7 +57,7 @@ public class IChainKeyUnitTests extends BaseTest {
         @Test
         @DisplayName("IllegalArgumentException if key is null")
         public void test1646483199660() {
-            assertNPE(() -> new IChainKey.Default(null), "key");
+            assertRequired(() -> new IChainKey.Default(null), "key");
         }
     }
 }

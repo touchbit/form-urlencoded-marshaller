@@ -18,7 +18,7 @@ public class FormUrlUtilsUnitTests extends BaseTest {
         @Test
         @DisplayName("Required parameters")
         public void test1646678004644() {
-            assertNPE(() -> FormUrlUtils.encode(null, UTF_8), "value");
+            assertRequired(() -> FormUrlUtils.encode(null, UTF_8), "value");
         }
 
         @Test
@@ -36,7 +36,7 @@ public class FormUrlUtilsUnitTests extends BaseTest {
         @Test
         @DisplayName("Required parameters")
         public void test1646937184822() {
-            assertNPE(() -> FormUrlUtils.decode(null, UTF_8), "value");
+            assertRequired(() -> FormUrlUtils.decode(null, UTF_8), "value");
         }
 
         @Test

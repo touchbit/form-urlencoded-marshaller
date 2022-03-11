@@ -84,10 +84,75 @@ public class FormUrlMarshaller {
      *
      * @param model {@code Map<String, Object>} or pojo object with {@link FormUrlEncoded} annotation
      * @return form url encoded string
+     * @throws MarshallerException for any internal errors.
+     */
+    public String marshal(final Object model) {
+        try {
+            return marshalObjectToUrlEncodedString(model);
+        } catch (MarshallerException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            throw MarshallerException.builder()
+                    .errorMessage("Unexpected marshalling error.")
+                    .errorCause(e)
+                    .build();
+        }
+    }
+
+    /**
+     * String to model conversion
+     * According to the 3W specification, it is strongly recommended to use UTF-8 charset for URL form data coding.
+     *
+     * @param modelClass    FormUrlEncoded model class
+     * @param encodedString URL encoded string to conversation
+     * @param <M>           model generic type
+     * @return completed model
+     * @throws MarshallerException for any internal errors.
+     */
+    public <M> M unmarshal(final Class<M> modelClass, final String encodedString) {
+        try {
+            return unmarshalStringToClass(modelClass, encodedString);
+        } catch (MarshallerException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            throw MarshallerException.builder()
+                    .errorMessage("Unexpected unmarshalling error.")
+                    .errorCause(e)
+                    .build();
+        }
+    }
+
+    /**
+     * String to model conversion
+     *
+     * @param object        POJO or Map object
+     * @param encodedString URL encoded string to conversation
+     * @param <M>           model generic type
+     * @throws MarshallerException for any internal errors.
+     */
+    public <M> void unmarshalTo(final M object, final String encodedString) {
+        try {
+            unmarshalStringToObject(object, encodedString);
+        } catch (MarshallerException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            throw MarshallerException.builder()
+                    .errorMessage("Unexpected unmarshalling error.")
+                    .errorCause(e)
+                    .build();
+        }
+    }
+
+    /**
+     * Model to string conversion
+     * According to the 3W specification, it is strongly recommended to use UTF-8 charset for URL form data coding.
+     *
+     * @param model {@code Map<String, Object>} or pojo object with {@link FormUrlEncoded} annotation
+     * @return form url encoded string
      * @throws NullPointerException if model is null
      * @throws MarshallerException  if model type is not supported
      */
-    public String marshal(final Object model) {
+    protected String marshalObjectToUrlEncodedString(final Object model) {
         FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
         if (FormUrlUtils.isMap(model) || FormUrlUtils.isPojo(model)) {
             //noinspection unchecked
@@ -115,56 +180,33 @@ public class FormUrlMarshaller {
      * @return completed model
      * @throws MarshallerException on class instantiation errors
      */
-    public <M> M unmarshal(final Class<M> modelClass, final String encodedString) {
+    protected <M> M unmarshalStringToClass(final Class<M> modelClass, final String encodedString) {
         FormUrlUtils.parameterRequireNonNull(modelClass, MODEL_CLASS_PARAMETER);
         FormUrlUtils.parameterRequireNonNull(encodedString, ENCODED_STRING_PARAMETER);
         final M model = FormUrlUtils.invokeConstructor(modelClass);
-        unmarshalTo(model, encodedString);
+        unmarshalStringToObject(model, encodedString);
         return model;
     }
 
     /**
      * String to model conversion
      *
-     * @param model         FormUrlEncoded model object
-     * @param encodedString URL encoded string to conversation
-     * @param <M>           model generic type
-     * @throws MarshallerException on class instantiation errors
-     */
-    public <M> void unmarshalTo(final M model, final String encodedString) {
-        try {
-            _unmarshalTo(model, encodedString);
-        } catch (RuntimeException e) {
-            if (e instanceof MarshallerException) {
-                throw e;
-            }
-            throw MarshallerException.builder()
-                    .errorMessage("Unexpected unmarshalling error")
-                    .errorCause(e)
-                    .build();
-        }
-
-    }
-
-    /**
-     * String to model conversion
-     *
-     * @param model         FormUrlEncoded model object
+     * @param object        POJO or Map object
      * @param encodedString URL encoded string to conversation
      * @param <M>           model generic type
      * @throws MarshallerException on class instantiation errors
      */
     @SuppressWarnings("unchecked")
-    protected <M> void _unmarshalTo(final M model, final String encodedString) {
-        FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
+    protected <M> void unmarshalStringToObject(final M object, final String encodedString) {
+        FormUrlUtils.parameterRequireNonNull(object, OBJECT_PARAMETER);
         FormUrlUtils.parameterRequireNonNull(encodedString, ENCODED_STRING_PARAMETER);
         final Map<String, Object> rawData = new IChain.Default(encodedString).getRawData();
-        if (FormUrlUtils.isMap(model) || FormUrlUtils.isPojo(model)) {
-            if (FormUrlUtils.isPojo(model)) {
-                writeRawDataToPojo(model, rawData);
+        if (FormUrlUtils.isMap(object) || FormUrlUtils.isPojo(object)) {
+            if (FormUrlUtils.isPojo(object)) {
+                writeRawDataToPojo(object, rawData);
             }
-            if (FormUrlUtils.isMap(model)) {
-                Map<String, Object> modelMap = (Map<String, Object>) model;
+            if (FormUrlUtils.isMap(object)) {
+                Map<String, Object> modelMap = (Map<String, Object>) object;
                 modelMap.putAll(rawData);
                 rawData.clear();
             }
@@ -179,7 +221,7 @@ public class FormUrlMarshaller {
         }
         throw MarshallerException.builder()
                 .errorMessage(ERR_RECEIVED_UNSUPPORTED_TYPE_FOR_CONVERSION)
-                .actualType(model)
+                .actualType(object)
                 .expected(ERR_POJO_CLASSES_WITH_FORM_URLENCODED_ANNOTATION)
                 .expectedHeirsOf(Map.class)
                 .build();

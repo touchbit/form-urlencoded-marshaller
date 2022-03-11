@@ -91,8 +91,8 @@ public class IChainUnitTests extends BaseTest {
         public void test1646512626465() {
             final IChain.Default chain = new IChain.Default("foo=%20");
             final IChainPart.Default bar = new IChainPart.Default("bar", false, false);
-            assertNPE(() -> chain.collectionToChainPart(null, new ArrayList<>()), "chainPart");
-            assertNPE(() -> chain.collectionToChainPart(bar, null), "value");
+            assertRequired(() -> chain.collectionToChainPart(null, new ArrayList<>()), "chainPart");
+            assertRequired(() -> chain.collectionToChainPart(bar, null), "value");
         }
 
         @Test
@@ -163,8 +163,8 @@ public class IChainUnitTests extends BaseTest {
         public void test1646525049194() {
             final IChain.Default chain = new IChain.Default(null);
             final IChainPart.Default bar = new IChainPart.Default("test", true, true);
-            assertNPE(() -> chain.simpleToChainPart(null, new Object()), "chainPart");
-            assertNPE(() -> chain.simpleToChainPart(bar, null), "value");
+            assertRequired(() -> chain.simpleToChainPart(null, new Object()), "chainPart");
+            assertRequired(() -> chain.simpleToChainPart(bar, null), "value");
         }
 
         @Test
@@ -186,8 +186,8 @@ public class IChainUnitTests extends BaseTest {
         public void test1646525291475() {
             final IChain.Default chain = new IChain.Default(null);
             final IChainPart.Default bar = new IChainPart.Default("test", true, true);
-            assertNPE(() -> chain.mapToChainPart(null, new HashMap<>()), "chainPart");
-            assertNPE(() -> chain.mapToChainPart(bar, null), "value");
+            assertRequired(() -> chain.mapToChainPart(null, new HashMap<>()), "chainPart");
+            assertRequired(() -> chain.mapToChainPart(bar, null), "value");
         }
 
         @Test
@@ -239,8 +239,8 @@ public class IChainUnitTests extends BaseTest {
         public void test1646583838933() {
             final IChain.Default chain = new IChain.Default(null);
             final IChainPart.Default bar = new IChainPart.Default("test", true, true);
-            assertNPE(() -> chain.valueObjectToChainParts(null, new HashMap<>()), "chainPart");
-            assertNPE(() -> chain.valueObjectToChainParts(bar, null), "value");
+            assertRequired(() -> chain.valueObjectToChainParts(null, new HashMap<>()), "chainPart");
+            assertRequired(() -> chain.valueObjectToChainParts(bar, null), "value");
         }
 
         @Test
@@ -293,7 +293,7 @@ public class IChainUnitTests extends BaseTest {
             assertThrow(() -> chain.valueObjectToChainParts(bar, mapOf("foo", UTF_8)))
                     .assertClass(ChainException.class)
                     .assertMessageIs("\n  Unsupported type for conversion.\n" +
-                                     "    Source type: sun.nio.cs.UTF_8\n" +
+                                     "    Actual type: sun.nio.cs.UTF_8\n" +
                                      "    Actual value: UTF-8\n" +
                                      "    Expected: simple reference types (String, Integer, Boolean, etc.)\n" +
                                      "    Expected: heirs of java.util.Map\n" +
@@ -309,7 +309,7 @@ public class IChainUnitTests extends BaseTest {
         @DisplayName("Required parameters")
         public void test1646584579737() {
             final IChain.Default chain = new IChain.Default(null);
-            assertNPE(() -> chain.readModel(null, true, true), "rawData");
+            assertRequired(() -> chain.readModel(null, true, true), "rawData");
         }
 
         @Test
@@ -338,7 +338,7 @@ public class IChainUnitTests extends BaseTest {
         @DisplayName("Required parameters")
         public void test1646581863035() {
             final IChain.Default chain = new IChain.Default(null);
-            assertNPE(() -> chain.isEvenBracketsRatio(null), "key");
+            assertRequired(() -> chain.isEvenBracketsRatio(null), "key");
         }
 
         @Test
@@ -385,7 +385,7 @@ public class IChainUnitTests extends BaseTest {
         @DisplayName("Required parameters")
         public void test1646590105290() {
             final IChain.Default chain = new IChain.Default(null);
-            assertNPE(() -> chain.hasNestedBrackets(null), "key");
+            assertRequired(() -> chain.hasNestedBrackets(null), "key");
         }
 
         @Test
@@ -418,7 +418,7 @@ public class IChainUnitTests extends BaseTest {
         @DisplayName("Required parameters")
         public void test1646590274538() {
             final IChain.Default chain = new IChain.Default(null);
-            assertNPE(() -> chain.assertKeyBrackets(null), "key");
+            assertRequired(() -> chain.assertKeyBrackets(null), "key");
         }
 
         @Test
@@ -518,8 +518,8 @@ public class IChainUnitTests extends BaseTest {
         @DisplayName("Required parameters")
         public void test1646663516549() {
             final IChain.Default chain = new IChain.Default(null);
-            assertNPE(() -> chain.mergeNonIndexedIChainLists(null, new IChainList.Default(true)), "source");
-            assertNPE(() -> chain.mergeNonIndexedIChainLists(new IChainList.Default(true), null), "target");
+            assertRequired(() -> chain.mergeNonIndexedIChainLists(null, new IChainList.Default(true)), "source");
+            assertRequired(() -> chain.mergeNonIndexedIChainLists(new IChainList.Default(true), null), "target");
         }
 
         @Test
@@ -608,8 +608,8 @@ public class IChainUnitTests extends BaseTest {
         @DisplayName("Required parameters")
         public void test1646663522227() {
             final IChain.Default chain = new IChain.Default(null);
-            assertNPE(() -> chain.mergeIndexedIChainLists(null, new IChainList.Default(true)), "source");
-            assertNPE(() -> chain.mergeIndexedIChainLists(new IChainList.Default(true), null), "target");
+            assertRequired(() -> chain.mergeIndexedIChainLists(null, new IChainList.Default(true)), "source");
+            assertRequired(() -> chain.mergeIndexedIChainLists(new IChainList.Default(true), null), "target");
         }
 
         @Test
@@ -741,8 +741,8 @@ public class IChainUnitTests extends BaseTest {
         @DisplayName("Required parameters")
         public void test1646592568162() {
             final IChain.Default chain = new IChain.Default(null);
-            assertNPE(() -> chain.mergeIChainLists(null, new IChainList.Default(true)), "source");
-            assertNPE(() -> chain.mergeIChainLists(new IChainList.Default(true), null), "target");
+            assertRequired(() -> chain.mergeIChainLists(null, new IChainList.Default(true)), "source");
+            assertRequired(() -> chain.mergeIChainLists(new IChainList.Default(true), null), "target");
         }
 
         @Test
@@ -877,8 +877,8 @@ public class IChainUnitTests extends BaseTest {
         @DisplayName("Required parameters")
         public void test1646595030951() {
             final IChain.Default chain = new IChain.Default(null);
-            assertNPE(() -> chain.mergeRawMap(null, mapOf()), "source");
-            assertNPE(() -> chain.mergeRawMap(mapOf(), null), "target");
+            assertRequired(() -> chain.mergeRawMap(null, mapOf()), "source");
+            assertRequired(() -> chain.mergeRawMap(mapOf(), null), "target");
         }
 
         @Test
@@ -997,8 +997,8 @@ public class IChainUnitTests extends BaseTest {
         @DisplayName("Required parameters")
         public void test1646610637161() {
             final IChain.Default chain = new IChain.Default(null);
-            assertNPE(() -> chain.mergeObjectValues(null, mapOf()), "source");
-            assertNPE(() -> chain.mergeObjectValues(mapOf(), null), "target");
+            assertRequired(() -> chain.mergeObjectValues(null, mapOf()), "source");
+            assertRequired(() -> chain.mergeObjectValues(mapOf(), null), "target");
         }
 
         @Test
@@ -1124,7 +1124,7 @@ public class IChainUnitTests extends BaseTest {
         @DisplayName("Required parameters")
         public void test1646612033683() {
             final IChain.Default chain = new IChain.Default(null);
-            assertNPE(() -> chain.chainPartsToRawData(null), "list");
+            assertRequired(() -> chain.chainPartsToRawData(null), "list");
         }
 
         @Test

@@ -46,7 +46,6 @@ public class FormUrlUtils {
      * Utility class. Forbidden instantiation.
      */
     private FormUrlUtils() {
-        throw new UnsupportedOperationException();
     }
 
     /**
@@ -55,7 +54,9 @@ public class FormUrlUtils {
      * @throws NullPointerException if parameter is null
      */
     public static void parameterRequireNonNull(Object parameter, String parameterName) {
-        Objects.requireNonNull(parameter, "Parameter '" + parameterName + "' is required and cannot be null.");
+        if (parameter == null) {
+            throw new MarshallerException("Parameter '" + parameterName + "' is required and cannot be null.", null);
+        }
     }
 
     public static Object readField(final Object object, final Field field) {
@@ -311,6 +312,7 @@ public class FormUrlUtils {
         parameterRequireNonNull(aClass, A_CLASS_PARAMETER);
         return FieldUtils.getFieldsListWithAnnotation(aClass, FormUrlEncodedField.class).stream()
                 .filter(f -> !f.getAnnotation(FormUrlEncodedField.class).value().trim().isEmpty())
+                .filter(f -> !Modifier.isTransient(f.getModifiers()))
                 .filter(f -> !Modifier.isStatic(f.getModifiers()))
                 .collect(Collectors.toList());
     }

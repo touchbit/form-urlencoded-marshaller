@@ -1,4 +1,4 @@
-package org.touchbit.www.form.urlencoded.marshaller.model;
+package model;
 
 import lombok.Getter;
 import lombok.Setter;

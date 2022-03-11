@@ -16,6 +16,8 @@
 
 package org.touchbit;
 
+import org.touchbit.www.form.urlencoded.marshaller.util.MarshallerException;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -118,8 +120,8 @@ public class ThrowableAsserter {
                 String expStr = (expected + "").replace("\n", "\\n");
                 String actStr = (throwable.getMessage() + "").replace("\n", "\\n");
                 throw new AssertionError("Throwable message by:\n" + throwableInfo + "\n\n" +
-                        "Expected: message contains '" + expStr + "'\n" +
-                        "  Actual: " + actStr);
+                                         "Expected: message contains '" + expStr + "'\n" +
+                                         "  Actual: " + actStr);
             }
         }
         return this;
@@ -129,8 +131,8 @@ public class ThrowableAsserter {
         return assertIs("Throwable class by:", Throwable::getClass, expected);
     }
 
-    public ThrowableAsserter assertNPE(String parameter) {
-        return assertClass(NullPointerException.class)
+    public ThrowableAsserter assertRequiredParameter(String parameter) {
+        return assertClass(MarshallerException.class)
                 .assertMessageIs("Parameter '" + parameter + "' is required and cannot be null.");
     }
 

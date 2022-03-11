@@ -1,7 +1,7 @@
 package org.touchbit;
 
+import model.Pojo;
 import org.touchbit.www.form.urlencoded.marshaller.chain.IChainList;
-import org.touchbit.www.form.urlencoded.marshaller.model.Pojo;
 import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncoded;
 
 import java.util.*;
@@ -25,8 +25,8 @@ public class BaseTest {
         ThrowableAsserter.assertUtilityClassException(aClass);
     }
 
-    protected void assertNPE(ThrowableRunnable runnable, String parameter) {
-        new ThrowableAsserter(runnable).assertNPE(parameter);
+    protected void assertRequired(ThrowableRunnable runnable, String parameter) {
+        new ThrowableAsserter(runnable).assertRequiredParameter(parameter);
     }
 
     protected static <O> void assertIs(O actual, O expected) {

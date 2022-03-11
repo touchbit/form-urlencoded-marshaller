@@ -53,7 +53,6 @@ public class CodecConstant {
      * Utility class. Forbidden instantiation.
      */
     private CodecConstant() {
-        throw new UnsupportedOperationException();
     }
 
 }

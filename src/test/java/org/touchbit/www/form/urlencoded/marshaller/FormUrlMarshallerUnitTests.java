@@ -1,12 +1,12 @@
 package org.touchbit.www.form.urlencoded.marshaller;
 
+import model.MapPojo;
+import model.Pojo;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.touchbit.BaseTest;
-import org.touchbit.www.form.urlencoded.marshaller.model.MapPojo;
-import org.touchbit.www.form.urlencoded.marshaller.model.Pojo;
 import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncoded;
 import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncodedAdditionalProperties;
 import org.touchbit.www.form.urlencoded.marshaller.util.MarshallerException;
@@ -28,7 +28,7 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         @Test
         @DisplayName("Required parameters")
         public void test1646683219120() {
-            assertNPE(() -> marshaller().marshal(null), "model");
+            assertRequired(() -> marshaller().marshal(null), "model");
         }
 
         @Test
@@ -73,7 +73,7 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
             assertThrow(() -> marshaller().marshal(new Object()))
                     .assertClass(MarshallerException.class)
                     .assertMessageIs("\n  Received unsupported type for conversion.\n" +
-                                     "    Source type: java.lang.Object\n" +
+                                     "    Actual type: java.lang.Object\n" +
                                      "    Expected: heirs of java.util.Map\n" +
                                      "    Expected: POJO classes with @FormUrlEncoded annotation\n");
         }
@@ -133,7 +133,7 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
             assertThrow(() -> marshaller().convertValueToRawData(new Object()))
                     .assertClass(MarshallerException.class)
                     .assertMessageIs("\n  Received unsupported type for conversion.\n" +
-                                     "    Source type: java.lang.Object\n" +
+                                     "    Actual type: java.lang.Object\n" +
                                      "    Expected: simple reference types (String, Integer, Boolean, etc.)\n" +
                                      "    Expected: POJO classes with @FormUrlEncoded annotation\n" +
                                      "    Expected: heirs of java.util.Map\n" +
@@ -149,7 +149,7 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         @Test
         @DisplayName("Required parameters")
         public void test1646681756463() {
-            assertNPE(() -> marshaller().convertPojoToRawData(null), "value");
+            assertRequired(() -> marshaller().convertPojoToRawData(null), "value");
         }
 
         @Test
@@ -195,7 +195,7 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         @Test
         @DisplayName("Required parameters")
         public void test1646681315876() {
-            assertNPE(() -> marshaller().convertMapToRawData(null), "value");
+            assertRequired(() -> marshaller().convertMapToRawData(null), "value");
         }
 
         @Test
@@ -228,7 +228,7 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
             assertThrow(() -> marshaller().convertMapToRawData(new Object()))
                     .assertClass(MarshallerException.class)
                     .assertMessageIs("\n  Received unsupported type for conversion.\n" +
-                                     "    Source type: java.lang.Object\n" +
+                                     "    Actual type: java.lang.Object\n" +
                                      "    Expected: heirs of java.util.Map\n");
         }
 
@@ -254,7 +254,7 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         @Test
         @DisplayName("Required parameters")
         public void test1646681100056() {
-            assertNPE(() -> marshaller().convertCollectionToRawData(null), "value");
+            assertRequired(() -> marshaller().convertCollectionToRawData(null), "value");
         }
 
         @Test
@@ -290,7 +290,7 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
             assertThrow(() -> marshaller().convertCollectionToRawData(new Object()))
                     .assertClass(MarshallerException.class)
                     .assertMessageIs("\n  Received unsupported type for conversion.\n" +
-                                     "    Source type: java.lang.Object\n" +
+                                     "    Actual type: java.lang.Object\n" +
                                      "    Expected: heirs of java.util.Collection\n");
         }
     }
@@ -302,7 +302,7 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         @Test
         @DisplayName("Required parameters")
         public void test1646680511311() {
-            assertNPE(() -> marshaller().convertArrayToRawData(null), "value");
+            assertRequired(() -> marshaller().convertArrayToRawData(null), "value");
         }
 
         @Test
@@ -329,7 +329,7 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
             assertThrow(() -> marshaller().convertArrayToRawData(new Object()))
                     .assertClass(MarshallerException.class)
                     .assertMessageIs("\n  Received unsupported type for conversion.\n" +
-                                     "    Source type: java.lang.Object\n" +
+                                     "    Actual type: java.lang.Object\n" +
                                      "    Expected: simple/complex reference type array (String[], POJO[], etc.)\n");
         }
 
@@ -372,8 +372,8 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         @Test
         @DisplayName("Required parameters")
         public void test1646750228257() {
-            assertNPE(() -> marshaller().writeRawDataToPojo(null, mapOf()), "model");
-            assertNPE(() -> marshaller().writeRawDataToPojo(mapPojo(), null), "rawData");
+            assertRequired(() -> marshaller().writeRawDataToPojo(null, mapOf()), "model");
+            assertRequired(() -> marshaller().writeRawDataToPojo(mapPojo(), null), "rawData");
         }
 
         @Test
@@ -652,8 +652,8 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         @DisplayName("Required parameters")
         @Disabled
         public void test1646935755648() {
-            assertNPE(() -> marshaller().unmarshalTo(null, ""), "model");
-            assertNPE(() -> marshaller().unmarshalTo(pojo(), null), "encodedString");
+            assertRequired(() -> marshaller().unmarshalTo(null, ""), "model");
+            assertRequired(() -> marshaller().unmarshalTo(pojo(), null), "encodedString");
         }
 
         @Test
@@ -764,8 +764,8 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         @Test
         @DisplayName("Required parameters")
         public void test1646935806232() {
-            assertNPE(() -> FormUrlMarshaller.INSTANCE.unmarshal(null, ""), "modelClass");
-            assertNPE(() -> FormUrlMarshaller.INSTANCE.unmarshal(pojo().getClass(), null), "encodedString");
+            assertRequired(() -> FormUrlMarshaller.INSTANCE.unmarshal(null, ""), "modelClass");
+            assertRequired(() -> FormUrlMarshaller.INSTANCE.unmarshal(pojo().getClass(), null), "encodedString");
         }
 
         @Test
