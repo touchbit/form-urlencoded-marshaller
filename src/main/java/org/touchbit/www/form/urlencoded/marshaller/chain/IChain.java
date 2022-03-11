@@ -20,6 +20,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.touchbit.www.form.urlencoded.marshaller.util.ChainException;
 import org.touchbit.www.form.urlencoded.marshaller.util.CodecConstant;
 import org.touchbit.www.form.urlencoded.marshaller.util.FormUrlUtils;
+import org.touchbit.www.form.urlencoded.marshaller.util.MarshallerException;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -70,7 +71,7 @@ public interface IChain {
          * @param rawData      from url encoded parameters raw representation
          * @param implicitList key contains an implicit array (unindexed) {@code foo[bar][]=value}
          * @param explicitList key contains an explicit array (indexed) {@code foo[bar][0]=value}
-         * @throws NullPointerException - rawData is null
+         * @throws MarshallerException - rawData is null
          */
         public Default(final Map<String, Object> rawData,
                        final boolean implicitList,
@@ -137,7 +138,7 @@ public interface IChain {
          * @param source source {@link Map} for merging
          * @param target target {@link Map} for merging
          * @return - merged target {@link Map}
-         * @throws NullPointerException if source or target is null
+         * @throws MarshallerException if source or target is null
          */
         @SuppressWarnings("unchecked")
         protected Map<String, Object> mergeRawMap(final Object source, final Object target) {
@@ -162,7 +163,7 @@ public interface IChain {
          * @param source source value for merging
          * @param target target value for merging
          * @return merge result (Map or List)
-         * @throws NullPointerException     if source or target is null
+         * @throws MarshallerException      if source or target is null
          * @throws IllegalArgumentException incompatible types
          */
         protected Object mergeObjectValues(final Object source, final Object target) {
@@ -211,7 +212,7 @@ public interface IChain {
          * @param source indexed {@link IChainList} for merging
          * @param target indexed {@link IChainList} for merging
          * @return merge result ({@link IChainList})
-         * @throws NullPointerException     if source or target is null
+         * @throws MarshallerException      if source or target is null
          * @throws IllegalArgumentException incompatible types
          */
         @SuppressWarnings({"java:S125", "java:S3776"})
@@ -309,7 +310,7 @@ public interface IChain {
          * @param source {@link IChainList} for merging
          * @param target {@link IChainList} for merging
          * @return merge result ({@link IChainList})
-         * @throws NullPointerException     if source or target is null
+         * @throws MarshallerException      if source or target is null
          * @throws IllegalArgumentException incompatible types
          * @throws IllegalArgumentException different IChainList types (indexed/unindexed)
          */
@@ -373,7 +374,7 @@ public interface IChain {
 
         /**
          * @param key url form parameter key
-         * @throws NullPointerException     if key is null
+         * @throws MarshallerException      if key is null
          * @throws IllegalArgumentException incorrect ratio of opening and closing brackets
          * @throws IllegalArgumentException list nesting [[]]
          */
@@ -394,7 +395,7 @@ public interface IChain {
         /**
          * @param key url form parameter key
          * @return true if the key contains nested lists
-         * @throws NullPointerException if key is null
+         * @throws MarshallerException if key is null
          */
         protected boolean hasNestedBrackets(String key) {
             FormUrlUtils.parameterRequireNonNull(key, CodecConstant.KEY_PARAMETER);
@@ -404,7 +405,7 @@ public interface IChain {
         /**
          * @param key url form parameter key
          * @return true if the key contains the same number of opening and closing brackets
-         * @throws NullPointerException if key is null
+         * @throws MarshallerException if key is null
          */
         protected boolean isEvenBracketsRatio(String key) {
             FormUrlUtils.parameterRequireNonNull(key, CodecConstant.KEY_PARAMETER);
@@ -451,8 +452,8 @@ public interface IChain {
          * @param chainPart parent {@link IChainPart}
          * @param value     object to convert to {@link IChainPart} list
          * @return child {@link IChainPart} list
-         * @throws NullPointerException     - chainPart or value is null
-         * @throws ChainException - unsupported value type
+         * @throws MarshallerException - chainPart or value is null
+         * @throws ChainException      - unsupported value type
          */
         protected List<IChainPart> valueObjectToChainParts(final IChainPart chainPart, Object value) {
             FormUrlUtils.parameterRequireNonNull(chainPart, CodecConstant.CHAIN_PART_PARAMETER);
@@ -489,7 +490,7 @@ public interface IChain {
          * @param chainPart parent {@link IChainPart}
          * @param value     map to convert to {@link IChainPart} list
          * @return child {@link IChainPart} list
-         * @throws NullPointerException - chainPart or value is null
+         * @throws MarshallerException - chainPart or value is null
          */
         protected List<IChainPart> mapToChainPart(IChainPart chainPart, Map<?, ?> value) {
             FormUrlUtils.parameterRequireNonNull(chainPart, "chainPart");
@@ -515,7 +516,7 @@ public interface IChain {
          * @param chainPart parent {@link IChainPart}
          * @param value     value for chainPart
          * @return chainPart ({@link IChainPart})
-         * @throws NullPointerException - chainPart or value is null
+         * @throws MarshallerException - chainPart or value is null
          */
         protected IChainPart simpleToChainPart(IChainPart chainPart, final Object value) {
             FormUrlUtils.parameterRequireNonNull(chainPart, CodecConstant.CHAIN_PART_PARAMETER);
@@ -533,7 +534,7 @@ public interface IChain {
          * @param chainPart parent {@link IChainPart}
          * @param value     list to convert to {@link IChainPart} list
          * @return child {@link IChainPart} list
-         * @throws NullPointerException - chainPart or value is null
+         * @throws MarshallerException - chainPart or value is null
          */
         protected List<IChainPart> collectionToChainPart(IChainPart chainPart, final Collection<?> value) {
             FormUrlUtils.parameterRequireNonNull(chainPart, CodecConstant.CHAIN_PART_PARAMETER);

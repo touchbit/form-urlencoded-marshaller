@@ -11,6 +11,8 @@ import org.touchbit.www.form.urlencoded.marshaller.chain.IChainList;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -18,9 +20,54 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static model.Pojo.PojoFields;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SuppressWarnings("ConstantConditions")
+@SuppressWarnings({"ConstantConditions", "RedundantCast"})
 @DisplayName("FormUrlUtils.class unit tests")
 public class FormUrlUtilsUnitTests extends BaseTest {
+
+    @Nested
+    @DisplayName("#getGenericCollectionArgumentType() method tests")
+    public class GetGenericCollectionArgumentTypeMethodTests {
+
+        @Test
+        @DisplayName("getGenericCollectionArgumentType")
+        public void test1647037509034() {
+            final Type type = FormUrlUtils.getGenericCollectionArgumentType(PojoFields.LIST_POJO.getGenericType());
+            assertThat(type).isEqualTo(Pojo.class);
+        }
+
+        @Test
+        @DisplayName("MarshallerException if type = null")
+        public void test1647037621529() {
+            assertThrow(() -> FormUrlUtils.getGenericCollectionArgumentType(null))
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("\n  Received type is not a generic collection.\n" +
+                                     "    Source type: null\n" +
+                                     "    Expected: heirs of java.util.Collection\n");
+        }
+
+        @Test
+        @DisplayName("MarshallerException if type = String[].class")
+        public void test1647037988208() {
+            assertThrow(() -> FormUrlUtils.getGenericCollectionArgumentType(arrayOf("1").getClass()))
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("\n  Received type is not a generic collection.\n" +
+                                     "    Source type: java.lang.String[]\n" +
+                                     "    Expected: heirs of java.util.Collection\n");
+        }
+
+        @Test
+        @DisplayName("MarshallerException if type = Map.class")
+        public void test1647037639266() {
+            assertThrow(() -> FormUrlUtils.getGenericCollectionArgumentType(PojoFields.MAP_POJO.getGenericType()))
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("\n  Incorrect number of TypeArguments was received for a generic collection.\n" +
+                                     "    Actual type: java.util.Map<java.lang.String, model.Pojo>\n" +
+                                     "    Actual: 2 generic parameters\n" +
+                                     "    Expected: 1 generic parameter\n");
+        }
+
+
+    }
 
     @Nested
     @DisplayName("#getArrayComponentType() method tests")
@@ -377,5 +424,34 @@ public class FormUrlUtilsUnitTests extends BaseTest {
 
         assertTrue(FormUrlUtils.isPojoGenericCollection(PojoFields.LIST_POJO.getGenericType()));
     }
+
+    @Test
+    @DisplayName("isSimple")
+    public void test1647037255026() {
+        assertFalse(FormUrlUtils.isSimple(new Object()));
+        assertFalse(FormUrlUtils.isSimple((Object) null));
+        assertFalse(FormUrlUtils.isSimple(Object.class));
+        assertFalse(FormUrlUtils.isSimple((Type) null));
+
+        assertTrue(FormUrlUtils.isSimple(String.class));
+        assertTrue(FormUrlUtils.isSimple(""));
+        assertTrue(FormUrlUtils.isSimple(Boolean.class));
+        assertTrue(FormUrlUtils.isSimple(true));
+        assertTrue(FormUrlUtils.isSimple(Short.class));
+        assertTrue(FormUrlUtils.isSimple(Short.valueOf("1")));
+        assertTrue(FormUrlUtils.isSimple(Long.class));
+        assertTrue(FormUrlUtils.isSimple(1L));
+        assertTrue(FormUrlUtils.isSimple(Float.class));
+        assertTrue(FormUrlUtils.isSimple(1f));
+        assertTrue(FormUrlUtils.isSimple(Integer.class));
+        assertTrue(FormUrlUtils.isSimple(1));
+        assertTrue(FormUrlUtils.isSimple(Double.class));
+        assertTrue(FormUrlUtils.isSimple(1.1));
+        assertTrue(FormUrlUtils.isSimple(BigInteger.class));
+        assertTrue(FormUrlUtils.isSimple(new BigInteger("1")));
+        assertTrue(FormUrlUtils.isSimple(BigDecimal.class));
+        assertTrue(FormUrlUtils.isSimple(new BigDecimal(1)));
+    }
+
 
 }

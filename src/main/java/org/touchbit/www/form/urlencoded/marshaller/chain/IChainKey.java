@@ -19,6 +19,7 @@ package org.touchbit.www.form.urlencoded.marshaller.chain;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.touchbit.www.form.urlencoded.marshaller.util.CodecConstant;
 import org.touchbit.www.form.urlencoded.marshaller.util.FormUrlUtils;
+import org.touchbit.www.form.urlencoded.marshaller.util.MarshallerException;
 
 import java.lang.reflect.Type;
 import java.util.List;
@@ -78,7 +79,7 @@ interface IChainKey {
 
         /**
          * @param key form parameter key (map key || array index || empty string for implicit array)
-         * @throws NullPointerException if key is null
+         * @throws MarshallerException if key is null
          */
         public Default(final String key) {
             FormUrlUtils.parameterRequireNonNull(key, CodecConstant.KEY_PARAMETER);

@@ -51,7 +51,7 @@ public class FormUrlUtils {
     /**
      * @param parameter     checked parameter
      * @param parameterName checked parameter name
-     * @throws NullPointerException if parameter is null
+     * @throws MarshallerException if parameter is null
      */
     public static void parameterRequireNonNull(final Object parameter, final String parameterName) {
         if (parameter == null) {
@@ -278,21 +278,21 @@ public class FormUrlUtils {
                 return typeArgumentsList.get(0);
             }
             throw MarshallerException.builder()
-                    .errorMessage("An incorrect number of TypeArguments was received for a generic collection.")
-                    .expected(1)
-                    .actual(typeArgumentsList.size())
-                    .actualValue(typeArgumentsList)
+                    .errorMessage("Incorrect number of TypeArguments was received for a generic collection.")
+                    .actualType(type)
+                    .actual(typeArgumentsList.size() + " generic parameters")
+                    .expected("1 generic parameter")
                     .build();
         }
         throw MarshallerException.builder()
                 .errorMessage("Received type is not a generic collection.")
                 .sourceType(type)
-                .expectedType(Collection.class)
+                .expectedHeirsOf(Collection.class)
                 .build();
     }
 
     public static boolean hasAdditionalProperty(final Object object) {
-        final Class<?> objClass = (object instanceof Class) ? ((Class<?>) object) : object.getClass();
+        final Class<?> objClass = object.getClass();
         return !FieldUtils.getFieldsListWithAnnotation(objClass, FormUrlEncodedAdditionalProperties.class).isEmpty();
     }
 
@@ -463,8 +463,8 @@ public class FormUrlUtils {
     /**
      * @param value form URL decoded string
      * @return form URL encoded string
-     * @throws NullPointerException  if value is null
-     * @throws IllegalStateException cannot be thrown since the configuration operates on an {@link java.nio.charset.Charset} class.
+     * @throws MarshallerException if value is null
+     * @throws MarshallerException cannot be thrown since the configuration operates on an {@link java.nio.charset.Charset} class.
      */
     public static String encode(final String value, final Charset codingCharset) {
         FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
@@ -472,15 +472,15 @@ public class FormUrlUtils {
         try {
             return URLEncoder.encode(value, codingCharset.name());
         } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("Unexpected error", e);
+            throw new MarshallerException("Unexpected error", e);
         }
     }
 
     /**
      * @param value form URL encoded string
      * @return form URL decoded string
-     * @throws NullPointerException  if value is null
-     * @throws IllegalStateException cannot be thrown since the configuration operates on an {@link java.nio.charset.Charset} class.
+     * @throws MarshallerException if value is null
+     * @throws MarshallerException cannot be thrown since the configuration operates on an {@link java.nio.charset.Charset} class.
      */
     public static String decode(final Object value, final Charset codingCharset) {
         FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
@@ -488,7 +488,7 @@ public class FormUrlUtils {
         try {
             return URLDecoder.decode(value.toString(), codingCharset.name());
         } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("Unexpected error", e);
+            throw new MarshallerException("Unexpected error", e);
         }
     }
 

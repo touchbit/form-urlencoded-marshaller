@@ -10,6 +10,8 @@ import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncodedField;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +33,13 @@ public class Pojo {
     @FormUrlEncodedField(NESTED_POJO_C)
     private Pojo nestedPojo;
 
+    private static final String TRANSIENT_POJO_C = "transientPojo";
+    @FormUrlEncodedField(TRANSIENT_POJO_C)
+    private transient Pojo transientPojo;
+
+    @FormUrlEncodedField("")
+    private String emptyFormUrlEncodedField;
+
     private static final String MISSED_C = "missed";
     @FormUrlEncodedField(MISSED_C)
     private String missed;
@@ -42,6 +51,34 @@ public class Pojo {
     private static final String INTEGER_C = "integer";
     @FormUrlEncodedField(INTEGER_C)
     private Integer integer;
+
+    private static final String STRING_F_C = "stringF";
+    @FormUrlEncodedField(STRING_F_C)
+    private String stringF;
+    private static final String BOOLEAN_F_C = "booleanF";
+    @FormUrlEncodedField(BOOLEAN_F_C)
+    private Boolean booleanF;
+    private static final String SHORT_F_C = "shortF";
+    @FormUrlEncodedField(SHORT_F_C)
+    private Short shortF;
+    private static final String LONG_F_C = "longF";
+    @FormUrlEncodedField(LONG_F_C)
+    private Long longF;
+    private static final String FLOAT_F_C = "floatF";
+    @FormUrlEncodedField(FLOAT_F_C)
+    private Float floatF;
+    private static final String INTEGER_F_C = "integerF";
+    @FormUrlEncodedField(INTEGER_F_C)
+    private Integer integerF;
+    private static final String DOUBLE_F_C = "doubleF";
+    @FormUrlEncodedField(DOUBLE_F_C)
+    private Double doubleF;
+    private static final String BIG_INTEGER_F_C = "bigIntegerF";
+    @FormUrlEncodedField(BIG_INTEGER_F_C)
+    private BigInteger bigIntegerF;
+    private static final String BIG_DECIMAL_F_C = "bigDecimalF";
+    @FormUrlEncodedField(BIG_DECIMAL_F_C)
+    private BigDecimal bigDecimalF;
 
     private static final String OBJECT_C = "object";
     @FormUrlEncodedField(OBJECT_C)

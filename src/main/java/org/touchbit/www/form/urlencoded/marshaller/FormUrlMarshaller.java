@@ -149,8 +149,8 @@ public class FormUrlMarshaller {
      *
      * @param model {@code Map<String, Object>} or pojo object with {@link FormUrlEncoded} annotation
      * @return form url encoded string
-     * @throws NullPointerException if model is null
-     * @throws MarshallerException  if model type is not supported
+     * @throws MarshallerException if model is null
+     * @throws MarshallerException if model type is not supported
      */
     protected String marshalObjectToUrlEncodedString(final Object model) {
         FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
@@ -264,8 +264,8 @@ public class FormUrlMarshaller {
     /**
      * @param value any object with {@link FormUrlEncoded} class annotation
      * @return {@link HashMap} with converted values
-     * @throws NullPointerException if value is null
-     * @throws MarshallerException  class does not contain a FormUrlEncodedField annotation
+     * @throws MarshallerException if value is null
+     * @throws MarshallerException class does not contain a FormUrlEncodedField annotation
      */
     protected Map<String, Object> convertPojoToRawData(final Object value) {
         FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
@@ -301,7 +301,7 @@ public class FormUrlMarshaller {
     /**
      * @param value any {@link Map}
      * @return {@link HashMap} with converted values
-     * @throws NullPointerException if value is null
+     * @throws MarshallerException if value is null
      * @throws MarshallerException  if value is not {@link Map}
      * @throws MarshallerException  if map keys is not {@link String}
      */
@@ -341,7 +341,7 @@ public class FormUrlMarshaller {
     /**
      * @param value any {@link Collection}
      * @return {@link ArrayList} with converted array values
-     * @throws NullPointerException if value is null
+     * @throws MarshallerException if value is null
      * @throws MarshallerException  if value is not {@link Collection}
      */
     protected Object convertCollectionToRawData(final Object value) {
@@ -362,7 +362,7 @@ public class FormUrlMarshaller {
     /**
      * @param value any array
      * @return {@link ArrayList} with converted array values
-     * @throws NullPointerException if value is null
+     * @throws MarshallerException if value is null
      * @throws MarshallerException  if value is not array
      */
     protected Object convertArrayToRawData(final Object value) {
@@ -605,7 +605,7 @@ public class FormUrlMarshaller {
     /**
      * @param modelClass FormUrlEncoded model class
      * @return field annotated with FormUrlEncodedAdditionalProperties or null
-     * @throws NullPointerException if modelClass parameter is null
+     * @throws MarshallerException if modelClass parameter is null
      * @throws MarshallerException  if additionalProperties fields more than one
      * @throws MarshallerException  if additionalProperties type != {@code Map<String, String>}
      */
@@ -660,7 +660,7 @@ public class FormUrlMarshaller {
      *
      * @param model FormUrlEncoded model
      * @return additionalProperty field value (Map) or null if field not present
-     * @throws NullPointerException if model parameter is null
+     * @throws MarshallerException if model parameter is null
      * @throws MarshallerException  if unable to initialize additionalProperties field
      * @throws MarshallerException  if additionalProperty field not readable
      */
