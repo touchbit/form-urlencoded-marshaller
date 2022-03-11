@@ -68,7 +68,39 @@ public class FormUrlUtils {
         try {
             return FieldUtils.readField(object, fieldName, true);
         } catch (Exception e) {
+            // TODO
             throw new RuntimeException("Unable to get value from field: " + fieldName, e);
+        }
+    }
+
+    /**
+     * @param object target object for write
+     * @param field  object field
+     * @param value  field value
+     * @throws MarshallerException if the value cannot be written to the model field
+     */
+    public static void writeDeclaredField(final Object object, final Field field, final Object value) {
+        FormUrlUtils.parameterRequireNonNull(object, OBJECT_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
+        FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
+        try {
+            FieldUtils.writeDeclaredField(object, field.getName(), value, true);
+        } catch (Exception e) {
+            final String fieldTypeName = field.getType().getSimpleName();
+            final String fieldValue;
+            if (value.getClass().isArray()) {
+                fieldValue = Arrays.toString((Object[]) value);
+            } else {
+                fieldValue = String.valueOf(value);
+            }
+            // TODO
+            throw new MarshallerException("Unable to write value to model field.\n" +
+                                          "    Model: " + object.getClass().getName() + "\n" +
+                                          "    Field name: " + field.getName() + "\n" +
+                                          "    Field type: " + fieldTypeName + "\n" +
+                                          "    Value type: " + value.getClass().getSimpleName() + "\n" +
+                                          "    Value: " + fieldValue + "\n" +
+                                          "    Error cause: " + e.getMessage().trim() + "\n", e);
         }
     }
 
@@ -314,7 +346,6 @@ public class FormUrlUtils {
         if (type instanceof Class) {
             final Class<?> aClass = (Class<?>) type;
             return String.class.isAssignableFrom(aClass) ||
-                   Boolean.class.isAssignableFrom(aClass) ||
                    Boolean.class.isAssignableFrom(aClass) ||
                    Short.class.isAssignableFrom(aClass) ||
                    Long.class.isAssignableFrom(aClass) ||

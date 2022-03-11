@@ -1,6 +1,8 @@
 package org.touchbit;
 
 import org.touchbit.www.form.urlencoded.marshaller.chain.IChainList;
+import org.touchbit.www.form.urlencoded.marshaller.model.Pojo;
+import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncoded;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -12,6 +14,8 @@ public class BaseTest {
 
     protected static final String ENCODED = "%D1%82%D0%B5%D1%81%D1%82";
     protected static final String DECODED = "тест";
+    protected static final Class<FormUrlEncoded> FORM_URL_ENCODED_CLASS = FormUrlEncoded.class;
+    protected static final String POJO_TYPE_NAME = Pojo.class.getTypeName();
 
     protected static ThrowableAsserter assertThrow(ThrowableRunnable runnable) {
         return new ThrowableAsserter(runnable);

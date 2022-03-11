@@ -18,23 +18,23 @@ package org.touchbit.www.form.urlencoded.marshaller.util;
 
 /**
  * @author Oleg Shaburov (shaburov.o.a@gmail.com)
- * Created: 18.02.2022
+ * Created: 11.03.2022
  */
-public class MarshallerException extends RuntimeException {
+public class ChainException extends MarshallerException {
 
-    public MarshallerException(String message) {
+    public ChainException(String message) {
         super(message);
     }
 
-    public MarshallerException(String message, Throwable t) {
+    public ChainException(String message, Throwable t) {
         super(message, t);
     }
 
     public static ExceptionBuilder<?> builder() {
-        return new ExceptionBuilder<MarshallerException>() {
+        return new ExceptionBuilder<ChainException>() {
             @Override
-            public MarshallerException build() {
-                return new MarshallerException(getMessage(), getCause());
+            public ChainException build() {
+                return new ChainException(getMessage(), getCause());
             }
         };
     }

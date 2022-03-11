@@ -81,11 +81,14 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         }
 
         @Test
-        @DisplayName("IllegalArgumentException if model type is not supported")
+        @DisplayName("MarshallerException if model type is not supported")
         public void test1646684025352() {
             assertThrow(() -> marshaller().marshal(new Object()))
-                    .assertClass(IllegalArgumentException.class)
-                    .assertMessageIs("Received unsupported type for conversion: class java.lang.Object");
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("\n  Received unsupported type for conversion.\n" +
+                                     "    Source type: java.lang.Object\n" +
+                                     "    Expected: heirs of java.util.Map\n" +
+                                     "    Expected: POJO classes with @FormUrlEncoded annotation\n");
         }
     }
 
@@ -138,11 +141,17 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         }
 
         @Test
-        @DisplayName("IllegalArgumentException if value type is not supported")
+        @DisplayName("MarshallerException if value type is not supported")
         public void test1646683148875() {
             assertThrow(() -> marshaller().convertValueToRawData(new Object()))
-                    .assertClass(IllegalArgumentException.class)
-                    .assertMessageIs("Received unsupported type for conversion: class java.lang.Object");
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("\n  Received unsupported type for conversion.\n" +
+                                     "    Source type: java.lang.Object\n" +
+                                     "    Expected: simple reference types (String, Integer, Boolean, etc.)\n" +
+                                     "    Expected: POJO classes with @FormUrlEncoded annotation\n" +
+                                     "    Expected: heirs of java.util.Map\n" +
+                                     "    Expected: heirs of java.util.Collection\n" +
+                                     "    Expected: simple/complex reference type array (String[], POJO[], etc.)\n");
         }
     }
 
@@ -181,13 +190,13 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         }
 
         @Test
-        @DisplayName("IllegalArgumentException class does not contain a FormUrlEncodedField annotation")
+        @DisplayName("MarshallerException class does not contain a FormUrlEncodedField annotation")
         public void test1646682319880() {
             assertThrow(() -> marshaller().convertPojoToRawData(new Object()))
-                    .assertClass(IllegalArgumentException.class)
-                    .assertMessageIs("Object class does not contain a required annotation.\n" +
-                                     "Class: java.lang.Object\n" +
-                                     "Expected annotation: " + FormUrlEncoded.class.getName() + "\n");
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("\n  Class does not contain a required annotation.\n" +
+                                     "    Source: class java.lang.Object\n" +
+                                     "    Expected: @FormUrlEncoded\n");
         }
 
     }
@@ -227,24 +236,26 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         }
 
         @Test
-        @DisplayName("IllegalArgumentException if value is not a Map")
+        @DisplayName("MarshallerException if value is not a Map")
         public void test1646681583817() {
             assertThrow(() -> marshaller().convertMapToRawData(new Object()))
-                    .assertClass(IllegalArgumentException.class)
-                    .assertMessageIs("Received unsupported type for conversion: \n" +
-                                     "Expected heirs of interface java.util.Map\n" +
-                                     "Actual: class java.lang.Object\n");
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("\n  Received unsupported type for conversion.\n" +
+                                     "    Source type: java.lang.Object\n" +
+                                     "    Expected: heirs of java.util.Map\n");
         }
 
         @Test
-        @DisplayName("IllegalArgumentException if map keys is not String")
+        @DisplayName("MarshallerException if map keys is not String")
         public void test1646681617352() {
             final Map<Object, Object> map = new HashMap<>();
-            map.put(1, 2);
+            map.put(100500, 2);
+            map.put(true, 2);
             assertThrow(() -> marshaller().convertMapToRawData(map))
-                    .assertClass(IllegalArgumentException.class)
-                    .assertMessageIs("Keys in the map must be of type String: Map<String, Object>\n" +
-                                     "Unsupported keys: [1]");
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("\n  Invalid Map keys type\n" +
+                                     "    Actual: key-type pairs: {100500=Integer, true=Boolean}\n" +
+                                     "    Expected: String key type (Map<String, ?>)\n");
         }
 
     }
@@ -287,13 +298,13 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         }
 
         @Test
-        @DisplayName("IllegalArgumentException if value is not Collection")
+        @DisplayName("MarshallerException if value is not Collection")
         public void test1646681219600() {
             assertThrow(() -> marshaller().convertCollectionToRawData(new Object()))
-                    .assertClass(IllegalArgumentException.class)
-                    .assertMessageIs("Received unsupported type for conversion: \n" +
-                                     "Expected heirs of interface java.util.Collection\n" +
-                                     "Actual: class java.lang.Object\n");
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("\n  Received unsupported type for conversion.\n" +
+                                     "    Source type: java.lang.Object\n" +
+                                     "    Expected: heirs of java.util.Collection\n");
         }
     }
 
@@ -326,13 +337,13 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         }
 
         @Test
-        @DisplayName("IllegalArgumentException if value is not array")
+        @DisplayName("MarshallerException if value is not array")
         public void test1646680982447() {
             assertThrow(() -> marshaller().convertArrayToRawData(new Object()))
-                    .assertClass(IllegalArgumentException.class)
-                    .assertMessageIs("Received unsupported type for conversion: \n" +
-                                     "Expected: array\n" +
-                                     "Actual: java.lang.Object\n");
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("\n  Received unsupported type for conversion.\n" +
+                                     "    Source type: java.lang.Object\n" +
+                                     "    Expected: simple/complex reference type array (String[], POJO[], etc.)\n");
         }
 
     }
@@ -444,7 +455,7 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
             final Pojo pojo = pojo();
             assertThrow(() -> marshaller().writeRawDataToPojo(pojo, rawData))
                     .assertClass(MarshallerException.class)
-                    .assertMessageIs("Incompatible types received for conversion.\n" +
+                    .assertMessageIs("\n  Incompatible types received for conversion.\n" +
                                      "    Source: {nestedPojo=[123]}\n" +
                                      "    Source field: nestedPojo\n" +
                                      "    Source value: [123]\n" +
@@ -461,7 +472,7 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
             final Pojo pojo = pojo();
             assertThrow(() -> marshaller().writeRawDataToPojo(pojo, rawData))
                     .assertClass(MarshallerException.class)
-                    .assertMessageIs("Incompatible types received for conversion.\n" +
+                    .assertMessageIs("\n  Incompatible types received for conversion.\n" +
                                      "    Source: {nestedPojo=UTF-8}\n" +
                                      "    Source field: nestedPojo\n" +
                                      "    Source value: UTF-8\n" +
@@ -638,10 +649,10 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
             final Map<String, Object> rawData = mapOf(nestedPojoFieldName, mapOf(integerFieldName, "123"));
             assertThrow(() -> marshaller().convertRawValueToTargetJavaType(rawData, genericType))
                     .assertClass(MarshallerException.class)
-                    .assertMessageIs("Incompatible types received for conversion.\n" +
+                    .assertMessageIs("\n  Incompatible types received for conversion.\n" +
                                      "    Source value: {nestedPojo={integerField=123}}\n" +
                                      "    Source type: java.util.HashMap\n" +
-                                     "    Target type: " + Pojo.class.getTypeName() + "\n");
+                                     "    Target type: " + POJO_TYPE_NAME + "\n");
         }
 
     }
@@ -721,9 +732,9 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
             Pojo pojo = pojo();
             assertThrow(() -> marshaller().prohibitAdditionalProperties(true).unmarshalTo(pojo, "foo=bar"))
                     .assertClass(MarshallerException.class)
-                    .assertMessageIs("URL encoded string contains unmapped additional properties.\n" +
-                                     "    Expected: There are no additional properties.\n" +
-                                     "    Actual: {foo=bar}\n");
+                    .assertMessageIs("\n  URL encoded string contains unmapped additional properties.\n" +
+                                     "    Actual: {foo=bar}\n" +
+                                     "    Expected: There are no additional properties.\n");
         }
 
         @Test
@@ -732,9 +743,9 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
             EmptyPojo pojo = new EmptyPojo();
             assertThrow(() -> marshaller().prohibitAdditionalProperties(true).unmarshalTo(pojo, "foo=bar"))
                     .assertClass(MarshallerException.class)
-                    .assertMessageIs("URL encoded string contains unmapped additional properties.\n" +
-                                     "    Expected: There are no additional properties.\n" +
-                                     "    Actual: {foo=bar}\n");
+                    .assertMessageIs("\n  URL encoded string contains unmapped additional properties.\n" +
+                                     "    Actual: {foo=bar}\n" +
+                                     "    Expected: There are no additional properties.\n");
         }
 
         @Test
@@ -743,9 +754,9 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
             MapPojo pojo = mapPojo();
             assertThrow(() -> marshaller().prohibitAdditionalProperties(true).unmarshalTo(pojo, "foo=bar"))
                     .assertClass(MarshallerException.class)
-                    .assertMessageIs("URL encoded string contains unmapped additional properties.\n" +
-                                     "    Expected: There are no additional properties.\n" +
-                                     "    Actual: {foo=bar}\n");
+                    .assertMessageIs("\n  URL encoded string contains unmapped additional properties.\n" +
+                                     "    Actual: {foo=bar}\n" +
+                                     "    Expected: There are no additional properties.\n");
         }
 
         @Test
@@ -806,7 +817,7 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         public void test1646936491761() {
             assertThrow(() -> marshaller().unmarshal(Map.class, "foo=bar"))
                     .assertClass(MarshallerException.class)
-                    .assertMessageIs("Unable to instantiate model class.\n" +
+                    .assertMessageIs("\n  Unable to instantiate model class.\n" +
                                      "    Source type: java.util.Map\n" +
                                      "    Error cause: No such accessible constructor on object: java.util.Map\n");
         }
@@ -817,7 +828,7 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
             final String typeName = PrivatePojo.class.getTypeName();
             assertThrow(() -> marshaller().unmarshal(PrivatePojo.class, "foo=bar"))
                     .assertClass(MarshallerException.class)
-                    .assertMessageIs("Unable to instantiate model class.\n" +
+                    .assertMessageIs("\n  Unable to instantiate model class.\n" +
                                      "    Source type: " + typeName + "\n" +
                                      "    Error cause: No such accessible constructor on object: " + typeName + "\n");
         }
@@ -828,7 +839,7 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
             final String typeName = PojoWithConstructorParams.class.getTypeName();
             assertThrow(() -> marshaller().unmarshal(PojoWithConstructorParams.class, "foo=bar"))
                     .assertClass(MarshallerException.class)
-                    .assertMessageIs("Unable to instantiate model class.\n" +
+                    .assertMessageIs("\n  Unable to instantiate model class.\n" +
                                      "    Source type: " + typeName + "\n" +
                                      "    Error cause: No such accessible constructor on object: " + typeName + "\n");
         }

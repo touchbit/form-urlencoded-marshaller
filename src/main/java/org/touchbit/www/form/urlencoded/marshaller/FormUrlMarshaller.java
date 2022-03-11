@@ -17,7 +17,6 @@
 package org.touchbit.www.form.urlencoded.marshaller;
 
 import org.apache.commons.lang3.math.NumberUtils;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.touchbit.www.form.urlencoded.marshaller.chain.IChain;
 import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncoded;
@@ -73,14 +72,6 @@ import static org.touchbit.www.form.urlencoded.marshaller.util.CodecConstant.*;
 public class FormUrlMarshaller implements IFormUrlMarshaller {
 
     public static final FormUrlMarshaller INSTANCE = new FormUrlMarshaller();
-    private static final String FIELD_NAME_ERR_MSG = "    Field name: ";
-    private static final String ERROR_CAUSE_ERR_MSG = "    Error cause: ";
-    private static final String FIELD_TYPE_ERR_MSG = "    Field type: ";
-    private static final String MODEL_ERR_MSG = "    Model: ";
-    private static final String FIELD_ERR_MSG = "    Field: ";
-    private static final String ACT_TYPE_ERR_MSG = "    Actual type: ";
-    private static final String EXP_TYPE_ERR_MSG = "    Expected type: ";
-    private static final String CONVERSION_UNSUPPORTED_TYPE_ERR_MSG = "Received unsupported type for conversion: ";
     private final IFormUrlMarshallerConfiguration configuration;
 
     private boolean prohibitAdditionalProperties = false;
@@ -108,8 +99,8 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
      *
      * @param model {@code Map<String, Object>} or pojo object with {@link FormUrlEncoded} annotation
      * @return form url encoded string
-     * @throws NullPointerException     if model is null
-     * @throws IllegalArgumentException if model type is not supported
+     * @throws NullPointerException if model is null
+     * @throws MarshallerException  if model type is not supported
      */
     @Override
     public String marshal(final Object model) {
@@ -122,13 +113,18 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
             chain.getChainParts().forEach(e -> sj.add(e.getKey() + "=" + ((e.getValue() == null) ? "" : e.getValue())));
             return sj.toString();
         }
-        throw new IllegalArgumentException(CONVERSION_UNSUPPORTED_TYPE_ERR_MSG + model.getClass());
+        throw MarshallerException.builder()
+                .errorMessage(ERR_RECEIVED_UNSUPPORTED_TYPE_FOR_CONVERSION)
+                .actualType(model)
+                .expectedHeirsOf(Map.class)
+                .expected("POJO classes with @" + FormUrlEncoded.class.getSimpleName() + " annotation")
+                .build();
     }
 
     /**
      * @param value any object
      * @return converted value (List || Map || String)
-     * @throws IllegalArgumentException if value type is not supported
+     * @throws MarshallerException if value type is not supported
      */
     protected Object convertValueToRawData(final Object value) {
         if (value == null || FormUrlUtils.isSimple(value)) {
@@ -147,15 +143,23 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
         } else if (FormUrlUtils.isArray(value)) {
             return convertArrayToRawData(value);
         } else {
-            throw new IllegalArgumentException(CONVERSION_UNSUPPORTED_TYPE_ERR_MSG + value.getClass());
+            throw MarshallerException.builder()
+                    .errorMessage(ERR_RECEIVED_UNSUPPORTED_TYPE_FOR_CONVERSION)
+                    .actualType(value)
+                    .expected(ERR_SIMPLE_REFERENCE_TYPES)
+                    .expected("POJO classes with @" + FormUrlEncoded.class.getSimpleName() + " annotation")
+                    .expectedHeirsOf(Map.class)
+                    .expectedHeirsOf(Collection.class)
+                    .expected(ERR_SIMPLE_COMPLEX_REFERENCE_TYPE_ARRAY)
+                    .build();
         }
     }
 
     /**
      * @param value any object with {@link FormUrlEncoded} class annotation
      * @return {@link HashMap} with converted values
-     * @throws NullPointerException     if value is null
-     * @throws IllegalArgumentException class does not contain a FormUrlEncodedField annotation
+     * @throws NullPointerException if value is null
+     * @throws MarshallerException  class does not contain a FormUrlEncodedField annotation
      */
     protected Map<String, Object> convertPojoToRawData(final Object value) {
         FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
@@ -181,17 +185,19 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
             }
             return result;
         }
-        throw new IllegalArgumentException("Object class does not contain a required annotation.\n" +
-                                           "Class: " + value.getClass().getName() + "\n" +
-                                           "Expected annotation: " + FormUrlEncoded.class.getName() + "\n");
+        throw MarshallerException.builder()
+                .errorMessage("Class does not contain a required annotation.")
+                .source(value.getClass())
+                .expected("@" + FormUrlEncoded.class.getSimpleName())
+                .build();
     }
 
     /**
      * @param value any {@link Map}
      * @return {@link HashMap} with converted values
-     * @throws NullPointerException     if value is null
-     * @throws IllegalArgumentException if value is not {@link Map}
-     * @throws IllegalArgumentException if map keys is not {@link String}
+     * @throws NullPointerException if value is null
+     * @throws MarshallerException  if value is not {@link Map}
+     * @throws MarshallerException  if map keys is not {@link String}
      */
     protected Map<String, Object> convertMapToRawData(final Object value) {
         FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
@@ -199,12 +205,17 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
         if (value instanceof Map) {
             Map<?, ?> map = (Map<?, ?>) value;
             final Set<?> rawKeySet = map.keySet();
-            final List<?> unsupportedKeys = rawKeySet.stream()
+            final List<?> invalidTypeKeys = rawKeySet.stream()
                     .filter(e -> !(e instanceof String))
                     .collect(Collectors.toList());
-            if (!unsupportedKeys.isEmpty()) {
-                throw new IllegalArgumentException("Keys in the map must be of type String: Map<String, Object>\n" +
-                                                   "Unsupported keys: " + unsupportedKeys);
+            if (!invalidTypeKeys.isEmpty()) {
+                final Map<?, String> actual = invalidTypeKeys.stream()
+                        .collect(Collectors.toMap(i -> i, i -> i.getClass().getSimpleName()));
+                throw MarshallerException.builder()
+                        .errorMessage("Invalid Map keys type")
+                        .actual("key-type pairs: " + actual)
+                        .expected("String key type (Map<String, ?>)")
+                        .build();
             }
             for (Object rawKey : rawKeySet) {
                 final String resultKey = String.valueOf(rawKey);
@@ -214,16 +225,18 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
             }
             return result;
         }
-        throw new IllegalArgumentException(CONVERSION_UNSUPPORTED_TYPE_ERR_MSG + "\n" +
-                                           "Expected heirs of " + Map.class + "\n" +
-                                           "Actual: " + value.getClass() + "\n");
+        throw MarshallerException.builder()
+                .errorMessage(ERR_RECEIVED_UNSUPPORTED_TYPE_FOR_CONVERSION)
+                .actualType(value)
+                .expectedHeirsOf(Map.class)
+                .build();
     }
 
     /**
      * @param value any {@link Collection}
      * @return {@link ArrayList} with converted array values
-     * @throws NullPointerException     if value is null
-     * @throws IllegalArgumentException if value is not {@link Collection}
+     * @throws NullPointerException if value is null
+     * @throws MarshallerException  if value is not {@link Collection}
      */
     protected Object convertCollectionToRawData(final Object value) {
         FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
@@ -233,16 +246,18 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
             collection.forEach(item -> result.add(convertValueToRawData(item)));
             return result;
         }
-        throw new IllegalArgumentException(CONVERSION_UNSUPPORTED_TYPE_ERR_MSG + "\n" +
-                                           "Expected heirs of " + Collection.class + "\n" +
-                                           "Actual: " + value.getClass() + "\n");
+        throw MarshallerException.builder()
+                .errorMessage(ERR_RECEIVED_UNSUPPORTED_TYPE_FOR_CONVERSION)
+                .actualType(value)
+                .expectedHeirsOf(Collection.class)
+                .build();
     }
 
     /**
      * @param value any array
      * @return {@link ArrayList} with converted array values
-     * @throws NullPointerException     if value is null
-     * @throws IllegalArgumentException if value is not array
+     * @throws NullPointerException if value is null
+     * @throws MarshallerException  if value is not array
      */
     protected Object convertArrayToRawData(final Object value) {
         FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
@@ -252,9 +267,11 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
             Arrays.stream(array).forEach(item -> result.add(convertValueToRawData(item)));
             return result;
         }
-        throw new IllegalArgumentException(CONVERSION_UNSUPPORTED_TYPE_ERR_MSG + "\n" +
-                                           "Expected: array\n" +
-                                           "Actual: " + value.getClass().getName() + "\n");
+        throw MarshallerException.builder()
+                .errorMessage(ERR_RECEIVED_UNSUPPORTED_TYPE_FOR_CONVERSION)
+                .actualType(value)
+                .expected(ERR_SIMPLE_COMPLEX_REFERENCE_TYPE_ARRAY)
+                .build();
     }
 
     /**
@@ -308,78 +325,88 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
             }
             if (!rawData.isEmpty() && isProhibitAdditionalProperties()) {
                 throw MarshallerException.builder()
-                        .errorMessage("URL encoded string contains unmapped additional properties.")
-                        .expected("There are no additional properties.")
+                        .errorMessage(ERR_UNMAPPED_ADDITIONAL_PROPERTIES)
                         .actual(rawData)
+                        .expected(THERE_ARE_NO_ADDITIONAL_PROPERTIES)
                         .build();
             }
             return;
         }
-        throw new IllegalArgumentException(CONVERSION_UNSUPPORTED_TYPE_ERR_MSG + model.getClass());
+        throw MarshallerException.builder()
+                .errorMessage(ERR_RECEIVED_UNSUPPORTED_TYPE_FOR_CONVERSION)
+                .actualType(model)
+                .expected("POJO classes with @" + FormUrlEncoded.class.getSimpleName() + " annotation")
+                .expectedHeirsOf(Map.class)
+                .build();
     }
 
+    @SuppressWarnings("java:S3776") // does not require decomposition
     protected <M> void writeRawDataToPojo(final M model, final Map<?, ?> rawData) {
         FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
         FormUrlUtils.parameterRequireNonNull(rawData, RAW_DATA_PARAMETER);
-        final Map<String, Field> pojoFieldsWithValues = FormUrlUtils.getFormUrlEncodedFieldsMap(model)
+        FormUrlUtils.getFormUrlEncodedFieldsMap(model)
                 .entrySet().stream().filter(e -> rawData.get(e.getKey()) != null)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        for (String fieldName : pojoFieldsWithValues.keySet()) {
-            final Object rawValue = rawData.get(fieldName);
-            final Field pojoField = pojoFieldsWithValues.get(fieldName);
-            final Type fieldType = pojoField.getGenericType();
-            if (FormUrlUtils.isSomePojo(fieldType)) {
-                if (FormUrlUtils.isMap(rawValue)) {
-                    if (FormUrlUtils.isPojo(fieldType)) {
-                        // raw value Map<String, Object> to target Pojo
-                        final Class<?> pojoClass = TypeUtils.getRawType(fieldType, null);
-                        final Object pojo = FormUrlUtils.invokeConstructor(pojoClass);
-                        writeRawDataToPojo(pojo, (Map<?, ?>) rawValue);
-                        writeFieldValue(model, pojoField, pojo);
-                    } else if (FormUrlUtils.isPojoGenericCollection(fieldType)) {
-                        // raw value Map<String, Object>  to target List<Pojo> (hidden url encoded array)
-                        final Class<?> pojoClass = FormUrlUtils.getGenericCollectionArgumentRawType(fieldType);
-                        final Object pojo = FormUrlUtils.invokeConstructor(pojoClass);
-                        writeRawDataToPojo(pojo, (Map<?, ?>) rawValue);
-                        writeFieldValue(model, pojoField, Collections.singletonList(pojo));
-                    } else if (FormUrlUtils.isPojoArray(fieldType)) {
-                        // raw value Map<String, Object>  to target Pojo[] (hidden url encoded array)
-                        final Class<?> arrayComponentClass = FormUrlUtils.getArrayComponentClass(fieldType);
-                        final Object pojo = FormUrlUtils.invokeConstructor(arrayComponentClass);
-                        writeRawDataToPojo(pojo, (Map<?, ?>) rawValue);
-                        writeFieldValue(model, pojoField, FormUrlUtils.objectToArray(pojo, arrayComponentClass));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+                .forEach((urlEncodedFieldName, pojoField) -> {
+                    final Object rawDataValue = rawData.get(urlEncodedFieldName);
+                    final Type fieldType = pojoField.getGenericType();
+                    if (!FormUrlUtils.isSomePojo(fieldType)) {
+                        final Object fieldValue = convertRawValueToTargetJavaType(rawDataValue, fieldType);
+                        FormUrlUtils.writeDeclaredField(model, pojoField, fieldValue);
+                        rawData.remove(urlEncodedFieldName);
+                    } else {
+                        if (!FormUrlUtils.isMap(rawDataValue)) {
+                            throw MarshallerException.builder()
+                                    .errorMessage(ERR_INCOMPATIBLE_TYPES_RECEIVED_FOR_CONVERSION)
+                                    .source(rawData)
+                                    .sourceField(urlEncodedFieldName)
+                                    .sourceValue(rawDataValue)
+                                    .sourceType(rawDataValue)
+                                    .targetType(fieldType)
+                                    .targetField(pojoField)
+                                    .build();
+                        } else {
+                            if (FormUrlUtils.isPojo(fieldType)) {
+                                // raw value Map<String, Object> to target Pojo
+                                final Class<?> pojoClass = TypeUtils.getRawType(fieldType, null);
+                                final Object pojo = FormUrlUtils.invokeConstructor(pojoClass);
+                                writeRawDataToPojo(pojo, (Map<?, ?>) rawDataValue);
+                                FormUrlUtils.writeDeclaredField(model, pojoField, pojo);
+                                rawData.remove(urlEncodedFieldName);
+                            } else if (FormUrlUtils.isPojoGenericCollection(fieldType)) {
+                                // raw value Map<String, Object>  to target List<Pojo> (hidden url encoded array)
+                                final Class<?> pojoClass = FormUrlUtils.getGenericCollectionArgumentRawType(fieldType);
+                                final Object pojo = FormUrlUtils.invokeConstructor(pojoClass);
+                                writeRawDataToPojo(pojo, (Map<?, ?>) rawDataValue);
+                                FormUrlUtils.writeDeclaredField(model, pojoField, Collections.singletonList(pojo));
+                                rawData.remove(urlEncodedFieldName);
+                            } else if (FormUrlUtils.isPojoArray(fieldType)) {
+                                // raw value Map<String, Object>  to target Pojo[] (hidden url encoded array)
+                                final Class<?> arrayComponentClass = FormUrlUtils.getArrayComponentClass(fieldType);
+                                final Object pojo = FormUrlUtils.invokeConstructor(arrayComponentClass);
+                                writeRawDataToPojo(pojo, (Map<?, ?>) rawDataValue);
+                                final Object[] value = FormUrlUtils.objectToArray(pojo, arrayComponentClass);
+                                FormUrlUtils.writeDeclaredField(model, pojoField, value);
+                                rawData.remove(urlEncodedFieldName);
+                            }
+                        }
                     }
-                } else {
-                    throw MarshallerException.builder()
-                            .errorMessage(INCOMPATIBLE_TYPES_RECEIVED_FOR_CONVERSION)
-                            .source(rawData)
-                            .sourceField(fieldName)
-                            .sourceValue(rawValue)
-                            .sourceType(rawValue)
-                            .targetType(fieldType)
-                            .targetField(pojoFieldsWithValues.get(fieldName))
-                            .build();
-                }
-            } else {
-                final Object fieldValue = convertRawValueToTargetJavaType(rawValue, fieldType);
-                writeFieldValue(model, pojoField, fieldValue);
-            }
-            rawData.remove(fieldName);
-        }
+                });
         if (FormUrlUtils.hasAdditionalProperty(model) && !rawData.isEmpty()) {
             if (!isProhibitAdditionalProperties()) {
                 unmarshalAndWriteAdditionalProperties(model, rawData);
                 rawData.clear();
             } else {
                 throw MarshallerException.builder()
-                        .errorMessage("URL encoded string contains unmapped additional properties.")
-                        .expected("There are no additional properties.")
+                        .errorMessage(ERR_UNMAPPED_ADDITIONAL_PROPERTIES)
                         .actual(rawData)
+                        .expected(THERE_ARE_NO_ADDITIONAL_PROPERTIES)
                         .build();
             }
         }
     }
 
+    @SuppressWarnings("java:S3776") // does not require decomposition
     protected Object convertRawValueToTargetJavaType(final Object rawValue, Type targetType) {
         if (FormUrlUtils.isSimple(rawValue) && FormUrlUtils.isSimple(targetType)) {
             // raw value String to target type Integer
@@ -485,38 +512,23 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
             return rawValue;
         }
         if (FormUrlUtils.isGenericArray(targetType)) {
-            final GenericArrayType genericArrayType = (GenericArrayType) targetType;
-            final Type genericComponentType = genericArrayType.getGenericComponentType();
+            final Class<?> targetArrayComponentClass = FormUrlUtils.getArrayComponentClass(targetType);
             if (FormUrlUtils.isCollectionOfMap(rawValue)) {
                 // raw value List<Map<String, ?>> to target type Map<String, ?>[]
                 final Collection<?> rawCollection = (Collection<?>) rawValue;
-                final Class<?> genericClass;
-                if (genericComponentType instanceof ParameterizedType) {
-                    final ParameterizedType parameterizedType = (ParameterizedType) genericComponentType;
-                    genericClass = (Class<?>) parameterizedType.getRawType();
-                } else {
-                    genericClass = (Class<?>) genericComponentType;
-                }
                 return rawCollection.stream()
-                        .map(i -> convertRawValueToTargetJavaType(i, genericClass))
+                        .map(i -> convertRawValueToTargetJavaType(i, targetArrayComponentClass))
                         .collect(Collectors.toList())
-                        .toArray((Object[]) Array.newInstance(genericClass, 0));
+                        .toArray((Object[]) Array.newInstance(targetArrayComponentClass, 0));
             }
             if (FormUrlUtils.isMap(rawValue)) {
                 // raw value Map<String, ?> to target type Map<String, ?>[] (hidden url encoded array)
-                final Class<?> genericClass;
-                if (genericComponentType instanceof ParameterizedType) {
-                    final ParameterizedType parameterizedType = (ParameterizedType) genericComponentType;
-                    genericClass = (Class<?>) parameterizedType.getRawType();
-                } else {
-                    genericClass = (Class<?>) genericComponentType;
-                }
-                final Object value = convertRawValueToTargetJavaType(rawValue, genericComponentType);
-                return Collections.singletonList(value).toArray((Object[]) Array.newInstance(genericClass, 0));
+                final Object value = convertRawValueToTargetJavaType(rawValue, targetArrayComponentClass);
+                return FormUrlUtils.objectToArray(value, targetArrayComponentClass);
             }
         }
         throw MarshallerException.builder()
-                .errorMessage(INCOMPATIBLE_TYPES_RECEIVED_FOR_CONVERSION)
+                .errorMessage(ERR_INCOMPATIBLE_TYPES_RECEIVED_FOR_CONVERSION)
                 .sourceValue(rawValue)
                 .sourceType(rawValue)
                 .targetType(targetType)
@@ -556,11 +568,14 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
                 .filter(f -> f.isAnnotationPresent(FormUrlEncodedAdditionalProperties.class))
                 .collect(Collectors.toList());
         if (additionalProperties.size() > 1) {
-            final String fNames = additionalProperties.stream().map(Field::getName).collect(Collectors.joining(", "));
-            throw new MarshallerException("Model contains more than one field annotated with " +
-                                          FormUrlEncodedAdditionalProperties.class.getSimpleName() + ":\n" +
-                                          MODEL_ERR_MSG + modelClass + "\n" +
-                                          "    Fields: " + fNames + "\n");
+            throw MarshallerException.builder()
+                    .errorMessage("POJO contains more than one annotated fields.")
+                    .model(modelClass)
+                    .annotation(FormUrlEncodedAdditionalProperties.class)
+                    .annotationType(FormUrlEncodedAdditionalProperties.class)
+                    .fields(additionalProperties)
+                    .expected("one annotated field")
+                    .build();
         }
         if (additionalProperties.isEmpty()) {
             return null;
@@ -580,12 +595,13 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
             isValidTypeArguments = false;
         }
         if (!isParameterizedType || !isMap || !isValidTypeArguments) {
-            throw new MarshallerException("Invalid field type with @" +
-                                          FormUrlEncodedAdditionalProperties.class.getSimpleName() + " annotation\n" +
-                                          MODEL_ERR_MSG + modelClass + "\n" +
-                                          FIELD_ERR_MSG + additionalProperty.getName() + "\n" +
-                                          ACT_TYPE_ERR_MSG + type.getTypeName() + "\n" +
-                                          EXP_TYPE_ERR_MSG + "java.util.Map<java.lang.String, java.lang.Object>\n");
+            throw MarshallerException.builder()
+                    .errorMessage("Invalid additional properties field type")
+                    .model(modelClass)
+                    .field(additionalProperty)
+                    .actualType(type)
+                    .expected("java.util.Map<java.lang.String, java.lang.Object>")
+                    .build();
         }
         return additionalProperty;
     }
@@ -605,29 +621,12 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
     protected Map<Object, Object> initAdditionalProperties(final Object model, final Field field) {
         FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
         FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
-        final String fieldName = field.getName();
-        try {
-            if (Modifier.isFinal(field.getModifiers())) {
-                return (Map<Object, Object>) FieldUtils.readDeclaredField(model, field.getName(), true);
-            }
-        } catch (Exception e) {
-            throw new MarshallerException("Unable to read additional properties field.\n" +
-                                          MODEL_ERR_MSG + model.getClass().getName() + "\n" +
-                                          FIELD_NAME_ERR_MSG + field.getName() + "\n" +
-                                          FIELD_TYPE_ERR_MSG + field.getType() + "\n" +
-                                          ERROR_CAUSE_ERR_MSG + e.getMessage().trim() + "\n", e);
+        if (Modifier.isFinal(field.getModifiers())) {
+            return (Map<Object, Object>) FormUrlUtils.readField(model, field);
         }
-        try {
-            final HashMap<Object, Object> value = new HashMap<>();
-            FieldUtils.writeDeclaredField(model, fieldName, value, true);
-            return value;
-        } catch (Exception e) {
-            throw new MarshallerException("Unable to initialize additional properties field.\n" +
-                                          MODEL_ERR_MSG + model.getClass().getName() + "\n" +
-                                          FIELD_NAME_ERR_MSG + field.getName() + "\n" +
-                                          FIELD_TYPE_ERR_MSG + field.getType() + "\n" +
-                                          ERROR_CAUSE_ERR_MSG + e.getMessage().trim() + "\n", e);
-        }
+        final HashMap<Object, Object> value = new HashMap<>();
+        FormUrlUtils.writeDeclaredField(model, field, value);
+        return value;
     }
 
     /**
@@ -647,17 +646,20 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
      * @param value      String value to convert
      * @param targetType Java type to which the string is converted
      * @return converted value
-     * @throws IllegalArgumentException if targetType is primitive
-     * @throws IllegalArgumentException if targetType not supported
-     * @throws IllegalArgumentException if the value cannot be converted to {@link Boolean} type
-     * @throws NumberFormatException    if the value cannot be converted to number types
+     * @throws MarshallerException   if targetType is primitive
+     * @throws MarshallerException   if targetType not supported
+     * @throws MarshallerException   if the value cannot be converted to {@link Boolean} type
+     * @throws NumberFormatException if the value cannot be converted to number types
      */
     @SuppressWarnings("java:S3776")
     protected Object convertUrlDecodedStringValueToSimpleType(final String value, final Type targetType) {
         FormUrlUtils.parameterRequireNonNull(targetType, TARGET_TYPE_PARAMETER);
         if (targetType instanceof Class && ((Class<?>) targetType).isPrimitive()) {
-            throw new IllegalArgumentException("It is forbidden to use primitive types " +
-                                               "in FormUrlEncoded models: " + targetType);
+            throw MarshallerException.builder()
+                    .errorMessage("Forbidden to use primitive types")
+                    .actualType(targetType)
+                    .expected(ERR_SIMPLE_COMPLEX_REFERENCE_TYPE_ARRAY)
+                    .build();
         }
         if (value == null) {
             return null;
@@ -666,13 +668,19 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
             return value;
         }
         if (targetType.equals(Boolean.class)) {
-            if ("true".equals(value)) {
+            if ("true".equalsIgnoreCase(value)) {
                 return true;
             }
-            if ("false".equals(value)) {
+            if ("false".equalsIgnoreCase(value)) {
                 return false;
             }
-            throw new IllegalArgumentException("Cannot convert string to boolean: '" + value + "'");
+            throw MarshallerException.builder()
+                    .errorMessage("Received non-convertible value")
+                    .sourceType(value)
+                    .sourceValue(value)
+                    .targetType(Boolean.class)
+                    .expectedValue("true || false")
+                    .build();
         }
         if (targetType.equals(Short.class)) {
             return Short.valueOf(value);
@@ -695,39 +703,11 @@ public class FormUrlMarshaller implements IFormUrlMarshaller {
         if (targetType.equals(BigDecimal.class)) {
             return NumberUtils.createBigDecimal(value);
         }
-        throw new IllegalArgumentException(CONVERSION_UNSUPPORTED_TYPE_ERR_MSG + targetType);
-    }
-
-    /**
-     * @param model FormUrlEncoded model
-     * @param field model field
-     * @param value String value to convert
-     * @param <M>   model generic type
-     * @throws MarshallerException if the value cannot be written to the model field
-     */
-
-    protected <M> void writeFieldValue(final M model, final Field field, final Object value) {
-        FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
-        FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
-        try {
-            FieldUtils.writeDeclaredField(model, field.getName(), value, true);
-        } catch (Exception e) {
-            final String fieldTypeName = field.getType().getSimpleName();
-            final String fieldValue;
-            if (value.getClass().isArray()) {
-                fieldValue = Arrays.toString((Object[]) value);
-            } else {
-                fieldValue = String.valueOf(value);
-            }
-            throw new MarshallerException("Unable to write value to model field.\n" +
-                                          MODEL_ERR_MSG + model.getClass().getName() + "\n" +
-                                          FIELD_NAME_ERR_MSG + field.getName() + "\n" +
-                                          FIELD_TYPE_ERR_MSG + fieldTypeName + "\n" +
-                                          "    Value type: " + value.getClass().getSimpleName() + "\n" +
-                                          "    Value: " + fieldValue + "\n" +
-                                          ERROR_CAUSE_ERR_MSG + e.getMessage().trim() + "\n", e);
-        }
+        throw MarshallerException.builder()
+                .errorMessage(ERR_RECEIVED_UNSUPPORTED_TYPE_FOR_CONVERSION)
+                .actualType(targetType)
+                .expected(ERR_SIMPLE_REFERENCE_TYPES)
+                .build();
     }
 
     /**
