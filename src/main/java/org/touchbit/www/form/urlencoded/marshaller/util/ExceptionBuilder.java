@@ -35,9 +35,13 @@ import java.util.function.Function;
  */
 public abstract class ExceptionBuilder<E extends RuntimeException> {
 
+    /***/
     private String errorMessage = "\n";
+    /***/
     private Exception cause = null;
+    /***/
     private final StringJoiner additionalInfo = new StringJoiner("\n");
+    /***/
     protected static final String L_DELIMITER = "\n     - ";
 
     /**

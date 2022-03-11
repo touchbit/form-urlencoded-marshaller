@@ -59,6 +59,12 @@ public class FormUrlUtils {
         }
     }
 
+    /**
+     * @param object target for read
+     * @param field  object field
+     * @return field value
+     * @throws MarshallerException if the value cannot be read form the object field
+     */
     public static Object readField(final Object object, final Field field) {
         FormUrlUtils.parameterRequireNonNull(object, OBJECT_PARAMETER);
         FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
@@ -75,7 +81,7 @@ public class FormUrlUtils {
     }
 
     /**
-     * @param object target object for write
+     * @param object target for write
      * @param field  object field
      * @param value  field value
      * @throws MarshallerException if the value cannot be written to the model field
@@ -98,6 +104,10 @@ public class FormUrlUtils {
         }
     }
 
+    /**
+     * @param type any {@link Type}
+     * @return true if type generic map (For example {@code Map<?, ?>})
+     */
     public static boolean isGenericMap(final Type type) {
         final ParameterizedType parameterizedType = getParameterizedType(type);
         if (parameterizedType != null) {
@@ -107,6 +117,10 @@ public class FormUrlUtils {
         return false;
     }
 
+    /**
+     * @param type any {@link Type}
+     * @return true if type generic collection (For example {@code List<?>})
+     */
     public static boolean isGenericCollection(final Type type) {
         final ParameterizedType parameterizedType = getParameterizedType(type);
         if (parameterizedType != null) {
@@ -124,14 +138,26 @@ public class FormUrlUtils {
         return object != null && isArray(object.getClass());
     }
 
+    /**
+     * @param type any {@link Type}
+     * @return true if type is class and array
+     */
     public static boolean isArray(final Type type) {
         return (type instanceof Class) && ((Class<?>) type).isArray();
     }
 
+    /**
+     * @param type any {@link Type}
+     * @return true if type is instance of {@link GenericArrayType}
+     */
     public static boolean isGenericArray(final Type type) {
         return type instanceof GenericArrayType;
     }
 
+    /**
+     * @param type any {@link Type}
+     * @return {@link ParameterizedType} or null
+     */
     public static ParameterizedType getParameterizedType(final Type type) {
         if (type instanceof ParameterizedType) {
             return (ParameterizedType) type;
@@ -206,6 +232,11 @@ public class FormUrlUtils {
         return isPojo(object) || isPojoGenericCollection(object) || isPojoArray(object);
     }
 
+    /**
+     * @param object any array
+     * @return true if object is array and
+     * all internal array objects contains {@link FormUrlEncoded} annotation
+     */
     public static boolean isPojoArray(final Object object) {
         if (object != null) {
             if (object instanceof Type) {
@@ -222,6 +253,11 @@ public class FormUrlUtils {
         return false;
     }
 
+    /**
+     * @param object {@link Collection}
+     * @return true if object is instance of {@link Collection} and
+     * all objects in the collection contains {@link FormUrlEncoded} annotation
+     */
     public static boolean isPojoGenericCollection(final Object object) {
         if (object != null) {
             if (object instanceof Type) {
@@ -238,6 +274,10 @@ public class FormUrlUtils {
         return false;
     }
 
+    /**
+     * @param type array (For example Integer[] {@link Type})
+     * @return array component type (For example Integer {@link Type})
+     */
     public static Type getArrayComponentType(final Type type) {
         final Type arrayComponentType = TypeUtils.getArrayComponentType(type);
         if (arrayComponentType != null) {
@@ -250,24 +290,50 @@ public class FormUrlUtils {
                 .build();
     }
 
+    /**
+     * @param type array (For example Integer[] {@link Type})
+     * @return array component type (For example Integer {@link Class})
+     */
     public static Class<?> getArrayComponentClass(final Type type) {
         final Type arrayComponentType = getArrayComponentType(type);
         return TypeUtils.getRawType(arrayComponentType, null);
     }
 
+    /**
+     * Convert generic collection into a typed array
+     *
+     * @param collection    generic collection
+     * @param componentType generic collection type argument raw type
+     * @return typed array (For example {@code Collection<String> -> String[]})
+     */
     public static Object[] collectionToArray(final Collection<?> collection, final Class<?> componentType) {
         return collection.toArray((Object[]) Array.newInstance(componentType, 0));
     }
 
+    /**
+     * Convert single object into a typed array
+     *
+     * @param object        single object
+     * @param componentType object raw type
+     * @return typed object array
+     */
     public static Object[] objectToArray(final Object object, final Class<?> componentType) {
         return Collections.singletonList(object).toArray((Object[]) Array.newInstance(componentType, 0));
     }
 
+    /**
+     * @param type any Collection {@link ParameterizedType}
+     * @return collection type argument. For example: {@code ArrayLIst<String>} return String {@link Class}
+     */
     public static Class<?> getGenericCollectionArgumentRawType(final Type type) {
         final Type genericCollectionArgumentType = getGenericCollectionArgumentType(type);
         return TypeUtils.getRawType(genericCollectionArgumentType, genericCollectionArgumentType);
     }
 
+    /**
+     * @param type any Collection {@link ParameterizedType}
+     * @return collection type argument. For example: {@code ArrayLIst<String>} return String {@link Type}
+     */
     public static Type getGenericCollectionArgumentType(final Type type) {
         if (type instanceof ParameterizedType) {
             final ParameterizedType parameterizedType = (ParameterizedType) type;
@@ -291,27 +357,50 @@ public class FormUrlUtils {
                 .build();
     }
 
+    /**
+     * @param object POJO
+     * @return true if POJO has field with {@link FormUrlEncodedAdditionalProperties} annotation
+     */
     public static boolean hasAdditionalProperty(final Object object) {
         final Class<?> objClass = object.getClass();
         return !FieldUtils.getFieldsListWithAnnotation(objClass, FormUrlEncodedAdditionalProperties.class).isEmpty();
     }
 
+    /**
+     * @param object POJO
+     * @return fields List with annotation {@link FormUrlEncodedField}
+     * @see #getFormUrlEncodedFields(Class)
+     */
     public static List<Field> getFormUrlEncodedFields(final Object object) {
         parameterRequireNonNull(object, OBJECT_PARAMETER);
         return getFormUrlEncodedFields(object.getClass());
     }
 
+    /**
+     * @param object POJO
+     * @return fields Map with annotation {@link FormUrlEncodedField} where key - non-empty URL form field name
+     * @see #getFormUrlEncodedFields(Class)
+     */
     public static Map<String, Field> getFormUrlEncodedFieldsMap(final Object object) {
         parameterRequireNonNull(object, OBJECT_PARAMETER);
         return getFormUrlEncodedFieldsMap(object.getClass());
     }
 
+    /**
+     * @param aClass POJO class
+     * @return fields Map with annotation {@link FormUrlEncodedField} where key - non-empty URL form field name
+     * @see #getFormUrlEncodedFields(Class)
+     */
     public static Map<String, Field> getFormUrlEncodedFieldsMap(final Class<?> aClass) {
         parameterRequireNonNull(aClass, A_CLASS_PARAMETER);
         return getFormUrlEncodedFields(aClass).stream()
                 .collect(Collectors.toMap(f -> f.getAnnotation(FormUrlEncodedField.class).value(), f -> f));
     }
 
+    /**
+     * @param aClass POJO class
+     * @return fields with annotation {@link FormUrlEncodedField} (not static and not transient)
+     */
     public static List<Field> getFormUrlEncodedFields(final Class<?> aClass) {
         parameterRequireNonNull(aClass, A_CLASS_PARAMETER);
         return FieldUtils.getFieldsListWithAnnotation(aClass, FormUrlEncodedField.class).stream()
@@ -448,6 +537,12 @@ public class FormUrlUtils {
         return list != null && list.stream().allMatch(FormUrlUtils::isMapAssignableFrom);
     }
 
+    /**
+     * @param modelClass {@link Class}
+     * @param <M>        generic type
+     * @return new instance of the class
+     * @throws MarshallerException on instantiation errors
+     */
     public static <M> M invokeConstructor(final Class<M> modelClass) {
         try {
             return ConstructorUtils.invokeConstructor(modelClass);
@@ -461,7 +556,8 @@ public class FormUrlUtils {
     }
 
     /**
-     * @param value form URL decoded string
+     * @param value         form URL decoded string
+     * @param codingCharset URL form data coding charset
      * @return form URL encoded string
      * @throws MarshallerException if value is null
      * @throws MarshallerException cannot be thrown since the configuration operates on an {@link java.nio.charset.Charset} class.
@@ -477,7 +573,8 @@ public class FormUrlUtils {
     }
 
     /**
-     * @param value form URL encoded string
+     * @param value         form URL encoded string
+     * @param codingCharset URL form data coding charset
      * @return form URL decoded string
      * @throws MarshallerException if value is null
      * @throws MarshallerException cannot be thrown since the configuration operates on an {@link java.nio.charset.Charset} class.

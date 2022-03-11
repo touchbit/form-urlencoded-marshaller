@@ -27,7 +27,6 @@ d:
 
 upv:
 	mvn versions:use-latest-versions -DgenerateBackupPoms=false
-	cd ./example && mvn versions:use-latest-versions -DgenerateBackupPoms=false
 
 ver:
 	mvn versions:set -DnewVersion=${VERSION}

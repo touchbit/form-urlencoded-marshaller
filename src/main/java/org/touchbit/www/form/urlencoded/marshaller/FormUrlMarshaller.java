@@ -71,11 +71,15 @@ import static org.touchbit.www.form.urlencoded.marshaller.util.CodecConstant.*;
  */
 public class FormUrlMarshaller {
 
+    /***/
     public static final FormUrlMarshaller INSTANCE = new FormUrlMarshaller();
-
+    /***/
     private boolean prohibitAdditionalProperties = false;
+    /***/
     private Charset codingCharset = StandardCharsets.UTF_8;
+    /***/
     private boolean isImplicitList = false;
+    /***/
     private boolean isExplicitList = false;
 
     /**
@@ -302,8 +306,8 @@ public class FormUrlMarshaller {
      * @param value any {@link Map}
      * @return {@link HashMap} with converted values
      * @throws MarshallerException if value is null
-     * @throws MarshallerException  if value is not {@link Map}
-     * @throws MarshallerException  if map keys is not {@link String}
+     * @throws MarshallerException if value is not {@link Map}
+     * @throws MarshallerException if map keys is not {@link String}
      */
     protected Map<String, Object> convertMapToRawData(final Object value) {
         FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
@@ -342,7 +346,7 @@ public class FormUrlMarshaller {
      * @param value any {@link Collection}
      * @return {@link ArrayList} with converted array values
      * @throws MarshallerException if value is null
-     * @throws MarshallerException  if value is not {@link Collection}
+     * @throws MarshallerException if value is not {@link Collection}
      */
     protected Object convertCollectionToRawData(final Object value) {
         FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
@@ -363,7 +367,7 @@ public class FormUrlMarshaller {
      * @param value any array
      * @return {@link ArrayList} with converted array values
      * @throws MarshallerException if value is null
-     * @throws MarshallerException  if value is not array
+     * @throws MarshallerException if value is not array
      */
     protected Object convertArrayToRawData(final Object value) {
         FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
@@ -388,6 +392,14 @@ public class FormUrlMarshaller {
         return FormUrlUtils.encode(value == null ? "" : String.valueOf(value), codingCharset);
     }
 
+    /**
+     * The method casts raw data to POJO field types and
+     * writes the converted values to the corresponding POJO fields.
+     *
+     * @param model   POJO object
+     * @param rawData data to write to the model
+     * @param <M>     model generic type
+     */
     @SuppressWarnings("java:S3776") // does not require decomposition
     protected <M> void writeRawDataToPojo(final M model, final Map<?, ?> rawData) {
         FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
@@ -454,6 +466,14 @@ public class FormUrlMarshaller {
         }
     }
 
+    /**
+     * The method converts the raw value to the desired type
+     *
+     * @param rawValue   any object
+     * @param targetType target Type for conversion
+     * @return converted value
+     * @throws MarshallerException if rawValue and targetType is not compatible
+     */
     @SuppressWarnings("java:S3776") // does not require decomposition
     protected Object convertRawValueToTargetJavaType(final Object rawValue, Type targetType) {
         if (FormUrlUtils.isSimple(rawValue) && FormUrlUtils.isSimple(targetType)) {
@@ -606,8 +626,8 @@ public class FormUrlMarshaller {
      * @param modelClass FormUrlEncoded model class
      * @return field annotated with FormUrlEncodedAdditionalProperties or null
      * @throws MarshallerException if modelClass parameter is null
-     * @throws MarshallerException  if additionalProperties fields more than one
-     * @throws MarshallerException  if additionalProperties type != {@code Map<String, String>}
+     * @throws MarshallerException if additionalProperties fields more than one
+     * @throws MarshallerException if additionalProperties type != {@code Map<String, String>}
      */
     protected Field getAdditionalPropertiesField(final Class<?> modelClass) {
         FormUrlUtils.parameterRequireNonNull(modelClass, CodecConstant.MODEL_CLASS_PARAMETER);
@@ -659,10 +679,11 @@ public class FormUrlMarshaller {
      * then a new HashMap instance will be written to the field value.
      *
      * @param model FormUrlEncoded model
+     * @param field model field with {@link FormUrlEncodedAdditionalProperties} annotation
      * @return additionalProperty field value (Map) or null if field not present
      * @throws MarshallerException if model parameter is null
-     * @throws MarshallerException  if unable to initialize additionalProperties field
-     * @throws MarshallerException  if additionalProperty field not readable
+     * @throws MarshallerException if unable to initialize additionalProperties field
+     * @throws MarshallerException if additionalProperty field not readable
      */
 
     @SuppressWarnings("unchecked")

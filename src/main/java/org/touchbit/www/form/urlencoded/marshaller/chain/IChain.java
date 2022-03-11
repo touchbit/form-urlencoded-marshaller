@@ -344,6 +344,7 @@ public interface IChain {
          * Transforms from url encoded parameters string to list of separated {@link IChainPart} (key/value pairs)
          *
          * @param urlEncodedString from url encoded parameters ({@code foo[bar][0]=value1&foo[bar][1]=value2})
+         * @param codingCharset    URL form data coding charset
          * @return form data {@link IChainPart} where part contains one key/value pair ({@code foo[bar][0]=value1})
          * @throws IllegalArgumentException key-value pair is not in URL form format
          */
