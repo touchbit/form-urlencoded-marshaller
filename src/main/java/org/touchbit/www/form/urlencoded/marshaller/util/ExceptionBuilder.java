@@ -342,15 +342,17 @@ public abstract class ExceptionBuilder<E extends RuntimeException> {
         final List<Throwable> causes = getNestedCauses(exception);
         final String message;
         if (causes.isEmpty()) {
-            message = "<absent>";
-        } else if (causes.size() == 1) {
-            message = causes.get(0).getMessage();
+            message = " <absent>";
         } else {
             final StringJoiner stringJoiner = new StringJoiner(L_DELIMITER, L_DELIMITER, "");
-            causes.forEach(c -> stringJoiner.add(value(Throwable::getMessage, c)));
+            for (Throwable throwable : causes) {
+                final String cMsg = throwable.getMessage();
+                final String cCls = throwable.getClass().getSimpleName();
+                stringJoiner.add(cCls + ": " + cMsg);
+            }
             message = stringJoiner.toString();
         }
-        this.additionalInfo.add("    Error cause: " + message);
+        this.additionalInfo.add("    Error cause:" + message);
         this.cause = exception;
         return this;
     }

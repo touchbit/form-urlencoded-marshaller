@@ -140,7 +140,8 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
             assertThrow(() -> marshaller().marshal(new BrokenMap<>()))
                     .assertClass(MarshallerException.class)
                     .assertMessageIs("\n  Unexpected marshalling error.\n" +
-                                     "    Error cause: BrokenMap for test\n");
+                                     "    Error cause:\n" +
+                                     "     - UnsupportedOperationException: BrokenMap for test\n");
         }
 
     }
@@ -834,7 +835,8 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
             assertThrow(() -> marshaller().unmarshalTo(new BrokenMap<>(), "foo=bar"))
                     .assertClass(MarshallerException.class)
                     .assertMessageIs("\n  Unexpected unmarshalling error.\n" +
-                                     "    Error cause: BrokenMap for test\n");
+                                     "    Error cause:\n" +
+                                     "     - UnsupportedOperationException: BrokenMap for test\n");
         }
 
     }
@@ -889,7 +891,9 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
                     .assertClass(MarshallerException.class)
                     .assertMessageIs("\n  Unable to instantiate model class.\n" +
                                      "    Source type: java.util.Map\n" +
-                                     "    Error cause: No such accessible constructor on object: java.util.Map\n");
+                                     "    Error cause:\n" +
+                                     "     - NoSuchMethodException: " +
+                                     "No such accessible constructor on object: java.util.Map\n");
         }
 
         @Test
@@ -900,7 +904,9 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
                     .assertClass(MarshallerException.class)
                     .assertMessageIs("\n  Unable to instantiate model class.\n" +
                                      "    Source type: " + typeName + "\n" +
-                                     "    Error cause: No such accessible constructor on object: " + typeName + "\n");
+                                     "    Error cause:\n" +
+                                     "     - NoSuchMethodException:" +
+                                     " No such accessible constructor on object: qa.model.PrivatePojo\n");
         }
 
         @Test
@@ -911,7 +917,9 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
                     .assertClass(MarshallerException.class)
                     .assertMessageIs("\n  Unable to instantiate model class.\n" +
                                      "    Source type: " + typeName + "\n" +
-                                     "    Error cause: No such accessible constructor on object: " + typeName + "\n");
+                                     "    Error cause:\n" +
+                                     "     - NoSuchMethodException: No such accessible constructor on object:" +
+                                     " qa.model.PojoWithConstructorParams\n");
         }
 
         @Test
@@ -931,7 +939,8 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
             assertThrow(() -> marshaller().unmarshal(BrokenMap.class, "foo=bar"))
                     .assertClass(MarshallerException.class)
                     .assertMessageIs("\n  Unexpected unmarshalling error.\n" +
-                                     "    Error cause: BrokenMap for test\n");
+                                     "    Error cause:\n" +
+                                     "     - UnsupportedOperationException: BrokenMap for test\n");
         }
 
     }
@@ -1035,12 +1044,26 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         public void test1645377271047() {
             assertThrow(() -> marshaller().convertUrlDecodedStringValueToSimpleType("FooBar", Boolean.class))
                     .assertClass(MarshallerException.class)
-                    .assertMessageIs("\n  Received non-convertible value\n" +
+                    .assertMessageIs("\n  Incompatible types received for conversion.\n" +
                                      "    Source type: java.lang.String\n" +
                                      "    Source value: FooBar\n" +
                                      "    Target type: java.lang.Boolean\n" +
                                      "    Expected value: true || false\n");
         }
+
+        @Test
+        @DisplayName("MarshallerException -> conversion 'FooBar' string value to BigInteger type")
+        public void test1647102344583() {
+            assertThrow(() -> marshaller().convertUrlDecodedStringValueToSimpleType("FooBar", BigInteger.class))
+                    .assertClass(MarshallerException.class)
+                    .assertMessageIs("\n  Incompatible types received for conversion.\n" +
+                                     "    Source type: java.lang.String\n" +
+                                     "    Source value: FooBar\n" +
+                                     "    Target type: java.math.BigInteger\n" +
+                                     "    Error cause:\n" +
+                                     "     - NumberFormatException: For input string: \"FooBar\"\n");
+        }
+
 
         @Test
         @DisplayName("MarshallerException -> field type is primitive")
@@ -1128,7 +1151,9 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
                                      "    Field: public Map<String, Object> additionalProperties;\n" +
                                      "    Value: {}\n" +
                                      "    Value type: java.util.HashMap\n" +
-                                     "    Error cause: Cannot locate declared field qa.model.EmptyPojo.additionalProperties\n");
+                                     "    Error cause:\n" +
+                                     "     - IllegalArgumentException: Cannot locate declared field" +
+                                     " qa.model.EmptyPojo.additionalProperties\n");
         }
 
         @Test
@@ -1140,7 +1165,9 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
                     .assertMessageIs("\n  Unable to raed value from object field.\n" +
                                      "    Model: qa.model.EmptyPojo\n" +
                                      "    Field: public final Map<String, Object> additionalProperties;\n" +
-                                     "    Error cause: Cannot locate field additionalProperties on class qa.model.EmptyPojo\n");
+                                     "    Error cause:\n" +
+                                     "     - IllegalArgumentException: Cannot locate field additionalProperties" +
+                                     " on class qa.model.EmptyPojo\n");
         }
 
     }

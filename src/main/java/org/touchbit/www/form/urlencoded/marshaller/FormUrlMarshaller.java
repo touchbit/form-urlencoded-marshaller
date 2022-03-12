@@ -744,33 +744,43 @@ public class FormUrlMarshaller {
                 return false;
             }
             throw MarshallerException.builder()
-                    .errorMessage("Received non-convertible value")
+                    .errorMessage(ERR_INCOMPATIBLE_TYPES_RECEIVED_FOR_CONVERSION)
                     .sourceType(value)
                     .sourceValue(value)
-                    .targetType(Boolean.class)
+                    .targetType(targetType)
                     .expectedValue("true || false")
                     .build();
         }
-        if (targetType.equals(Short.class)) {
-            return Short.valueOf(value);
-        }
-        if (targetType.equals(Long.class)) {
-            return Long.valueOf(value);
-        }
-        if (targetType.equals(Float.class)) {
-            return Float.valueOf(value);
-        }
-        if (targetType.equals(Integer.class)) {
-            return Integer.valueOf(value);
-        }
-        if (targetType.equals(Double.class)) {
-            return Double.valueOf(value);
-        }
-        if (targetType.equals(BigInteger.class)) {
-            return NumberUtils.createBigInteger(value);
-        }
-        if (targetType.equals(BigDecimal.class)) {
-            return NumberUtils.createBigDecimal(value);
+        try {
+            if (targetType.equals(Short.class)) {
+                return Short.valueOf(value);
+            }
+            if (targetType.equals(Long.class)) {
+                return Long.valueOf(value);
+            }
+            if (targetType.equals(Float.class)) {
+                return Float.valueOf(value);
+            }
+            if (targetType.equals(Integer.class)) {
+                return Integer.valueOf(value);
+            }
+            if (targetType.equals(Double.class)) {
+                return Double.valueOf(value);
+            }
+            if (targetType.equals(BigInteger.class)) {
+                return NumberUtils.createBigInteger(value);
+            }
+            if (targetType.equals(BigDecimal.class)) {
+                return NumberUtils.createBigDecimal(value);
+            }
+        } catch (NumberFormatException e) {
+            throw MarshallerException.builder()
+                    .errorMessage(ERR_INCOMPATIBLE_TYPES_RECEIVED_FOR_CONVERSION)
+                    .sourceType(value)
+                    .sourceValue(value)
+                    .targetType(targetType)
+                    .errorCause(e)
+                    .build();
         }
         throw MarshallerException.builder()
                 .errorMessage(ERR_RECEIVED_UNSUPPORTED_TYPE_FOR_CONVERSION)

@@ -191,7 +191,9 @@ public class FormUrlUtilsUnitTests extends BaseTest {
                     .assertMessageIs("\n  Unable to raed value from object field.\n" +
                                      "    Model: java.util.HashMap\n" +
                                      "    Field: private Integer integer;\n" +
-                                     "    Error cause: Cannot locate field integer on class java.util.HashMap\n");
+                                     "    Error cause:\n" +
+                                     "     - IllegalArgumentException: " +
+                                     "Cannot locate field integer on class java.util.HashMap\n");
         }
 
     }
@@ -230,8 +232,9 @@ public class FormUrlUtilsUnitTests extends BaseTest {
                                      "    Field: private Integer integer;\n" +
                                      "    Value: test\n" +
                                      "    Value type: java.lang.String\n" +
-                                     "    Error cause: " +
-                                     "Can not set java.lang.Integer field qa.model.Pojo.integer to java.lang.String\n");
+                                     "    Error cause:\n" +
+                                     "     - IllegalArgumentException: Can not set java.lang.Integer " +
+                                     "field qa.model.Pojo.integer to java.lang.String\n");
         }
 
     }

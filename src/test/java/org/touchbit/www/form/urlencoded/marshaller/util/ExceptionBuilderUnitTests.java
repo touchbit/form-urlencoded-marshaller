@@ -60,7 +60,8 @@ public class ExceptionBuilderUnitTests extends BaseTest {
         @DisplayName("errorCause without internal Exceptions")
         public void test1647022515347() {
             String err = builder().errorCause(new RuntimeException("foo")).getAdditionalInfo().toString();
-            assertIs(err, "    Error cause: foo");
+            assertIs(err, "    Error cause:\n" +
+                          "     - RuntimeException: foo");
         }
 
         @Test
@@ -68,9 +69,9 @@ public class ExceptionBuilderUnitTests extends BaseTest {
         public void test1647022536096() {
             String err = builder().errorCause(new RuntimeException("foo", new RuntimeException("bar")))
                     .getAdditionalInfo().toString();
-            assertIs(err, "    Error cause: \n" +
-                          "     - foo\n" +
-                          "     - bar");
+            assertIs(err, "    Error cause:\n" +
+                          "     - RuntimeException: foo\n" +
+                          "     - RuntimeException: bar");
         }
 
     }
