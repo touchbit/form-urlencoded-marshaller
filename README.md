@@ -22,6 +22,18 @@ org.touchbit.web:form-urlencoded-marshaller:jar:1.0.0
 
 ---
 
+## TOC
+
+- [Features](#features)
+- [Settings](#settings)
+- [Usage](#usage)
+  - [Simple POJO (flat data)](#simple-pojo-flat-data)
+  - [Complex POJO (nested objects)](#complex-pojo-nested-objects)
+  - [Additional properties](#additional-properties)
+- [Benchmarks](#benchmarks)
+
+---
+
 ## Features
 
 * Marshal POJO/`Map<String, Object>` to URL form data string.
@@ -33,6 +45,8 @@ org.touchbit.web:form-urlencoded-marshaller:jar:1.0.0
 * Converting string values to POJO field types.
 * Rules for handling null values (ignore, null string, empty string, null marker).
 * AdditionalProperties field for extra form data parameters (like Jackson2).
+
+[Back to top](#toc)
 
 ## Settings
 
@@ -49,6 +63,8 @@ FormUrlMarshaller.INSTANCE
   .prohibitAdditionalProperties(true) - error if extra fields received (D false)
   .setFormUrlCodingCharset(UTF_16); - value encoding (D utf-8)
 ```
+
+[Back to top](#toc)
 
 ## Usage
 
@@ -92,6 +108,8 @@ public class Example {
 UrlEncoded form: offset=10&limit=50
 Pagination POJO: {offset=10, limit=50}
 ```
+
+[Back to top](#toc)
 
 ### Complex POJO (nested objects)
 
@@ -140,3 +158,80 @@ UrlEncoded form: paginate[offset]=10&paginate[limit]=50&sorting=DESC&exclude=%3C
 QueryParam POJO: {exclude=<,>, sorting=DESC, paginate={offset=10, limit=50}}
 ```
 
+[Back to top](#toc)
+
+## Additional properties
+
+Used during unmarshalling to store extra fields that are not present in the POJO model.   
+AP field must have the `@FormUrlEncodedAdditionalProperties` annotation.   
+AP field type - strictly `Map<String, Object>`.   
+
+```java
+@lombok.Data
+@FormUrlEncoded
+public static class FormData {
+
+    @FormUrlEncodedField("firstName")
+    private String firstName;
+
+    @FormUrlEncodedField("lastName")
+    private String lastName;
+
+    @FormUrlEncodedAdditionalProperties()
+    public Map<String, Object> additionalProperties;
+
+}
+```
+
+**Usage**
+
+```java
+public class Example {
+
+  public static void main(String[] args) {
+      FormUrlMarshaller marshaller = FormUrlMarshaller.INSTANCE;
+      final String data = 
+              "lastName=Pearson&firstName=Michael&nickname=Gentlemen";
+      final FormData unmarshal = marshaller.unmarshal(FormData.class, data);
+      System.out.println("QueryParam POJO: " + unmarshal);
+  }
+}
+```
+
+**Output**
+
+```text
+UrlEncoded form: lastName=Pearson&firstName=Michael&nickname=Gentlemen
+QueryParam POJO: {firstName=Michael, lastName=Pearson, additionalProperties={nickname=Gentlemen}}
+```
+
+**Prohibition of extra fields**
+
+```java
+public class Example {
+
+  public static void main(String[] args) {
+      FormUrlMarshaller marshaller = FormUrlMarshaller.INSTANCE
+              .prohibitAdditionalProperties(true); // <--------
+      final String data = 
+              "lastName=Pearson&firstName=Michael&nickname=Gentlemen";
+      final FormData unmarshal = marshaller.unmarshal(FormData.class, data);
+      System.out.println("QueryParam POJO: " + unmarshal);
+  }
+}
+```
+
+```text
+MarshallerException: 
+  URL encoded string contains unmapped additional properties.
+    Actual: {nickname=Gentlemen}
+    Expected: There are no additional properties.
+```
+
+[Back to top](#toc)
+
+## Benchmarks
+
+In progress
+
+[Back to top](#toc)
