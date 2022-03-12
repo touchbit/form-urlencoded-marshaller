@@ -81,18 +81,59 @@ public class FormUrlMarshaller {
     private boolean isImplicitList = false;
     /***/
     private boolean isExplicitList = false;
+    /***/
+    private NullValueRule nullValueRule = NullValueRule.RULE_IGNORE;
 
     /**
      * Model to string conversion
-     * According to the 3W specification, it is strongly recommended to use UTF-8 charset for URL form data coding.
      *
      * @param model {@code Map<String, Object>} or pojo object with {@link FormUrlEncoded} annotation
      * @return form url encoded string
      * @throws MarshallerException for any internal errors.
      */
     public String marshal(final Object model) {
+        final StringJoiner sj = new StringJoiner("&");
+        marshalToMap(model).forEach((key, valueList) -> valueList.forEach(value -> sj.add(key + "=" + value)));
+        return sj.toString();
+    }
+
+    /**
+     * Convert model to url encoded {@link IChain}
+     *
+     * @param model {@code Map<String, Object>} or pojo object with {@link FormUrlEncoded} annotation
+     * @return {@link IChain}
+     * @throws MarshallerException if model is null
+     * @throws MarshallerException if model type is not supported
+     */
+    public Map<String, List<String>> marshalToMap(final Object model) {
+        final Map<String, List<String>> result = new HashMap<>();
+        marshalToIChain(model).getChainParts().forEach(part ->
+                result.computeIfAbsent(part.getKey(), i -> new ArrayList<>()).add(part.getValue()));
+        return result;
+    }
+
+    /**
+     * Convert model to url encoded {@link IChain}
+     *
+     * @param model {@code Map<String, Object>} or pojo object with {@link FormUrlEncoded} annotation
+     * @return {@link IChain}
+     * @throws MarshallerException if model is null
+     * @throws MarshallerException if model type is not supported
+     */
+    public IChain marshalToIChain(final Object model) {
+        FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
         try {
-            return marshalObjectToUrlEncodedString(model);
+            if (FormUrlUtils.isMapAssignableFrom(model) || FormUrlUtils.isPojo(model)) {
+                //noinspection unchecked
+                final Map<String, Object> rawData = (Map<String, Object>) convertValueToRawData(model);
+                return new IChain.Default(rawData, isImplicitList(), isExplicitList());
+            }
+            throw MarshallerException.builder()
+                    .errorMessage(ERR_RECEIVED_UNSUPPORTED_TYPE_FOR_CONVERSION)
+                    .actualType(model)
+                    .expectedHeirsOf(Map.class)
+                    .expected(ERR_POJO_CLASSES_WITH_FORM_URLENCODED_ANNOTATION)
+                    .build();
         } catch (MarshallerException e) {
             throw e;
         } catch (RuntimeException e) {
@@ -105,7 +146,6 @@ public class FormUrlMarshaller {
 
     /**
      * String to model conversion
-     * According to the 3W specification, it is strongly recommended to use UTF-8 charset for URL form data coding.
      *
      * @param modelClass    FormUrlEncoded model class
      * @param encodedString URL encoded string to conversation
@@ -148,35 +188,7 @@ public class FormUrlMarshaller {
     }
 
     /**
-     * Model to string conversion
-     * According to the 3W specification, it is strongly recommended to use UTF-8 charset for URL form data coding.
-     *
-     * @param model {@code Map<String, Object>} or pojo object with {@link FormUrlEncoded} annotation
-     * @return form url encoded string
-     * @throws MarshallerException if model is null
-     * @throws MarshallerException if model type is not supported
-     */
-    protected String marshalObjectToUrlEncodedString(final Object model) {
-        FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
-        if (FormUrlUtils.isMapAssignableFrom(model) || FormUrlUtils.isPojo(model)) {
-            //noinspection unchecked
-            final Map<String, Object> rawData = new HashMap<>((Map<String, Object>) convertValueToRawData(model));
-            final IChain chain = new IChain.Default(rawData, isImplicitList(), isExplicitList());
-            final StringJoiner sj = new StringJoiner("&");
-            chain.getChainParts().forEach(e -> sj.add(e.getKey() + "=" + ((e.getValue() == null) ? "" : e.getValue())));
-            return sj.toString();
-        }
-        throw MarshallerException.builder()
-                .errorMessage(ERR_RECEIVED_UNSUPPORTED_TYPE_FOR_CONVERSION)
-                .actualType(model)
-                .expectedHeirsOf(Map.class)
-                .expected(ERR_POJO_CLASSES_WITH_FORM_URLENCODED_ANNOTATION)
-                .build();
-    }
-
-    /**
      * String to model conversion
-     * According to the 3W specification, it is strongly recommended to use UTF-8 charset for URL form data coding.
      *
      * @param modelClass    FormUrlEncoded model class
      * @param encodedString URL encoded string to conversation
@@ -278,12 +290,35 @@ public class FormUrlMarshaller {
             final List<Field> formUrlEncodedFields = FormUrlUtils.getFormUrlEncodedFields(value);
             for (Field field : formUrlEncodedFields) {
                 final FormUrlEncodedField annotation = field.getAnnotation(FormUrlEncodedField.class);
-                final Object fieldValue = FormUrlUtils.readField(value, field);
-                final String resultKey = annotation.value();
-                final Object resultValue;
+                final Object rawFieldValue = FormUrlUtils.readField(value, field);
+                final Object fieldValue;
+                if (rawFieldValue != null) {
+                    fieldValue = rawFieldValue;
+                } else {
+                    switch (getNullValueRule()) {
+                        case RULE_NULL_MARKER:
+                            if (annotation.encoded()) {
+                                fieldValue = NullValueRule.ENCODED_NULL_MARKER;
+                            } else {
+                                fieldValue = NullValueRule.DECODED_NULL_MARKER;
+                            }
+                            break;
+                        case RULE_NULL_STRING:
+                            fieldValue = "null";
+                            break;
+                        case RULE_EMPTY_STRING:
+                            fieldValue = "";
+                            break;
+                        case RULE_IGNORE:
+                        default:
+                            fieldValue = null;
+                    }
+                }
                 if (fieldValue == null) {
                     continue;
                 }
+                final String resultKey = annotation.value();
+                final Object resultValue;
                 if (FormUrlUtils.isSimple(fieldValue)) {
                     final String stringValue = String.valueOf(fieldValue);
                     final String encoded = FormUrlUtils.encode(stringValue, codingCharset);
@@ -875,6 +910,24 @@ public class FormUrlMarshaller {
      */
     public boolean isHiddenList() {
         return !isImplicitList() && !isExplicitList();
+    }
+
+    /**
+     * @return {@link NullValueRule}
+     * @see NullValueRule
+     */
+    public NullValueRule getNullValueRule() {
+        return nullValueRule;
+    }
+
+    /**
+     * @param nullValueRule - rule for handling fields with null value
+     * @return this
+     * @see NullValueRule
+     */
+    public FormUrlMarshaller setNullValueRule(final NullValueRule nullValueRule) {
+        this.nullValueRule = nullValueRule;
+        return this;
     }
 
 }

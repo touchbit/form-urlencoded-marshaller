@@ -15,6 +15,7 @@ import java.util.*;
 import static java.nio.charset.StandardCharsets.UTF_16;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.touchbit.www.form.urlencoded.marshaller.NullValueRule.*;
 
 @SuppressWarnings("unchecked")
 @DisplayName("FormUrlMarshaller.class unit tests")
@@ -72,6 +73,19 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
             marshaller.prohibitAdditionalProperties(true);
             assertTrue(marshaller.isProhibitAdditionalProperties());
         }
+
+        @Test
+        @DisplayName("NullValueRule")
+        public void test1647111089607() {
+            final FormUrlMarshaller marshaller = new FormUrlMarshaller();
+            assertIs(marshaller.getNullValueRule(), RULE_IGNORE);
+            final LittlePojo pojo = new LittlePojo();
+            assertThat(marshaller.marshal(pojo)).isEmpty();
+            assertThat(marshaller.setNullValueRule(RULE_NULL_STRING).marshal(pojo)).isEqualTo("bar=null&foo=null");
+            assertThat(marshaller.setNullValueRule(RULE_EMPTY_STRING).marshal(pojo)).isEqualTo("bar=&foo=");
+            assertThat(marshaller.setNullValueRule(RULE_NULL_MARKER).marshal(pojo)).isEqualTo("bar=%00&foo=%00");
+        }
+
     }
 
     @Nested
@@ -90,7 +104,7 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
             final MapPojo mapPojo = mapPojo().nestedMapPojo(mapPojo().string("string_value"));
             mapPojo.put("foo", mapOf("bar", 1));
             final FormUrlMarshaller marshaller = marshaller();
-            assertThat(marshaller.marshal(mapPojo)).isEqualTo("nestedMapPojo[string]=string_value&foo[bar]=1");
+            assertThat(marshaller.marshal(mapPojo)).isEqualTo("foo[bar]=1&nestedMapPojo[string]=string_value");
         }
 
         @Test
@@ -100,7 +114,7 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
             mapPojo.put("foo", mapOf("bar", arrayOf(1, 2)));
             final FormUrlMarshaller marshaller = marshaller().enableHiddenList();
             assertThat(marshaller.marshal(mapPojo))
-                    .isEqualTo("nestedMapPojo[string]=string_value&foo[bar]=1&foo[bar]=2");
+                    .isEqualTo("foo[bar]=1&foo[bar]=2&nestedMapPojo[string]=string_value");
         }
 
         @Test
@@ -110,17 +124,24 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
             mapPojo.put("foo", mapOf("bar", arrayOf(1, 2)));
             final FormUrlMarshaller marshaller = marshaller().enableImplicitList();
             assertThat(marshaller.marshal(mapPojo))
-                    .isEqualTo("nestedMapPojo[string]=string_value&foo[bar][]=1&foo[bar][]=2");
+                    .isEqualTo("foo[bar][]=1&foo[bar][]=2&nestedMapPojo[string]=string_value");
         }
 
         @Test
         @DisplayName("Convert pojo to form url encoded string with explicit list")
         public void test1646683947701() {
-            final MapPojo mapPojo = mapPojo().nestedMapPojo(mapPojo().string("string_value"));
-            mapPojo.put("foo", mapOf("bar", arrayOf(1, 2)));
+            final Pojo mapPojo = pojo().nestedPojo(pojo().arrayString(arrayOf("s1", "s2")));
             final FormUrlMarshaller marshaller = marshaller().enableExplicitList();
             assertThat(marshaller.marshal(mapPojo))
-                    .isEqualTo("nestedMapPojo[string]=string_value&foo[bar][0]=1&foo[bar][1]=2");
+                    .isEqualTo("nestedPojo[arrayString][0]=s1&nestedPojo[arrayString][1]=s2");
+        }
+
+        @Test
+        @DisplayName("Convert Map to form url encoded string with explicit list")
+        public void test1647109833581() {
+            final Map<String, Object> map = mapOf("foo", mapOf("bar", arrayOf(1, 2)));
+            assertThat(marshaller().enableExplicitList().marshal(map))
+                    .isEqualTo("foo[bar][0]=1&foo[bar][1]=2");
         }
 
         @Test
