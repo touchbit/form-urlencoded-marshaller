@@ -32,3 +32,4 @@ tmp-*.yml
 /.idea/jarRepositories.xml
 /.idea/codeStyles
 /.idea/modules.xml
+/.idea/misc.xml
