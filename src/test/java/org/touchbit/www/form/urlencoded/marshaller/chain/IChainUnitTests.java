@@ -1198,7 +1198,5 @@ public class IChainUnitTests extends BaseTest {
                                                  "]}");
 
         }
-
-
     }
 }
