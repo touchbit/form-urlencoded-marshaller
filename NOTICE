@@ -1,0 +1,6 @@
+form-urlencoded-marshaller
+----------------------------------------------------------------------
+Marshaller for "x-www-form-urlencoded" data (POJO/string)
+Distributed under license 'Apache License Version 2.0'
+Copyright 2022 Shaburov Oleg
+----------------------------------------------------------------------
