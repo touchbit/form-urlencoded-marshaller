@@ -26,7 +26,10 @@ import org.touchbit.www.form.urlencoded.marshaller.util.CodecConstant;
 import org.touchbit.www.form.urlencoded.marshaller.util.FormUrlUtils;
 import org.touchbit.www.form.urlencoded.marshaller.util.MarshallerException;
 
-import java.lang.reflect.*;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
@@ -283,6 +286,7 @@ public class FormUrlMarshaller {
      * @throws MarshallerException if value is null
      * @throws MarshallerException class does not contain a FormUrlEncodedField annotation
      */
+    @SuppressWarnings("java:S3776") // does not require decomposition
     protected Map<String, Object> convertPojoToRawData(final Object value) {
         FormUrlUtils.parameterRequireNonNull(value, VALUE_PARAMETER);
         if (value.getClass().isAnnotationPresent(FormUrlEncoded.class)) {
@@ -327,6 +331,12 @@ public class FormUrlMarshaller {
                     resultValue = convertValueToRawData(fieldValue);
                 }
                 result.put(resultKey, resultValue);
+            }
+            final Field additionalPropertiesField = getAdditionalPropertiesField(value.getClass());
+            if (additionalPropertiesField != null) {
+                final Map<Object, Object> ap = getAdditionalProperties(value, additionalPropertiesField);
+                @SuppressWarnings("unchecked") final Map<String, Object> convertedAP = (Map<String, Object>) convertValueToRawData(ap);
+                result.putAll(convertedAP);
             }
             return result;
         }
@@ -653,7 +663,7 @@ public class FormUrlMarshaller {
         FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
         FormUrlUtils.parameterRequireNonNull(rawData, RAW_DATA_PARAMETER);
         final Field field = getAdditionalPropertiesField(model.getClass());
-        final Map<Object, Object> additionalProperties = initAdditionalProperties(model, field);
+        final Map<Object, Object> additionalProperties = getAdditionalProperties(model, field);
         additionalProperties.putAll(rawData);
     }
 
@@ -722,15 +732,16 @@ public class FormUrlMarshaller {
      */
 
     @SuppressWarnings("unchecked")
-    protected Map<Object, Object> initAdditionalProperties(final Object model, final Field field) {
+    protected Map<Object, Object> getAdditionalProperties(final Object model, final Field field) {
         FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
         FormUrlUtils.parameterRequireNonNull(field, FIELD_PARAMETER);
-        if (Modifier.isFinal(field.getModifiers())) {
-            return (Map<Object, Object>) FormUrlUtils.readField(model, field);
+        final Map<Object, Object> fieldValue = (Map<Object, Object>) FormUrlUtils.readField(model, field);
+        if (fieldValue == null) {
+            final HashMap<Object, Object> value = new HashMap<>();
+            FormUrlUtils.writeDeclaredField(model, field, value);
+            return value;
         }
-        final HashMap<Object, Object> value = new HashMap<>();
-        FormUrlUtils.writeDeclaredField(model, field, value);
-        return value;
+        return fieldValue;
     }
 
     /**

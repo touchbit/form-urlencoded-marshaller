@@ -375,9 +375,9 @@ public interface IChain {
 
         /**
          * @param key url form parameter key
-         * @throws MarshallerException      if key is null
-         * @throws ChainException incorrect ratio of opening and closing brackets
-         * @throws ChainException list nesting [[]]
+         * @throws MarshallerException if key is null
+         * @throws ChainException      incorrect ratio of opening and closing brackets
+         * @throws ChainException      list nesting [[]]
          */
         protected void assertKeyBrackets(String key) {
             FormUrlUtils.parameterRequireNonNull(key, CodecConstant.KEY_PARAMETER);

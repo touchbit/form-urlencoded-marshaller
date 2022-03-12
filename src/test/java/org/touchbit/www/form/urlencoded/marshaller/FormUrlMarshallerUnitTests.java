@@ -137,6 +137,27 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         }
 
         @Test
+        @DisplayName("Convert pojo with additionalProperties")
+        public void test1647116805713() {
+            final Pojo pojo = pojo().additionalProperties(mapOf("foo", "car", "bar", "lar"));
+            assertThat(marshaller().marshal(pojo)).isEqualTo("bar=lar&foo=car");
+        }
+
+        @Test
+        @DisplayName("Convert pojo if additionalProperties contains nested pojo with additionalProperties")
+        public void test1647117098739() {
+            final Pojo pojo = pojo().additionalProperties(mapOf("nested", pojo().additionalProperties(mapOf("foo", "bar"))));
+            assertThat(marshaller().marshal(pojo)).isEqualTo("nested[foo]=bar");
+        }
+
+        @Test
+        @DisplayName("Overwrite pojo field if additionalProperties contains same key")
+        public void test1647117208258() {
+            final Pojo pojo = pojo().string("foo").additionalProperties(mapOf("string", "bar"));
+            assertThat(marshaller().marshal(pojo)).isEqualTo("string=bar");
+        }
+
+        @Test
         @DisplayName("Convert Map to form url encoded string with explicit list")
         public void test1647109833581() {
             final Map<String, Object> map = mapOf("foo", mapOf("bar", arrayOf(1, 2)));
@@ -1128,8 +1149,8 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         public void test1645292235482() throws NoSuchFieldException {
             final Pojo model = pojo();
             final Field field = Pojo.class.getDeclaredField("additionalProperties");
-            assertRequired(() -> marshaller().initAdditionalProperties(null, field), "model");
-            assertRequired(() -> marshaller().initAdditionalProperties(model, null), "field");
+            assertRequired(() -> marshaller().getAdditionalProperties(null, field), "model");
+            assertRequired(() -> marshaller().getAdditionalProperties(model, null), "field");
         }
 
         @Test
@@ -1139,7 +1160,7 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
             model.additionalProperties = new HashMap<>();
             model.additionalProperties.put("1", "2");
             final Field field = AdditionalProperties.class.getDeclaredField("additionalProperties");
-            final Map<Object, Object> result = marshaller().initAdditionalProperties(model, field);
+            final Map<Object, Object> result = marshaller().getAdditionalProperties(model, field);
             assertIs(result, model.additionalProperties);
         }
 
@@ -1147,7 +1168,7 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         @DisplayName("Successfully getting additionalProperties map if field not initiated")
         public void test1645292357593() throws NoSuchFieldException {
             final Field field = AdditionalProperties.class.getDeclaredField("additionalProperties");
-            final Map<Object, Object> result = marshaller().initAdditionalProperties(new AdditionalProperties(), field);
+            final Map<Object, Object> result = marshaller().getAdditionalProperties(new AdditionalProperties(), field);
             assertIs(result, new HashMap<>());
         }
 
@@ -1157,7 +1178,7 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
             final AdditionalPropertiesFinal model = new AdditionalPropertiesFinal();
             model.additionalProperties.put("1", "2");
             final Field field = AdditionalPropertiesFinal.class.getDeclaredField("additionalProperties");
-            final Map<Object, Object> result = marshaller().initAdditionalProperties(model, field);
+            final Map<Object, Object> result = marshaller().getAdditionalProperties(model, field);
             assertIs(result, model.additionalProperties);
         }
 
@@ -1165,23 +1186,21 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
         @DisplayName("MarshallerException if unable to initialize additionalProperties field")
         public void test1645292405815() throws NoSuchFieldException {
             final Field field = AdditionalProperties.class.getDeclaredField("additionalProperties");
-            assertThrow(() -> marshaller().initAdditionalProperties(new EmptyPojo(), field))
+            assertThrow(() -> marshaller().getAdditionalProperties(new EmptyPojo(), field))
                     .assertClass(MarshallerException.class)
-                    .assertMessageIs("\n  Unable to write value to object field.\n" +
+                    .assertMessageIs("\n  Unable to raed value from object field.\n" +
                                      "    Model: qa.model.EmptyPojo\n" +
                                      "    Field: public Map<String, Object> additionalProperties;\n" +
-                                     "    Value: {}\n" +
-                                     "    Value type: java.util.HashMap\n" +
                                      "    Error cause:\n" +
-                                     "     - IllegalArgumentException: Cannot locate declared field" +
-                                     " qa.model.EmptyPojo.additionalProperties\n");
+                                     "     - IllegalArgumentException: Cannot locate field additionalProperties" +
+                                     " on class qa.model.EmptyPojo\n");
         }
 
         @Test
         @DisplayName("MarshallerException if additionalProperty field not readable")
         public void test1645458156865() throws NoSuchFieldException {
             final Field field = AdditionalPropertiesFinal.class.getDeclaredField("additionalProperties");
-            assertThrow(() -> marshaller().initAdditionalProperties(new EmptyPojo(), field))
+            assertThrow(() -> marshaller().getAdditionalProperties(new EmptyPojo(), field))
                     .assertClass(MarshallerException.class)
                     .assertMessageIs("\n  Unable to raed value from object field.\n" +
                                      "    Model: qa.model.EmptyPojo\n" +
@@ -1190,7 +1209,6 @@ public class FormUrlMarshallerUnitTests extends BaseTest {
                                      "     - IllegalArgumentException: Cannot locate field additionalProperties" +
                                      " on class qa.model.EmptyPojo\n");
         }
-
     }
 
     @Nested
