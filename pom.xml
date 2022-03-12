@@ -8,9 +8,7 @@
     <artifactId>form-urlencoded-marshaller</artifactId>
     <version>1.0.0</version>
     <name>Marshaller for "x-www-form-urlencoded" data (POJO/string)</name>
-    <description>The marshaller allows you to convert a FormUrlEncoded string to a POJO/Map object and vice versa.
-        Supports nesting of objects, lists, arrays. Supports indexed and non-indexed lists.
-    </description>
+    <description>The marshaller allows you to convert a FormUrlEncoded string to a POJO/Map object and vice versa. Supports nesting of objects, lists, arrays. Supports indexed and non-indexed lists.</description>
     <packaging>jar</packaging>
 
     <licenses>
