@@ -286,7 +286,7 @@ public class IChainUnitTests extends BaseTest {
         }
 
         @Test
-        @DisplayName("IllegalArgumentException - unsupported value type")
+        @DisplayName("ChainException - unsupported value type")
         public void test1646584333520() {
             final IChain.Default chain = new IChain.Default(null);
             final IChainPart.Default bar = new IChainPart.Default("test", true, true);
@@ -429,21 +429,21 @@ public class IChainUnitTests extends BaseTest {
         }
 
         @Test
-        @DisplayName("IllegalArgumentException incorrect ratio of opening and closing brackets")
+        @DisplayName("ChainException incorrect ratio of opening and closing brackets")
         public void test1646590330285() {
             final IChain.Default chain = new IChain.Default(null);
             assertThrow(() -> chain.assertKeyBrackets("foo[bar]0]=value"))
-                    .assertClass(IllegalArgumentException.class)
+                    .assertClass(ChainException.class)
                     .assertMessageIs("The key contains an incorrect ratio of opening and closing brackets.\n" +
                                      "Invalid key: foo[bar]0]=value\n");
         }
 
         @Test
-        @DisplayName("IllegalArgumentException list nesting [[]]")
+        @DisplayName("ChainException list nesting [[]]")
         public void test1646590381283() {
             final IChain.Default chain = new IChain.Default(null);
             assertThrow(() -> chain.assertKeyBrackets("foo[bar][[0]]=value"))
-                    .assertClass(IllegalArgumentException.class)
+                    .assertClass(ChainException.class)
                     .assertMessageIs("Key nesting is not allowed.\n" +
                                      "Invalid key: foo[bar][[0]]=value\n" +
                                      "Expected nested object format: filter[foo][bar]\n" +
@@ -490,21 +490,21 @@ public class IChainUnitTests extends BaseTest {
         }
 
         @Test
-        @DisplayName("IllegalArgumentException key-value pair is not in URL form format (foo)")
+        @DisplayName("ChainException key-value pair is not in URL form format (foo)")
         public void test1646592184246() {
             final IChain.Default chain = new IChain.Default(null);
             assertThrow(() -> chain.readUrlEncodedString("foo", UTF_8))
-                    .assertClass(IllegalArgumentException.class)
+                    .assertClass(ChainException.class)
                     .assertMessageIs("URL encoded key-value pair is not in URL format:\n" +
                                      "Pair: foo");
         }
 
         @Test
-        @DisplayName("IllegalArgumentException key-value pair is not in URL form format (foo=bar=val)")
+        @DisplayName("ChainException key-value pair is not in URL form format (foo=bar=val)")
         public void test1646592215480() {
             final IChain.Default chain = new IChain.Default(null);
             assertThrow(() -> chain.readUrlEncodedString("foo=bar=val", UTF_8))
-                    .assertClass(IllegalArgumentException.class)
+                    .assertClass(ChainException.class)
                     .assertMessageIs("URL encoded key-value pair is not in URL format:\n" +
                                      "Pair: foo=bar=val");
         }
@@ -746,12 +746,12 @@ public class IChainUnitTests extends BaseTest {
         }
 
         @Test
-        @DisplayName("IllegalArgumentException incompatible types (source)")
+        @DisplayName("ChainException incompatible types (source)")
         public void test1646592652315() {
             final IChain.Default chain = new IChain.Default(null);
             final IChainList.Default target = new IChainList.Default(true);
             assertThrow(() -> chain.mergeIChainLists(new Object(), target))
-                    .assertClass(IllegalArgumentException.class)
+                    .assertClass(ChainException.class)
                     .assertMessageIs("Received incompatible types to merge\n" +
                                      "Expected type: " + IChainList.class + "\n" +
                                      "Actual source: class java.lang.Object\n" +
@@ -759,12 +759,12 @@ public class IChainUnitTests extends BaseTest {
         }
 
         @Test
-        @DisplayName("IllegalArgumentException incompatible types (target)")
+        @DisplayName("ChainException incompatible types (target)")
         public void test1646592726500() {
             final IChain.Default chain = new IChain.Default(null);
             final IChainList.Default source = new IChainList.Default(true);
             assertThrow(() -> chain.mergeIChainLists(source, new Object()))
-                    .assertClass(IllegalArgumentException.class)
+                    .assertClass(ChainException.class)
                     .assertMessageIs("Received incompatible types to merge\n" +
                                      "Expected type: " + IChainList.class + "\n" +
                                      "Actual source: " + IChainList.Default.class + "\n" +
@@ -772,12 +772,12 @@ public class IChainUnitTests extends BaseTest {
         }
 
         @Test
-        @DisplayName("IllegalArgumentException incompatible types (ArrayList)")
+        @DisplayName("ChainException incompatible types (ArrayList)")
         public void test1646592819291() {
             final IChain.Default chain = new IChain.Default(null);
             final IChainList.Default target = new IChainList.Default(true);
             assertThrow(() -> chain.mergeIChainLists(new ArrayList<>(), target))
-                    .assertClass(IllegalArgumentException.class)
+                    .assertClass(ChainException.class)
                     .assertMessageIs("Received incompatible types to merge\n" +
                                      "Expected type: " + IChainList.class + "\n" +
                                      "Actual source: class java.util.ArrayList\n" +
@@ -785,11 +785,11 @@ public class IChainUnitTests extends BaseTest {
         }
 
         @Test
-        @DisplayName("IllegalArgumentException different IChainList types (indexed/unindexed)")
+        @DisplayName("ChainException different IChainList types (indexed/unindexed)")
         public void test1646663678542() {
             final IChain.Default chain = new IChain.Default(null);
             assertThrow(() -> chain.mergeIChainLists(chainListOf(true, "foo"), chainListOf(false, "bar")))
-                    .assertClass(IllegalArgumentException.class)
+                    .assertClass(ChainException.class)
                     .assertMessageIs("Different types of lists are passed for merging.\n" +
                                      "Source list: indexed\n" +
                                      "Target list: not indexed\n");
@@ -882,11 +882,11 @@ public class IChainUnitTests extends BaseTest {
         }
 
         @Test
-        @DisplayName("IllegalArgumentException incompatible types (source)")
+        @DisplayName("ChainException incompatible types (source)")
         public void test1646595033381() {
             final IChain.Default chain = new IChain.Default(null);
             assertThrow(() -> chain.mergeRawMap(new Object(), mapOf()))
-                    .assertClass(IllegalArgumentException.class)
+                    .assertClass(ChainException.class)
                     .assertMessageIs("Received incompatible types to merge\n" +
                                      "Expected type: interface java.util.Map\n" +
                                      "Actual source: class java.lang.Object\n" +
@@ -894,11 +894,11 @@ public class IChainUnitTests extends BaseTest {
         }
 
         @Test
-        @DisplayName("IllegalArgumentException incompatible types (target)")
+        @DisplayName("ChainException incompatible types (target)")
         public void test1646595036108() {
             final IChain.Default chain = new IChain.Default(null);
             assertThrow(() -> chain.mergeRawMap(mapOf(), new Object()))
-                    .assertClass(IllegalArgumentException.class)
+                    .assertClass(ChainException.class)
                     .assertMessageIs("Received incompatible types to merge\n" +
                                      "Expected type: interface java.util.Map\n" +
                                      "Actual source: class java.util.HashMap\n" +
@@ -1080,11 +1080,11 @@ public class IChainUnitTests extends BaseTest {
         }
 
         @Test
-        @DisplayName("IllegalArgumentException incompatible types")
+        @DisplayName("ChainException incompatible types")
         public void test1646611420769() {
             final IChain.Default chain = new IChain.Default(null);
             assertThrow(() -> chain.mergeObjectValues(mapOf("foo", "source"), chainListOf(true, "target")))
-                    .assertClass(IllegalArgumentException.class)
+                    .assertClass(ChainException.class)
                     .assertMessageIs("Received incompatible value types to merge.\n" +
                                      "Source type: java.util.HashMap\n" +
                                      "Source value: {foo=source}\n" +

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.touchbit.www.form.urlencoded.marshaller.BaseTest;
+import org.touchbit.www.form.urlencoded.marshaller.util.ChainException;
 
 import java.util.List;
 import java.util.Map;
@@ -118,10 +119,10 @@ public class IChainPartUnitTests extends BaseTest {
         }
 
         @Test
-        @DisplayName("IllegalArgumentException if index is negative")
+        @DisplayName("ChainException if index is negative")
         public void test1646397732588() {
             assertThrow(() -> new IChainPart.Default("foo1", null, false, false).appendIndex(-1))
-                    .assertClass(IllegalArgumentException.class)
+                    .assertClass(ChainException.class)
                     .assertMessageIs("Array index cannot be negative but got -1");
         }
 
@@ -140,10 +141,10 @@ public class IChainPartUnitTests extends BaseTest {
         }
 
         @Test
-        @DisplayName("IllegalArgumentException when adding a key part if value present")
+        @DisplayName("ChainException when adding a key part if value present")
         public void test1646350171867() {
             assertThrow(() -> new IChainPart.Default("foo1", "bar", false, false).appendPart("foo2"))
-                    .assertClass(IllegalArgumentException.class)
+                    .assertClass(ChainException.class)
                     .assertMessageIs("It is forbidden to change the key if the value is already set.\n" +
                                      "Key: foo1\n" +
                                      "Val: bar\n" +
@@ -293,10 +294,10 @@ public class IChainPartUnitTests extends BaseTest {
         }
 
         @Test
-        @DisplayName("IllegalArgumentException if firs key is array index")
+        @DisplayName("ChainException if firs key is array index")
         public void test1646404144957() {
             assertThrow(() -> new IChainPart.Default("0", true, true).getRawDataValue())
-                    .assertClass(IllegalArgumentException.class)
+                    .assertClass(ChainException.class)
                     .assertMessageIs("Unable to process key. The key does not belong to the 'Map' type.\n" +
                                      "Key: 0\n" +
                                      "Key type: " + IChainList.Default.class + "\n" +

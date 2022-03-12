@@ -145,10 +145,10 @@ public interface IChain {
             FormUrlUtils.parameterRequireNonNull(source, CodecConstant.SOURCE_PARAMETER);
             FormUrlUtils.parameterRequireNonNull(target, CodecConstant.TARGET_PARAMETER);
             if (!(source instanceof Map && target instanceof Map)) {
-                throw new IllegalArgumentException("Received incompatible types to merge\n" +
-                                                   "Expected type: " + Map.class + "\n" +
-                                                   "Actual source: " + source.getClass() + "\n" +
-                                                   "Actual target: " + target.getClass() + "\n");
+                throw new ChainException("Received incompatible types to merge\n" +
+                                         "Expected type: " + Map.class + "\n" +
+                                         "Actual source: " + source.getClass() + "\n" +
+                                         "Actual target: " + target.getClass() + "\n");
             }
             final Map<String, Object> sourceMap = (Map<String, Object>) source;
             final Map<String, Object> targetMap = (Map<String, Object>) target;
@@ -163,8 +163,8 @@ public interface IChain {
          * @param source source value for merging
          * @param target target value for merging
          * @return merge result (Map or List)
-         * @throws MarshallerException      if source or target is null
-         * @throws IllegalArgumentException incompatible types
+         * @throws MarshallerException if source or target is null
+         * @throws ChainException      incompatible types
          */
         protected Object mergeObjectValues(final Object source, final Object target) {
             FormUrlUtils.parameterRequireNonNull(source, CodecConstant.SOURCE_PARAMETER);
@@ -184,11 +184,11 @@ public interface IChain {
                 final boolean notIndexed = ((IChainList) source).isNotIndexed();
                 return mergeIChainLists(source, getNewIChainList(!notIndexed, target));
             }
-            throw new IllegalArgumentException("Received incompatible value types to merge.\n" +
-                                               "Source type: " + source.getClass().getName() + "\n" +
-                                               "Source value: " + source + "\n" +
-                                               "Target type: " + target.getClass().getName() + "\n" +
-                                               "Target value: " + target + "\n");
+            throw new ChainException("Received incompatible value types to merge.\n" +
+                                     "Source type: " + source.getClass().getName() + "\n" +
+                                     "Source value: " + source + "\n" +
+                                     "Target type: " + target.getClass().getName() + "\n" +
+                                     "Target value: " + target + "\n");
         }
 
         /**
@@ -212,8 +212,8 @@ public interface IChain {
          * @param source indexed {@link IChainList} for merging
          * @param target indexed {@link IChainList} for merging
          * @return merge result ({@link IChainList})
-         * @throws MarshallerException      if source or target is null
-         * @throws IllegalArgumentException incompatible types
+         * @throws MarshallerException if source or target is null
+         * @throws ChainException      incompatible types
          */
         @SuppressWarnings({"java:S125", "java:S3776"})
         protected IChainList mergeIndexedIChainLists(final IChainList source, final IChainList target) {
@@ -310,18 +310,18 @@ public interface IChain {
          * @param source {@link IChainList} for merging
          * @param target {@link IChainList} for merging
          * @return merge result ({@link IChainList})
-         * @throws MarshallerException      if source or target is null
-         * @throws IllegalArgumentException incompatible types
-         * @throws IllegalArgumentException different IChainList types (indexed/unindexed)
+         * @throws MarshallerException if source or target is null
+         * @throws ChainException      incompatible types
+         * @throws ChainException      different IChainList types (indexed/unindexed)
          */
         protected IChainList mergeIChainLists(final Object source, final Object target) {
             FormUrlUtils.parameterRequireNonNull(source, CodecConstant.SOURCE_PARAMETER);
             FormUrlUtils.parameterRequireNonNull(target, CodecConstant.TARGET_PARAMETER);
             if (!(source instanceof IChainList && target instanceof IChainList)) {
-                throw new IllegalArgumentException("Received incompatible types to merge\n" +
-                                                   "Expected type: " + IChainList.class + "\n" +
-                                                   "Actual source: " + source.getClass() + "\n" +
-                                                   "Actual target: " + target.getClass() + "\n");
+                throw new ChainException("Received incompatible types to merge\n" +
+                                         "Expected type: " + IChainList.class + "\n" +
+                                         "Actual source: " + source.getClass() + "\n" +
+                                         "Actual target: " + target.getClass() + "\n");
             }
             final IChainList sourceList = (IChainList) source;
             final IChainList targetList = (IChainList) target;
@@ -331,9 +331,9 @@ public interface IChain {
             final boolean sNotIndexed = sourceList.isNotIndexed();
             final boolean tNotIndexed = targetList.isNotIndexed();
             if ((sNotIndexed && !tNotIndexed) || (!sNotIndexed && tNotIndexed)) {
-                throw new IllegalArgumentException("Different types of lists are passed for merging.\n" +
-                                                   "Source list: " + (sNotIndexed ? "not indexed" : "indexed") + "\n" +
-                                                   "Target list: " + (tNotIndexed ? "not indexed" : "indexed") + "\n");
+                throw new ChainException("Different types of lists are passed for merging.\n" +
+                                         "Source list: " + (sNotIndexed ? "not indexed" : "indexed") + "\n" +
+                                         "Target list: " + (tNotIndexed ? "not indexed" : "indexed") + "\n");
             }
             return sNotIndexed ?
                     mergeNonIndexedIChainLists(sourceList, targetList) :
@@ -346,7 +346,7 @@ public interface IChain {
          * @param urlEncodedString from url encoded parameters ({@code foo[bar][0]=value1&foo[bar][1]=value2})
          * @param codingCharset    URL form data coding charset
          * @return form data {@link IChainPart} where part contains one key/value pair ({@code foo[bar][0]=value1})
-         * @throws IllegalArgumentException key-value pair is not in URL form format
+         * @throws ChainException key-value pair is not in URL form format
          */
         protected List<IChainPart> readUrlEncodedString(final String urlEncodedString, final Charset codingCharset) {
             if (urlEncodedString == null || urlEncodedString.trim().isEmpty()) {
@@ -357,8 +357,8 @@ public interface IChain {
             for (String pair : pairs) {
                 final String[] split = pair.contains("=") ? pair.split("=") : new String[]{};
                 if (split.length > 2 || split.length == 0) {
-                    throw new IllegalArgumentException("URL encoded key-value pair is not in URL format:\n" +
-                                                       "Pair: " + urlEncodedString);
+                    throw new ChainException("URL encoded key-value pair is not in URL format:\n" +
+                                             "Pair: " + urlEncodedString);
                 }
                 final String rawValue = (split.length == 1) ? "" : split[1].trim();
                 final String rawKey = split[0].trim();
@@ -376,20 +376,20 @@ public interface IChain {
         /**
          * @param key url form parameter key
          * @throws MarshallerException      if key is null
-         * @throws IllegalArgumentException incorrect ratio of opening and closing brackets
-         * @throws IllegalArgumentException list nesting [[]]
+         * @throws ChainException incorrect ratio of opening and closing brackets
+         * @throws ChainException list nesting [[]]
          */
         protected void assertKeyBrackets(String key) {
             FormUrlUtils.parameterRequireNonNull(key, CodecConstant.KEY_PARAMETER);
             if (!isEvenBracketsRatio(key)) {
-                throw new IllegalArgumentException("The key contains an incorrect ratio of opening and closing brackets.\n" +
-                                                   "Invalid key: " + key + "\n");
+                throw new ChainException("The key contains an incorrect ratio of opening and closing brackets.\n" +
+                                         "Invalid key: " + key + "\n");
             }
             if (hasNestedBrackets(key)) {
-                throw new IllegalArgumentException("Key nesting is not allowed.\n" +
-                                                   "Invalid key: " + key + "\n" +
-                                                   "Expected nested object format: filter[foo][bar]\n" +
-                                                   "Expected nested list format: filter[foo][0]\n");
+                throw new ChainException("Key nesting is not allowed.\n" +
+                                         "Invalid key: " + key + "\n" +
+                                         "Expected nested object format: filter[foo][bar]\n" +
+                                         "Expected nested list format: filter[foo][0]\n");
             }
         }
 

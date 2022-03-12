@@ -55,7 +55,7 @@ public class IChainKeyUnitTests extends BaseTest {
         }
 
         @Test
-        @DisplayName("IllegalArgumentException if key is null")
+        @DisplayName("MarshallerException if key is null")
         public void test1646483199660() {
             assertRequired(() -> new IChainKey.Default(null), "key");
         }

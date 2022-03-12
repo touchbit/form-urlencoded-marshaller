@@ -16,6 +16,8 @@
 
 package org.touchbit.www.form.urlencoded.marshaller.chain;
 
+import org.touchbit.www.form.urlencoded.marshaller.util.ChainException;
+
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -130,7 +132,7 @@ public interface IChainPart {
 
         /**
          * @return converted this {@link Default} to {@link Map} structure (with nesting) - {@code {foo={bar=["value"]}}}
-         * @throws IllegalArgumentException if first key element is array item
+         * @throws ChainException if first key element is array item
          */
         @Override
         @SuppressWarnings({"unchecked", "java:S3776"})
@@ -176,10 +178,10 @@ public interface IChainPart {
             if (nested instanceof Map) {
                 return (Map<String, Object>) nested;
             }
-            throw new IllegalArgumentException("Unable to process key. The key does not belong to the 'Map' type.\n" +
-                                               "Key: " + key + "\n" +
-                                               "Key type: " + (nested == null ? null : nested.getClass()) + "\n" +
-                                               "Key structure: " + nested + "\n");
+            throw new ChainException("Unable to process key. The key does not belong to the 'Map' type.\n" +
+                                     "Key: " + key + "\n" +
+                                     "Key type: " + (nested == null ? null : nested.getClass()) + "\n" +
+                                     "Key structure: " + nested + "\n");
         }
 
         /**
@@ -196,15 +198,15 @@ public interface IChainPart {
         /**
          * @param part append key part to the {@link Default#key} (nested key element)
          * @return this {@link Default}
-         * @throws IllegalArgumentException if value already set (unmodifiable key)
+         * @throws ChainException if value already set (unmodifiable key)
          */
         @Override
         public Default appendPart(String part) {
             if (value != null) {
-                throw new IllegalArgumentException("It is forbidden to change the key if the value is already set.\n" +
-                                                   "Key: " + key + "\n" +
-                                                   "Val: " + value + "\n" +
-                                                   "Wrong part: " + part + "\n");
+                throw new ChainException("It is forbidden to change the key if the value is already set.\n" +
+                                         "Key: " + key + "\n" +
+                                         "Val: " + value + "\n" +
+                                         "Wrong part: " + part + "\n");
             }
             key += "[" + part + "]";
             return this;
@@ -213,12 +215,12 @@ public interface IChainPart {
         /**
          * @param index append array part to the {@link Default#key} (nested array element)
          * @return this {@link Default}
-         * @throws IllegalArgumentException if index is negative
+         * @throws ChainException if index is negative
          */
         @Override
         public Default appendIndex(int index) {
             if (index < 0) {
-                throw new IllegalArgumentException("Array index cannot be negative but got " + index);
+                throw new ChainException("Array index cannot be negative but got " + index);
             }
             if (explicitList) {
                 key += "[" + index + "]";
