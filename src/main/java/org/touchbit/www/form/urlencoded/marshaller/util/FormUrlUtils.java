@@ -352,8 +352,8 @@ public class FormUrlUtils {
         }
         throw MarshallerException.builder()
                 .errorMessage("Received type is not a generic collection.")
-                .sourceType(type)
-                .expectedHeirsOf(Collection.class)
+                .expectedHeirsOf(ParameterizedType.class)
+                .actualType(type)
                 .build();
     }
 
@@ -453,7 +453,7 @@ public class FormUrlUtils {
     public static boolean isCollectionOfSimpleObj(final Object object) {
         if (object instanceof Field) {
             Field field = (Field) object;
-            return isCollectionOfSimpleObj(field.getType());
+            return isCollectionOfSimpleObj(field.getGenericType());
         }
         if (object instanceof ParameterizedType) {
             final ParameterizedType parameterizedType = (ParameterizedType) object;
@@ -469,20 +469,20 @@ public class FormUrlUtils {
 
     /**
      * @param object nullable {@link Field} or {@link Type} or {@link Class}
-     * @return true if the object or field type is a collection and contains nested collections {@code [[], []]}
+     * @return true if the object or field type is a collection and contains nested arrays {@code List<Integer[]>}
      */
     public static boolean isCollectionOfArray(final Object object) {
         if (object instanceof Field) {
             Field field = (Field) object;
-            return isCollectionOfArray(field.getType());
+            return isCollectionOfArray(field.getGenericType());
         }
         if (object instanceof ParameterizedType) {
             final ParameterizedType parameterizedType = (ParameterizedType) object;
             final Type genericType = parameterizedType.getActualTypeArguments()[0];
             return isArray(genericType);
         }
-        if (object instanceof Class) {
-            return ((Class<?>) object).isArray();
+        if (object instanceof Collection) {
+            return ((Collection<?>) object).stream().filter(Objects::nonNull).allMatch(FormUrlUtils::isArray);
         }
         return false;
     }
@@ -587,6 +587,33 @@ public class FormUrlUtils {
         } catch (UnsupportedEncodingException e) {
             throw new MarshallerException("Unexpected error", e);
         }
+    }
+
+    /**
+     * @param field nullable field
+     * @return field type generic SimpleName {@code Map<Integer, Integer>>} instead of {@code Map}
+     */
+    public static String getGenericSimpleName(final Field field) {
+        return field == null ? "null" : getGenericSimpleName(field.getGenericType());
+    }
+
+    /**
+     * @param type nullable type
+     * @return type generic SimpleName {@code Map<Integer, Integer>>} instead of {@code Map}
+     */
+    public static String getGenericSimpleName(final Type type) {
+        if (type instanceof ParameterizedType) {
+            final ParameterizedType parameterizedType = (ParameterizedType) type;
+            final StringJoiner stringJoiner = new StringJoiner(", ", "<", ">");
+            for (Type actualTypeArgument : parameterizedType.getActualTypeArguments()) {
+                stringJoiner.add(getGenericSimpleName(actualTypeArgument));
+            }
+            final Class<?> rawType = TypeUtils.getRawType(parameterizedType, null);
+            return rawType.getSimpleName() + stringJoiner;
+        } else if (type instanceof Class) {
+            return ((Class<?>) type).getSimpleName();
+        }
+        return type == null ? "null" : type.getTypeName();
     }
 
 }

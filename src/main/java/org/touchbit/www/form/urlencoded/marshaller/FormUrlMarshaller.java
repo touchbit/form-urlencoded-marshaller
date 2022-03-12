@@ -214,7 +214,7 @@ public class FormUrlMarshaller {
                 modelMap.putAll(rawData);
                 rawData.clear();
             }
-            if (!rawData.isEmpty() && isProhibitAdditionalProperties()) {
+            if (!rawData.isEmpty() && prohibitAdditionalProperties) {
                 throw MarshallerException.builder()
                         .errorMessage(ERR_UNMAPPED_ADDITIONAL_PROPERTIES)
                         .actual(rawData)
@@ -453,7 +453,7 @@ public class FormUrlMarshaller {
                     }
                 });
         if (FormUrlUtils.hasAdditionalProperty(model) && !rawData.isEmpty()) {
-            if (!isProhibitAdditionalProperties()) {
+            if (!prohibitAdditionalProperties) {
                 unmarshalAndWriteAdditionalProperties(model, rawData);
                 rawData.clear();
             } else {
@@ -627,7 +627,7 @@ public class FormUrlMarshaller {
      * @return field annotated with FormUrlEncodedAdditionalProperties or null
      * @throws MarshallerException if modelClass parameter is null
      * @throws MarshallerException if additionalProperties fields more than one
-     * @throws MarshallerException if additionalProperties type != {@code Map<String, String>}
+     * @throws MarshallerException if additionalProperties type != {@code Map<String, Object>}
      */
     protected Field getAdditionalPropertiesField(final Class<?> modelClass) {
         FormUrlUtils.parameterRequireNonNull(modelClass, CodecConstant.MODEL_CLASS_PARAMETER);
@@ -796,6 +796,13 @@ public class FormUrlMarshaller {
     }
 
     /**
+     * @return URL form data coding charset
+     */
+    public Charset getFormUrlCodingCharset() {
+        return codingCharset;
+    }
+
+    /**
      * According to the 3W specification, it is strongly recommended to use UTF-8 charset for URL form data coding.
      *
      * @param codingCharset URL form data coding charset
@@ -804,13 +811,6 @@ public class FormUrlMarshaller {
     public FormUrlMarshaller setFormUrlCodingCharset(Charset codingCharset) {
         this.codingCharset = codingCharset;
         return this;
-    }
-
-    /**
-     * @return URL form data coding charset
-     */
-    public Charset getCodingCharset() {
-        return codingCharset;
     }
 
     /**

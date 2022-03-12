@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.touchbit;
+package qa.util;
 
 import org.touchbit.www.form.urlencoded.marshaller.util.MarshallerException;
 

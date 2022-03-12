@@ -2,7 +2,7 @@ package org.touchbit.www.form.urlencoded.marshaller.chain;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.touchbit.BaseTest;
+import org.touchbit.www.form.urlencoded.marshaller.BaseTest;
 
 import java.util.Map;
 

@@ -1,4 +1,4 @@
-package model;
+package qa.model;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -18,17 +18,17 @@ import java.util.Map;
 @Setter
 @Accessors(chain = true, fluent = true)
 @FormUrlEncoded
-public class GenericPojo<O> extends HashMap<String, O> {
+public class MapPojo extends HashMap<String, Object> {
 
-    public static final GenericPojo CONSTANT = new GenericPojo();
+    public static final MapPojo CONSTANT = new MapPojo();
 
     private static final String CONSTANT_C = "constant";
     @FormUrlEncodedField(CONSTANT_C)
-    public static final GenericPojo ANNOTATED_CONSTANT = new GenericPojo();
+    public static final MapPojo ANNOTATED_CONSTANT = new MapPojo();
 
-    private static final String NESTED_GENERIC_POJO_C = "nestedGenericPojo";
-    @FormUrlEncodedField(NESTED_GENERIC_POJO_C)
-    private GenericPojo<O> nestedGenericPojo;
+    private static final String NESTED_MAP_POJO_C = "nestedMapPojo";
+    @FormUrlEncodedField(NESTED_MAP_POJO_C)
+    private MapPojo nestedMapPojo;
 
     private static final String MISSED_C = "missed";
     @FormUrlEncodedField(MISSED_C)
@@ -37,6 +37,10 @@ public class GenericPojo<O> extends HashMap<String, O> {
     private static final String STRING_C = "string";
     @FormUrlEncodedField(STRING_C)
     private String string;
+
+    private static final String ENCODED_STRING_C = "encodedString";
+    @FormUrlEncodedField(value = ENCODED_STRING_C, encoded = true)
+    private String encodedString;
 
     private static final String INTEGER_C = "integer";
     @FormUrlEncodedField(INTEGER_C)
@@ -142,9 +146,25 @@ public class GenericPojo<O> extends HashMap<String, O> {
         return "toString";
     }
 
+    public Map<String, Object> toMap() {
+        final Map<String, Object> result = new HashMap<>();
+        if (nestedMapPojo != null) result.put("nestedMapPojo", nestedMapPojo);
+        if (missed != null) result.put("missed", missed);
+        if (string != null) result.put("string", string);
+        if (integer != null) result.put("integer", integer);
+        if (object != null) result.put("object", object);
+        if (arrayString != null) result.put("arrayString", arrayString);
+        if (arrayInteger != null) result.put("arrayInteger", arrayInteger);
+        if (listString != null) result.put("listString", listString);
+        if (listObject != null) result.put("listObject", listObject);
+        if (listInteger != null) result.put("listInteger", listInteger);
+        if (mapObject != null) result.put("mapObject", mapObject);
+        return result;
+    }
+
     public enum PojoFields {
         CONSTANT(CONSTANT_C),
-        NESTED_GENERIC_POJO(NESTED_GENERIC_POJO_C),
+        NESTED_MAP_POJO(NESTED_MAP_POJO_C),
         MISSED(MISSED_C),
         STRING(STRING_C),
         INTEGER(INTEGER_C),
@@ -185,7 +205,7 @@ public class GenericPojo<O> extends HashMap<String, O> {
 
         public Field getDeclaredField() {
             try {
-                return GenericPojo.class.getDeclaredField(this.fieldName);
+                return MapPojo.class.getDeclaredField(this.fieldName);
             } catch (NoSuchFieldException e) {
                 throw new RuntimeException("Test corrupted", e);
             }

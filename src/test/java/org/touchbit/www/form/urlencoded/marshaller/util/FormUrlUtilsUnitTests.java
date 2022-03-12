@@ -1,13 +1,13 @@
 package org.touchbit.www.form.urlencoded.marshaller.util;
 
-import model.GenericPojo;
-import model.MapPojo;
-import model.Pojo;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.touchbit.BaseTest;
+import org.touchbit.www.form.urlencoded.marshaller.BaseTest;
 import org.touchbit.www.form.urlencoded.marshaller.chain.IChainList;
+import qa.model.GenericPojo;
+import qa.model.MapPojo;
+import qa.model.Pojo;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
@@ -17,8 +17,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static model.Pojo.PojoFields;
 import static org.assertj.core.api.Assertions.assertThat;
+import static qa.model.Pojo.PojoFields;
 
 @SuppressWarnings({"ConstantConditions", "RedundantCast"})
 @DisplayName("FormUrlUtils.class unit tests")
@@ -41,18 +41,18 @@ public class FormUrlUtilsUnitTests extends BaseTest {
             assertThrow(() -> FormUrlUtils.getGenericCollectionArgumentType(null))
                     .assertClass(MarshallerException.class)
                     .assertMessageIs("\n  Received type is not a generic collection.\n" +
-                                     "    Source type: null\n" +
-                                     "    Expected: heirs of java.util.Collection\n");
+                                     "    Expected: heirs of java.lang.reflect.ParameterizedType\n" +
+                                     "    Actual type: null\n");
         }
 
         @Test
         @DisplayName("MarshallerException if type = String[].class")
         public void test1647037988208() {
-            assertThrow(() -> FormUrlUtils.getGenericCollectionArgumentType(arrayOf("1").getClass()))
+            assertThrow(() -> FormUrlUtils.getGenericCollectionArgumentType(arrayOf("1", "2").getClass()))
                     .assertClass(MarshallerException.class)
                     .assertMessageIs("\n  Received type is not a generic collection.\n" +
-                                     "    Source type: java.lang.String[]\n" +
-                                     "    Expected: heirs of java.util.Collection\n");
+                                     "    Expected: heirs of java.lang.reflect.ParameterizedType\n" +
+                                     "    Actual type: java.lang.String[]\n");
         }
 
         @Test
@@ -61,7 +61,7 @@ public class FormUrlUtilsUnitTests extends BaseTest {
             assertThrow(() -> FormUrlUtils.getGenericCollectionArgumentType(PojoFields.MAP_POJO.getGenericType()))
                     .assertClass(MarshallerException.class)
                     .assertMessageIs("\n  Incorrect number of TypeArguments was received for a generic collection.\n" +
-                                     "    Actual type: java.util.Map<java.lang.String, model.Pojo>\n" +
+                                     "    Actual type: java.util.Map<java.lang.String, qa.model.Pojo>\n" +
                                      "    Actual: 2 generic parameters\n" +
                                      "    Expected: 1 generic parameter\n");
         }
@@ -226,11 +226,12 @@ public class FormUrlUtilsUnitTests extends BaseTest {
             assertThrow(() -> FormUrlUtils.writeDeclaredField(pojo, field, "test"))
                     .assertClass(MarshallerException.class)
                     .assertMessageIs("\n  Unable to write value to object field.\n" +
-                                     "    Model: model.Pojo\n" +
+                                     "    Model: qa.model.Pojo\n" +
                                      "    Field: private Integer integer;\n" +
                                      "    Value: test\n" +
                                      "    Value type: java.lang.String\n" +
-                                     "    Error cause: Can not set java.lang.Integer field model.Pojo.integer to java.lang.String\n");
+                                     "    Error cause: " +
+                                     "Can not set java.lang.Integer field qa.model.Pojo.integer to java.lang.String\n");
         }
 
     }
@@ -267,7 +268,8 @@ public class FormUrlUtilsUnitTests extends BaseTest {
     @Test
     @DisplayName("isArray")
     public void test1647030516440() {
-        assertFalse(FormUrlUtils.isArray(null));
+        assertFalse(FormUrlUtils.isArray((Object) null));
+        assertFalse(FormUrlUtils.isArray((Type) null));
         assertFalse(FormUrlUtils.isArray(PojoFields.INTEGER.getGenericType()));
         assertFalse(FormUrlUtils.isArray(PojoFields.MAP_RAW.getGenericType()));
         assertFalse(FormUrlUtils.isArray(PojoFields.MAP_RAW_GENERIC.getGenericType()));
@@ -453,5 +455,130 @@ public class FormUrlUtilsUnitTests extends BaseTest {
         assertTrue(FormUrlUtils.isSimple(new BigDecimal(1)));
     }
 
+    @Test
+    @DisplayName("isCollectionOfSimpleObj")
+    public void test1647092864496() {
+        assertFalse(FormUrlUtils.isCollectionOfSimpleObj(null));
+        assertFalse(FormUrlUtils.isCollectionOfSimpleObj(new MapPojo()));
+        assertFalse(FormUrlUtils.isCollectionOfSimpleObj(new GenericPojo<>()));
+        assertFalse(FormUrlUtils.isCollectionOfSimpleObj(new Pojo[]{}));
+        assertFalse(FormUrlUtils.isCollectionOfSimpleObj(PojoFields.INTEGER.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfSimpleObj(PojoFields.NESTED_POJO.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfSimpleObj(PojoFields.MAP_POJO.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfSimpleObj(PojoFields.ARRAY_POJO.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfSimpleObj(PojoFields.LIST_LIST_STRING.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfSimpleObj(PojoFields.LIST_LIST_POJO.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfSimpleObj(PojoFields.LIST_POJO.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfSimpleObj(PojoFields.LIST_ARRAY_INTEGER.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfSimpleObj(PojoFields.LIST_RAW_GENERIC.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfSimpleObj(PojoFields.LIST_MAP_STRING_INTEGER.getDeclaredField()));
+        assertFalse(FormUrlUtils.isCollectionOfSimpleObj(listOf(new Object())));
+
+        assertTrue(FormUrlUtils.isCollectionOfSimpleObj(listOf()));
+        assertTrue(FormUrlUtils.isCollectionOfSimpleObj(listOf("1", "2")));
+        assertTrue(FormUrlUtils.isCollectionOfSimpleObj(PojoFields.LIST_INTEGER.getDeclaredField()));
+        assertTrue(FormUrlUtils.isCollectionOfSimpleObj(PojoFields.LIST_INTEGER.getGenericType()));
+        assertTrue(FormUrlUtils.isCollectionOfSimpleObj(PojoFields.LIST_STRING.getDeclaredField()));
+        assertTrue(FormUrlUtils.isCollectionOfSimpleObj(PojoFields.LIST_STRING.getGenericType()));
+    }
+
+    @Test
+    @DisplayName("isCollectionOfArray")
+    public void test1647094280291() {
+        assertFalse(FormUrlUtils.isCollectionOfArray(null));
+        assertFalse(FormUrlUtils.isCollectionOfArray(new MapPojo()));
+        assertFalse(FormUrlUtils.isCollectionOfArray(new GenericPojo<>()));
+        assertFalse(FormUrlUtils.isCollectionOfArray(new Pojo[]{}));
+        assertFalse(FormUrlUtils.isCollectionOfArray(PojoFields.INTEGER.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfArray(PojoFields.NESTED_POJO.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfArray(PojoFields.MAP_POJO.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfArray(PojoFields.LIST_LIST_STRING.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfArray(PojoFields.LIST_LIST_POJO.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfArray(PojoFields.LIST_POJO.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfArray(PojoFields.LIST_RAW_GENERIC.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfArray(PojoFields.LIST_INTEGER.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfArray(PojoFields.LIST_STRING.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfArray(listOf(new Object())));
+        assertFalse(FormUrlUtils.isCollectionOfArray(PojoFields.LIST_INTEGER.getDeclaredField()));
+        assertFalse(FormUrlUtils.isCollectionOfArray(PojoFields.LIST_STRING.getDeclaredField()));
+        assertFalse(FormUrlUtils.isCollectionOfArray(PojoFields.ARRAY_POJO.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfArray(PojoFields.LIST_MAP_STRING_INTEGER.getDeclaredField()));
+        assertFalse(FormUrlUtils.isCollectionOfArray(arrayOf()));
+
+        assertTrue(FormUrlUtils.isCollectionOfArray(listOf()));
+        assertTrue(FormUrlUtils.isCollectionOfArray(listOf(arrayOf(1), arrayOf(2))));
+        assertTrue(FormUrlUtils.isCollectionOfArray(PojoFields.LIST_ARRAY_INTEGER.getGenericType()));
+        assertTrue(FormUrlUtils.isCollectionOfArray(PojoFields.LIST_ARRAY_INTEGER.getDeclaredField()));
+    }
+
+    @Test
+    @DisplayName("isCollectionOfMap")
+    public void test1647097043092() {
+        assertFalse(FormUrlUtils.isCollectionOfMap(null));
+        assertFalse(FormUrlUtils.isCollectionOfMap(new MapPojo()));
+        assertFalse(FormUrlUtils.isCollectionOfMap(new GenericPojo<>()));
+        assertFalse(FormUrlUtils.isCollectionOfMap(new Pojo[]{}));
+        assertFalse(FormUrlUtils.isCollectionOfMap(PojoFields.INTEGER.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfMap(PojoFields.NESTED_POJO.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfMap(PojoFields.MAP_POJO.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfMap(PojoFields.LIST_LIST_STRING.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfMap(PojoFields.LIST_LIST_POJO.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfMap(PojoFields.LIST_POJO.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfMap(PojoFields.LIST_RAW_GENERIC.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfMap(PojoFields.LIST_INTEGER.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfMap(PojoFields.LIST_STRING.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfMap(listOf(new Object())));
+        assertFalse(FormUrlUtils.isCollectionOfMap(PojoFields.LIST_INTEGER.getDeclaredField()));
+        assertFalse(FormUrlUtils.isCollectionOfMap(PojoFields.LIST_STRING.getDeclaredField()));
+        assertFalse(FormUrlUtils.isCollectionOfMap(PojoFields.ARRAY_POJO.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfMap(arrayOf()));
+        assertFalse(FormUrlUtils.isCollectionOfMap(PojoFields.LIST_ARRAY_INTEGER.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfMap(PojoFields.LIST_ARRAY_INTEGER.getDeclaredField()));
+
+        assertTrue(FormUrlUtils.isCollectionOfMap(listOf()));
+        assertTrue(FormUrlUtils.isCollectionOfMap(listOf(mapOf(), mapOf())));
+        assertTrue(FormUrlUtils.isCollectionOfMap(PojoFields.LIST_MAP_STRING_INTEGER.getDeclaredField()));
+    }
+
+    @Test
+    @DisplayName("isCollectionOfCollections")
+    public void test1647097335935() {
+        assertFalse(FormUrlUtils.isCollectionOfCollections(null));
+        assertFalse(FormUrlUtils.isCollectionOfCollections(new MapPojo()));
+        assertFalse(FormUrlUtils.isCollectionOfCollections(new GenericPojo<>()));
+        assertFalse(FormUrlUtils.isCollectionOfCollections(new Pojo[]{}));
+        assertFalse(FormUrlUtils.isCollectionOfCollections(PojoFields.INTEGER.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfCollections(PojoFields.NESTED_POJO.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfCollections(PojoFields.MAP_POJO.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfCollections(PojoFields.LIST_POJO.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfCollections(PojoFields.LIST_RAW_GENERIC.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfCollections(PojoFields.LIST_INTEGER.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfCollections(PojoFields.LIST_STRING.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfCollections(listOf(new Object())));
+        assertFalse(FormUrlUtils.isCollectionOfCollections(PojoFields.LIST_INTEGER.getDeclaredField()));
+        assertFalse(FormUrlUtils.isCollectionOfCollections(PojoFields.LIST_STRING.getDeclaredField()));
+        assertFalse(FormUrlUtils.isCollectionOfCollections(PojoFields.ARRAY_POJO.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfCollections(arrayOf()));
+        assertFalse(FormUrlUtils.isCollectionOfCollections(PojoFields.LIST_ARRAY_INTEGER.getGenericType()));
+        assertFalse(FormUrlUtils.isCollectionOfCollections(PojoFields.LIST_ARRAY_INTEGER.getDeclaredField()));
+
+        assertTrue(FormUrlUtils.isCollectionOfCollections(listOf()));
+        assertTrue(FormUrlUtils.isCollectionOfCollections(listOf(listOf(), listOf())));
+        assertTrue(FormUrlUtils.isCollectionOfCollections(PojoFields.LIST_LIST_INTEGER.getDeclaredField()));
+        assertTrue(FormUrlUtils.isCollectionOfCollections(PojoFields.LIST_LIST_STRING.getGenericType()));
+        assertTrue(FormUrlUtils.isCollectionOfCollections(PojoFields.LIST_LIST_POJO.getGenericType()));
+    }
+
+    @Test
+    @DisplayName("isMapIChainList")
+    public void test1647097187403() {
+        assertFalse(FormUrlUtils.isMapIChainList(null));
+        assertFalse(FormUrlUtils.isMapIChainList(chainListOf(true, 1, 2)));
+        assertFalse(FormUrlUtils.isMapIChainList(chainListOf(true, listOf(1, 2), listOf(1, 2))));
+        assertFalse(FormUrlUtils.isMapIChainList(chainListOf(true, arrayOf(1, 2), arrayOf(1, 2))));
+
+        assertTrue(FormUrlUtils.isMapIChainList(chainListOf(true, mapOf(), mapOf())));
+        assertTrue(FormUrlUtils.isMapIChainList(chainListOf(true)));
+    }
 
 }

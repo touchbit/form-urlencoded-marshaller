@@ -7,11 +7,11 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="form-url-coder" />
+        <module name="form-urlencoded-marshaller" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="form-url-coder" target="1.8" />
+      <module name="form-urlencoded-marshaller" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>

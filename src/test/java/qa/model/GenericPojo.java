@@ -1,8 +1,7 @@
-package model;
+package qa.model;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 import lombok.experimental.Accessors;
 import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncoded;
 import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncodedAdditionalProperties;
@@ -10,35 +9,26 @@ import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncodedField;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
-import java.math.BigDecimal;
-import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings("rawtypes")
 @Getter
 @Setter
-@ToString
 @Accessors(chain = true, fluent = true)
 @FormUrlEncoded
-public class Pojo {
+public class GenericPojo<O> extends HashMap<String, O> {
 
-    public static final Pojo CONSTANT = new Pojo();
+    public static final GenericPojo CONSTANT = new GenericPojo();
 
     private static final String CONSTANT_C = "constant";
     @FormUrlEncodedField(CONSTANT_C)
-    public static final Pojo ANNOTATED_CONSTANT = new Pojo();
+    public static final GenericPojo ANNOTATED_CONSTANT = new GenericPojo();
 
-    private static final String NESTED_POJO_C = "nestedPojo";
-    @FormUrlEncodedField(NESTED_POJO_C)
-    private Pojo nestedPojo;
-
-    private static final String TRANSIENT_POJO_C = "transientPojo";
-    @FormUrlEncodedField(TRANSIENT_POJO_C)
-    private transient Pojo transientPojo;
-
-    @FormUrlEncodedField("")
-    private String emptyFormUrlEncodedField;
+    private static final String NESTED_GENERIC_POJO_C = "nestedGenericPojo";
+    @FormUrlEncodedField(NESTED_GENERIC_POJO_C)
+    private GenericPojo<O> nestedGenericPojo;
 
     private static final String MISSED_C = "missed";
     @FormUrlEncodedField(MISSED_C)
@@ -51,34 +41,6 @@ public class Pojo {
     private static final String INTEGER_C = "integer";
     @FormUrlEncodedField(INTEGER_C)
     private Integer integer;
-
-    private static final String STRING_F_C = "stringF";
-    @FormUrlEncodedField(STRING_F_C)
-    private String stringF;
-    private static final String BOOLEAN_F_C = "booleanF";
-    @FormUrlEncodedField(BOOLEAN_F_C)
-    private Boolean booleanF;
-    private static final String SHORT_F_C = "shortF";
-    @FormUrlEncodedField(SHORT_F_C)
-    private Short shortF;
-    private static final String LONG_F_C = "longF";
-    @FormUrlEncodedField(LONG_F_C)
-    private Long longF;
-    private static final String FLOAT_F_C = "floatF";
-    @FormUrlEncodedField(FLOAT_F_C)
-    private Float floatF;
-    private static final String INTEGER_F_C = "integerF";
-    @FormUrlEncodedField(INTEGER_F_C)
-    private Integer integerF;
-    private static final String DOUBLE_F_C = "doubleF";
-    @FormUrlEncodedField(DOUBLE_F_C)
-    private Double doubleF;
-    private static final String BIG_INTEGER_F_C = "bigIntegerF";
-    @FormUrlEncodedField(BIG_INTEGER_F_C)
-    private BigInteger bigIntegerF;
-    private static final String BIG_DECIMAL_F_C = "bigDecimalF";
-    @FormUrlEncodedField(BIG_DECIMAL_F_C)
-    private BigDecimal bigDecimalF;
 
     private static final String OBJECT_C = "object";
     @FormUrlEncodedField(OBJECT_C)
@@ -123,10 +85,6 @@ public class Pojo {
     private static final String LIST_LIST_STRING_C = "listListString";
     @FormUrlEncodedField(LIST_LIST_STRING_C)
     private List<List<String>> listListString;
-
-    private static final String LIST_LIST_POJO_C = "listListPojo";
-    @FormUrlEncodedField(LIST_LIST_POJO_C)
-    private List<List<Pojo>> listListPojo;
 
     private static final String LIST_POJO_C = "listPojo";
     @FormUrlEncodedField(LIST_POJO_C)
@@ -179,13 +137,14 @@ public class Pojo {
     @FormUrlEncodedAdditionalProperties()
     private Map<String, Object> additionalProperties;
 
-    public static String getTypeName() {
-        return Pojo.class.getTypeName();
+    @Override
+    public String toString() {
+        return "toString";
     }
 
     public enum PojoFields {
         CONSTANT(CONSTANT_C),
-        NESTED_POJO(NESTED_POJO_C),
+        NESTED_GENERIC_POJO(NESTED_GENERIC_POJO_C),
         MISSED(MISSED_C),
         STRING(STRING_C),
         INTEGER(INTEGER_C),
@@ -200,7 +159,6 @@ public class Pojo {
         LIST_RAW_GENERIC(LIST_RAW_GENERIC_C),
         LIST_STRING(LIST_STRING_C),
         LIST_LIST_STRING(LIST_LIST_STRING_C),
-        LIST_LIST_POJO(LIST_LIST_POJO_C),
         LIST_POJO(LIST_POJO_C),
         LIST_OBJECT(LIST_OBJECT_C),
         LIST_INTEGER(LIST_INTEGER_C),
@@ -227,7 +185,7 @@ public class Pojo {
 
         public Field getDeclaredField() {
             try {
-                return Pojo.class.getDeclaredField(this.fieldName);
+                return GenericPojo.class.getDeclaredField(this.fieldName);
             } catch (NoSuchFieldException e) {
                 throw new RuntimeException("Test corrupted", e);
             }

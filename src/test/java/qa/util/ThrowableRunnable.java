@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.touchbit;
+package qa.util;
 
 @FunctionalInterface
 public interface ThrowableRunnable {

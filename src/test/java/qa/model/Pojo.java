@@ -1,7 +1,8 @@
-package model;
+package qa.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncoded;
 import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncodedAdditionalProperties;
@@ -9,26 +10,35 @@ import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncodedField;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
-import java.util.HashMap;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings("rawtypes")
 @Getter
 @Setter
+@ToString
 @Accessors(chain = true, fluent = true)
 @FormUrlEncoded
-public class MapPojo extends HashMap<String, Object> {
+public class Pojo {
 
-    public static final MapPojo CONSTANT = new MapPojo();
+    public static final Pojo CONSTANT = new Pojo();
 
     private static final String CONSTANT_C = "constant";
     @FormUrlEncodedField(CONSTANT_C)
-    public static final MapPojo ANNOTATED_CONSTANT = new MapPojo();
+    public static final Pojo ANNOTATED_CONSTANT = new Pojo();
 
-    private static final String NESTED_MAP_POJO_C = "nestedMapPojo";
-    @FormUrlEncodedField(NESTED_MAP_POJO_C)
-    private MapPojo nestedMapPojo;
+    private static final String NESTED_POJO_C = "nestedPojo";
+    @FormUrlEncodedField(NESTED_POJO_C)
+    private Pojo nestedPojo;
+
+    private static final String TRANSIENT_POJO_C = "transientPojo";
+    @FormUrlEncodedField(TRANSIENT_POJO_C)
+    private transient Pojo transientPojo;
+
+    @FormUrlEncodedField("")
+    private String emptyFormUrlEncodedField;
 
     private static final String MISSED_C = "missed";
     @FormUrlEncodedField(MISSED_C)
@@ -41,6 +51,34 @@ public class MapPojo extends HashMap<String, Object> {
     private static final String INTEGER_C = "integer";
     @FormUrlEncodedField(INTEGER_C)
     private Integer integer;
+
+    private static final String STRING_F_C = "stringF";
+    @FormUrlEncodedField(STRING_F_C)
+    private String stringF;
+    private static final String BOOLEAN_F_C = "booleanF";
+    @FormUrlEncodedField(BOOLEAN_F_C)
+    private Boolean booleanF;
+    private static final String SHORT_F_C = "shortF";
+    @FormUrlEncodedField(SHORT_F_C)
+    private Short shortF;
+    private static final String LONG_F_C = "longF";
+    @FormUrlEncodedField(LONG_F_C)
+    private Long longF;
+    private static final String FLOAT_F_C = "floatF";
+    @FormUrlEncodedField(FLOAT_F_C)
+    private Float floatF;
+    private static final String INTEGER_F_C = "integerF";
+    @FormUrlEncodedField(INTEGER_F_C)
+    private Integer integerF;
+    private static final String DOUBLE_F_C = "doubleF";
+    @FormUrlEncodedField(DOUBLE_F_C)
+    private Double doubleF;
+    private static final String BIG_INTEGER_F_C = "bigIntegerF";
+    @FormUrlEncodedField(BIG_INTEGER_F_C)
+    private BigInteger bigIntegerF;
+    private static final String BIG_DECIMAL_F_C = "bigDecimalF";
+    @FormUrlEncodedField(BIG_DECIMAL_F_C)
+    private BigDecimal bigDecimalF;
 
     private static final String OBJECT_C = "object";
     @FormUrlEncodedField(OBJECT_C)
@@ -85,6 +123,10 @@ public class MapPojo extends HashMap<String, Object> {
     private static final String LIST_LIST_STRING_C = "listListString";
     @FormUrlEncodedField(LIST_LIST_STRING_C)
     private List<List<String>> listListString;
+
+    private static final String LIST_LIST_POJO_C = "listListPojo";
+    @FormUrlEncodedField(LIST_LIST_POJO_C)
+    private List<List<Pojo>> listListPojo;
 
     private static final String LIST_POJO_C = "listPojo";
     @FormUrlEncodedField(LIST_POJO_C)
@@ -137,30 +179,13 @@ public class MapPojo extends HashMap<String, Object> {
     @FormUrlEncodedAdditionalProperties()
     private Map<String, Object> additionalProperties;
 
-    @Override
-    public String toString() {
-        return "toString";
-    }
-
-    public Map<String, Object> toMap() {
-        final Map<String, Object> result = new HashMap<>();
-        if (nestedMapPojo != null) result.put("nestedMapPojo", nestedMapPojo);
-        if (missed != null) result.put("missed", missed);
-        if (string != null) result.put("string", string);
-        if (integer != null) result.put("integer", integer);
-        if (object != null) result.put("object", object);
-        if (arrayString != null) result.put("arrayString", arrayString);
-        if (arrayInteger != null) result.put("arrayInteger", arrayInteger);
-        if (listString != null) result.put("listString", listString);
-        if (listObject != null) result.put("listObject", listObject);
-        if (listInteger != null) result.put("listInteger", listInteger);
-        if (mapObject != null) result.put("mapObject", mapObject);
-        return result;
+    public static String getTypeName() {
+        return Pojo.class.getTypeName();
     }
 
     public enum PojoFields {
         CONSTANT(CONSTANT_C),
-        NESTED_MAP_POJO(NESTED_MAP_POJO_C),
+        NESTED_POJO(NESTED_POJO_C),
         MISSED(MISSED_C),
         STRING(STRING_C),
         INTEGER(INTEGER_C),
@@ -175,6 +200,7 @@ public class MapPojo extends HashMap<String, Object> {
         LIST_RAW_GENERIC(LIST_RAW_GENERIC_C),
         LIST_STRING(LIST_STRING_C),
         LIST_LIST_STRING(LIST_LIST_STRING_C),
+        LIST_LIST_POJO(LIST_LIST_POJO_C),
         LIST_POJO(LIST_POJO_C),
         LIST_OBJECT(LIST_OBJECT_C),
         LIST_INTEGER(LIST_INTEGER_C),
@@ -201,7 +227,7 @@ public class MapPojo extends HashMap<String, Object> {
 
         public Field getDeclaredField() {
             try {
-                return MapPojo.class.getDeclaredField(this.fieldName);
+                return Pojo.class.getDeclaredField(this.fieldName);
             } catch (NoSuchFieldException e) {
                 throw new RuntimeException("Test corrupted", e);
             }

@@ -1,4 +1,4 @@
-package model;
+package qa.model;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 

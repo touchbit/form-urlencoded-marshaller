@@ -1,14 +1,14 @@
-package model;
+package qa.model;
 
 import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncoded;
 import org.touchbit.www.form.urlencoded.marshaller.pojo.FormUrlEncodedAdditionalProperties;
 
-import java.util.List;
+import java.util.Map;
 
 @FormUrlEncoded
-public class AdditionalPropertiesList {
+public class AdditionalProperties {
 
     @FormUrlEncodedAdditionalProperties()
-    private List<String> additionalProperties;
+    public Map<String, Object> additionalProperties;
 
 }

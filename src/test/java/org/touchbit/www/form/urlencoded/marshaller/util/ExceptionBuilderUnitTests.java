@@ -1,13 +1,13 @@
 package org.touchbit.www.form.urlencoded.marshaller.util;
 
-import model.FieldsClass;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.touchbit.BaseTest;
+import org.touchbit.www.form.urlencoded.marshaller.BaseTest;
+import qa.model.FieldsClass;
 
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;

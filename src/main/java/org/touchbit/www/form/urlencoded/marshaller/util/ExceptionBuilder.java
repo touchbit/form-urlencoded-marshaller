@@ -36,13 +36,13 @@ import java.util.function.Function;
 public abstract class ExceptionBuilder<E extends RuntimeException> {
 
     /***/
-    private String errorMessage = "\n";
-    /***/
-    private Exception cause = null;
+    protected static final String L_DELIMITER = "\n     - ";
     /***/
     private final StringJoiner additionalInfo = new StringJoiner("\n");
     /***/
-    protected static final String L_DELIMITER = "\n     - ";
+    private String errorMessage = "\n";
+    /***/
+    private Exception cause = null;
 
     /**
      * @return heirs of RuntimeException
@@ -401,7 +401,7 @@ public abstract class ExceptionBuilder<E extends RuntimeException> {
     protected String getFieldInfo(final Field field) {
         final int mod = field.getModifiers();
         return ((mod == 0) ? "" : (Modifier.toString(mod) + " "))
-               + field.getType().getSimpleName() + " "
+               + FormUrlUtils.getGenericSimpleName(field) + " "
                + field.getName() + ";";
     }
 
