@@ -1,6 +1,6 @@
-# Marshaller for "x-www-form-urlencoded" data (mapPojo/string)
+# Marshaller for "x-www-form-urlencoded" data (POJO/string)
 
-Marshaller allows you to convert a FormUrlEncoded string to a mapPojo object and vice versa.
+Marshaller allows you to convert a FormUrlEncoded string to a POJO object and vice versa.
 
 - Supports nesting of objects and lists.
 - Supports indexed and non-indexed lists.
