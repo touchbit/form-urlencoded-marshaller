@@ -8,6 +8,8 @@
 
 ![](https://img.shields.io/badge/Java-8%2B-blue?style=plastic&logo=java) [![](https://maven-badges.herokuapp.com/maven-central/org.touchbit.web/form-urlencoded-marshaller/badge.svg?style=plastic)](https://mvnrepository.com/artifact/org.touchbit.web)
 
+The marshaller allows you to convert a `form-urlencoded` string to a POJO/Map object and vice versa. Supports nesting of objects, lists, arrays. Supports indexed and non-indexed lists.
+
 ```xml
 
 <dependency>
