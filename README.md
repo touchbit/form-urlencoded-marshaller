@@ -310,12 +310,12 @@ Benchmark mode: Average time, time/op
 
 Click image for detailed JMH report
 
-[![](./.benchmarks/img/MapStringString.png?raw=true)](https://jmh.morethan.io/source=https://github.com/touchbit/form-urlencoded-marshaller/.benchmarks/POJO_field_type_String-report.json?raw=true)
-[![](./.benchmarks/img/PojoString.png?raw=true)](https://jmh.morethan.io/source=https://github.com/touchbit/form-urlencoded-marshaller/.benchmarks/POJO_field_type_String-report.json?raw=true)
-[![](./.benchmarks/img/PojoInteger.png?raw=true)](https://jmh.morethan.io/source=https://github.com/touchbit/form-urlencoded-marshaller/.benchmarks/POJO_field_type_Integer-report.json?raw=true)
-[![](./.benchmarks/img/PojoListString.png?raw=true)](https://jmh.morethan.io/source=https://github.com/touchbit/form-urlencoded-marshaller/.benchmarks/POJO_field_type_List_String-report.json?raw=true)
-[![](./.benchmarks/img/PojoListInteger.png?raw=true)](https://jmh.morethan.io/source=https://github.com/touchbit/form-urlencoded-marshaller/.benchmarks/POJO_field_type_List_Integer-report.json?raw=true)
-[![](./.benchmarks/img/PojoNestedPojo.png?raw=true)](https://jmh.morethan.io/source=https://github.com/touchbit/form-urlencoded-marshaller/.benchmarks/POJO_field_type_nested_POJO-report.json?raw=true)
+[![](./.benchmarks/img/MapStringString.png?raw=true)](https://jmh.morethan.io/?source=https://raw.githubusercontent.com/touchbit/form-urlencoded-marshaller/main/.benchmarks//POJO_field_type_String-report.json?raw=true)
+[![](./.benchmarks/img/PojoString.png?raw=true)](https://jmh.morethan.io/?source=https://raw.githubusercontent.com/touchbit/form-urlencoded-marshaller/main/.benchmarks//POJO_field_type_String-report.json?raw=true)
+[![](./.benchmarks/img/PojoInteger.png?raw=true)](https://jmh.morethan.io/?source=https://raw.githubusercontent.com/touchbit/form-urlencoded-marshaller/main/.benchmarks//POJO_field_type_Integer-report.json?raw=true)
+[![](./.benchmarks/img/PojoListString.png?raw=true)](https://jmh.morethan.io/?source=https://raw.githubusercontent.com/touchbit/form-urlencoded-marshaller/main/.benchmarks//POJO_field_type_List_String-report.json?raw=true)
+[![](./.benchmarks/img/PojoListInteger.png?raw=true)](https://jmh.morethan.io/?source=https://raw.githubusercontent.com/touchbit/form-urlencoded-marshaller/main/.benchmarks//POJO_field_type_List_Integer-report.json?raw=true)
+[![](./.benchmarks/img/PojoNestedPojo.png?raw=true)](https://jmh.morethan.io/?source=https://raw.githubusercontent.com/touchbit/form-urlencoded-marshaller/main/.benchmarks//POJO_field_type_nested_POJO-report.json?raw=true)
 
 [Back to top](#toc)
 
