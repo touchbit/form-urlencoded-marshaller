@@ -88,7 +88,7 @@ public class FormUrlMarshaller {
     private NullValueRule nullValueRule = NullValueRule.RULE_IGNORE;
 
     /**
-     * Model to string conversion
+     * Converts a POJO or Map to a form URL encoded string
      *
      * @param model {@code Map<String, Object>} or pojo object with {@link FormUrlEncoded} annotation
      * @return form url encoded string
@@ -101,10 +101,14 @@ public class FormUrlMarshaller {
     }
 
     /**
-     * Convert model to url encoded {@link IChain}
+     * Converts a POJO or Map to a form URL encoded Map where
+     * key - URL form Key,
+     * value - list of encoded values.
+     * For example: {foo=[1, 2], bar=car} <--> {foo=[1, 2], bar=[car]}.
+     * Allows you to implement your own processing of form URL encoded lists.
      *
      * @param model {@code Map<String, Object>} or pojo object with {@link FormUrlEncoded} annotation
-     * @return {@link IChain}
+     * @return {@link Map}
      * @throws MarshallerException if model is null
      * @throws MarshallerException if model type is not supported
      */
@@ -116,7 +120,9 @@ public class FormUrlMarshaller {
     }
 
     /**
-     * Convert model to url encoded {@link IChain}
+     * Converts a POJO or Map to IChain object.
+     * IChain - this is a chain of encoded url form parameters.
+     * Allows you to implement your own processing of form URL encoded string data.
      *
      * @param model {@code Map<String, Object>} or pojo object with {@link FormUrlEncoded} annotation
      * @return {@link IChain}
@@ -450,9 +456,10 @@ public class FormUrlMarshaller {
         FormUrlUtils.parameterRequireNonNull(model, MODEL_PARAMETER);
         FormUrlUtils.parameterRequireNonNull(rawData, RAW_DATA_PARAMETER);
         FormUrlUtils.getFormUrlEncodedFieldsMap(model)
-                .entrySet().stream().filter(e -> rawData.get(e.getKey()) != null)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
                 .forEach((urlEncodedFieldName, pojoField) -> {
+                    if (rawData.get(urlEncodedFieldName) == null) {
+                        return;
+                    }
                     final Object rawDataValue = rawData.get(urlEncodedFieldName);
                     final Type fieldType = pojoField.getGenericType();
                     if (!FormUrlUtils.isSomePojo(fieldType)) {

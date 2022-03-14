@@ -12,6 +12,10 @@ SHELL=/bin/bash -o pipefail
 b:
 	mvn clean package
 
+bm:
+	@mvn clean package -DskipTests
+	@java -jar target/Benchmarks-test.jar
+
 i:
 	mvn clean install
 
